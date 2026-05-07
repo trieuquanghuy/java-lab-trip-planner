@@ -1,0 +1,7 @@
+# macOS
+.DS_Store
+
+# Obsidian — vault config is per-user; tracked notes are still committed
+.obsidian/workspace.json
+.obsidian/workspaces.json
+.obsidian/cache

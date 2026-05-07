@@ -120,47 +120,47 @@ Explicitly excluded from this milestone. Documented to prevent scope creep.
 
 ## Traceability
 
-Mapping of requirements to roadmap phases. Empty initially, populated by gsd-roadmapper in the next step.
+Mapping of requirements to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | TBD | Pending |
-| AUTH-02 | TBD | Pending |
-| AUTH-03 | TBD | Pending |
-| AUTH-04 | TBD | Pending |
-| SRCH-01 | TBD | Pending |
-| SRCH-02 | TBD | Pending |
-| DEST-01 | TBD | Pending |
-| DEST-02 | TBD | Pending |
-| DEST-03 | TBD | Pending |
-| TRIP-01 | TBD | Pending |
-| TRIP-02 | TBD | Pending |
-| TRIP-03 | TBD | Pending |
-| TRIP-04 | TBD | Pending |
-| TRIP-05 | TBD | Pending |
-| TRIP-06 | TBD | Pending |
-| SCHD-01 | TBD | Pending |
-| SCHD-02 | TBD | Pending |
-| SCHD-03 | TBD | Pending |
-| TMAP-01 | TBD | Pending |
-| PERS-01 | TBD | Pending |
-| PERS-02 | TBD | Pending |
-| PERS-03 | TBD | Pending |
-| NFR-01 | TBD | Pending |
-| NFR-02 | TBD | Pending |
-| NFR-03 | TBD | Pending |
-| NFR-04 | TBD | Pending |
-| NFR-05 | TBD | Pending |
-| NFR-06 | TBD | Pending |
-| NFR-07 | TBD | Pending |
-| NFR-08 | TBD | Pending |
-| NFR-09 | TBD | Pending |
+| AUTH-01 | Phase 2 | Pending |
+| AUTH-02 | Phase 2 | Pending |
+| AUTH-03 | Phase 2 | Pending |
+| AUTH-04 | Phase 2 | Pending |
+| SRCH-01 | Phase 3 | Pending |
+| SRCH-02 | Phase 4 | Pending |
+| DEST-01 | Phase 4 | Pending |
+| DEST-02 | Phase 4 | Pending |
+| DEST-03 | Phase 4 | Pending |
+| TRIP-01 | Phase 5 | Pending |
+| TRIP-02 | Phase 5 | Pending |
+| TRIP-03 | Phase 6 | Pending |
+| TRIP-04 | Phase 6 | Pending |
+| TRIP-05 | Phase 7 | Pending |
+| TRIP-06 | Phase 5 | Pending |
+| SCHD-01 | Phase 8 | Pending |
+| SCHD-02 | Phase 8 | Pending |
+| SCHD-03 | Phase 8 | Pending |
+| TMAP-01 | Phase 8 | Pending |
+| PERS-01 | Phase 6 | Pending |
+| PERS-02 | Phase 6 | Pending |
+| PERS-03 | Phase 6 | Pending |
+| NFR-01 | Phase 3 | Pending |
+| NFR-02 | Phase 1 | Pending |
+| NFR-03 | Phase 4 | Pending |
+| NFR-04 | Phase 0 | Pending |
+| NFR-05 | Phase 2 | Pending |
+| NFR-06 | Phase 6 | Pending |
+| NFR-07 | Phase 8 | Pending |
+| NFR-08 | Phase 8 | Pending |
+| NFR-09 | Phase 10 | Pending |
 
 **Coverage:**
 - v1 requirements: 31 total (22 functional + 9 non-functional)
-- Mapped to phases: 0 (will be filled by roadmapper)
-- Unmapped: 31 ⚠️ (resolves after roadmap creation)
+- Mapped to phases: 31 ✓
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-05-08*
-*Last updated: 2026-05-08 after initial definition (synthesized from docs/01-prd.md, validated by .planning/research/)*
+*Last updated: 2026-05-08 — traceability populated by gsd-roadmapper after roadmap creation*

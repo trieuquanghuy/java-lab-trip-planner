@@ -163,7 +163,7 @@ The following directives in `./CLAUDE.md` MUST be honored by the plan. Treat as 
 |---------|---------|---------|--------------|
 | Node | 20 LTS | Build/test runtime | LTS through April 2026 (then maintenance to April 2027). CI uses `actions/setup-node@v4` with `node-version: 20`. [CITED: CLAUDE.md D-16] |
 | pnpm | 9.x (`packageManager: "pnpm@9.15.x"` recommended) | Package manager | Faster than npm, no global install needed (Corepack auto-bootstraps from `packageManager` field). [CITED: CLAUDE.md] |
-| Vite | **5.4.x** (recommended pin) | Dev server + build | Vite 5 is mature and matches Vitest 3 cleanly. Vite 6 is also valid but has Sass/build-target/Runtime-API breaks; not worth chasing for Phase 0. **Pick Vite 5.x.** [VERIFIED: vite.dev blog] |
+| Vite | **6.x** (per D-31; v5.4 was the prior recommendation) | Dev server + build | D-31 (CONTEXT.md addendum 2026-05-08) locks Vite 6.x — paired with Vitest 3.x or 4.x and Node ≥20. Vite 6 breaking changes (Sass API default, build target name, Runtime API rename) are noise-level for a greenfield Phase 0 with no migration burden. [VERIFIED: vite.dev blog; LOCKED by D-31] |
 | React | 18.3.x | UI framework | Locked by CLAUDE.md. React 19 incompatible with react-leaflet v4 (react-leaflet v5 needs React 19). [VERIFIED: react-leaflet GitHub releases] |
 | TypeScript | 5.8.x | Static typing | TS 6.0 (March 2026) has breaking changes; 5.8 is stable. [VERIFIED: CLAUDE.md] |
 | Tailwind CSS | **3.4.x** | Styling | Tailwind v4 is an engine rewrite with browser baseline bumps + CSS-first config — **not v4 in Phase 0**. [CITED: tailwindcss.com v4 announcement, CLAUDE.md] |
@@ -1189,37 +1189,45 @@ Each service's `logback-spring.xml` simply `<include resource="logback-spring-ba
 | A8 | The Spring Cloud Gateway "classic reactive" `spring-cloud-starter-gateway` artifact name is preserved through Northfields (the Web MVC variant deprecation does not affect us). | Standard Stack | Low — Phase 0 uses reactive Gateway. Verify by spring.io 2025.0 release post. |
 | A9 | NFR-04 (free tier) is satisfied if Phase 0 introduces no paid SaaS dependencies and uses MailHog locally. | Phase Requirements | None — Phase 0 ships nothing but local containers + open source. |
 
-## Open Questions
+## Open Questions (RESOLVED via CONTEXT.md addendum 2026-05-08)
+
+> All six Open Questions raised in initial research have been resolved or deferred. Each is annotated with its resolution below. The Plan-Phase Addendum decisions (D-30..D-33) in `00-CONTEXT.md` are the authoritative source.
 
 1. **Spring Cloud train (2024.0 vs 2025.0):** CLAUDE.md says 2024.0; verified sources say 2025.0 for SB 3.5.
    - What we know: Spring Cloud 2025.0 is built on SB 3.5.x; 2024.0 is built on SB 3.4.x.
    - What's unclear: Whether the user/team intentionally locked 2024.0 (Moorgate) for some reason despite the train mismatch.
    - Recommendation: **Plan uses Spring Cloud 2025.0.x.** If the user objects in plan-check, surface this Open Question; it's documented in Pitfall E. Update CLAUDE.md to reflect the verified train.
+   - **RESOLVED by D-30 (CONTEXT.md addendum 2026-05-08):** `gradle/libs.versions.toml` pins `springCloud = "2025.0.2"` (or latest 2025.0.x patch). CLAUDE.md is being treated as out-of-date on this pin per D-30.
 
 2. **shadcn CLI version path (2.x explicit vs. @latest with v3 prompts):**
    - What we know: `shadcn@latest` defaults to v4 + React 19; `shadcn@2.x` is the legacy v3 path.
    - What's unclear: Whether `shadcn@latest` exposes a CLI flag (`--tailwind v3`) to force the v3 path without needing the `@2.x` pin.
    - Recommendation: Default to `pnpm dlx shadcn@2.x init`. Discretion item.
+   - **RESOLVED by D-32 (CONTEXT.md addendum 2026-05-08):** Use `pnpm dlx shadcn@latest init` with explicit prompt answers (Style=default, Base color=slate, CSS file=src/index.css, CSS variables=yes, Tailwind config=tailwind.config.ts, Path alias=@/*→src/*) — the LOCKING MECHANISM is the prompt answers, NOT the version pin. Prompt answers are documented in `frontend/README.md` (Plan 09 Task 9.4) so Phase 7 reproduces.
 
 3. **Compose `include:` portability:**
    - What we know: `include:` is Compose 2.20+ (~Docker Desktop 4.30+).
    - What's unclear: Whether the user has tested this on their Docker Desktop install.
    - Recommendation: README documents minimum Docker Desktop 4.x; if `include:` fails, the planner emits a fallback step.
+   - **DEFERRED:** README (root + `infra/README.md`) documents Docker Desktop 4.30+ requirement and the fallback `docker compose -f infra/docker-compose.yml up` invocation. No code-level mitigation in Phase 0; user-environment-specific.
 
 4. **Vite 5 vs Vite 6 final decision:**
    - What we know: Both are valid per CLAUDE.md and CONTEXT.md discretion.
    - What's unclear: Whether the user prefers stability (Vite 5) or modernity (Vite 6).
    - Recommendation: **Vite 5.4.x** — the Vite 5 + Vitest 3 + Tailwind v3 combination is battle-tested. Vite 6 introduces breaks for negligible Phase 0 benefit.
+   - **RESOLVED by D-31 (CONTEXT.md addendum 2026-05-08):** Vite 6.x + Vitest 3.x (or 4.x). Per D-31 the prior "Vite 5.4.x" recommendation is superseded; v5.4 → v6 migration burden is zero in greenfield. The §Standard Stack table line for Vite has been updated to reflect the D-31 pin.
 
 5. **`spring.application.name` for eureka-server:**
    - What we know: D-25 says set in every service.
    - What's unclear: Whether eureka-server (which doesn't trace itself) needs this set for Zipkin grouping. (It does NOT register with itself per Pattern 4 config.)
    - Recommendation: Set `spring.application.name=eureka-server` for log clarity even if Zipkin grouping is irrelevant; harmless.
+   - **RESOLVED by D-25 (already locked in original CONTEXT.md):** Set `spring.application.name=eureka-server` in eureka-server's `application.yml`. This was D-25's original mandate — apply uniformly to every service. No additional addendum decision needed.
 
 6. **`libs/observability` reactive (gateway) vs servlet (services) MDC filter:**
    - What we know: Gateway is WebFlux; auth/trip/destination are Servlet. MDC enrichment filter must be implemented twice.
    - What's unclear: Whether `libs/observability` ships both filters and gates each via `@ConditionalOnClass(WebFilter.class)` / `@ConditionalOnClass(jakarta.servlet.Filter)`, or whether the gateway gets a separate sub-module.
    - Recommendation: Single lib, two filter classes, conditional registration. Cleaner. Code Examples §"AutoConfiguration registration" shows the pattern.
+   - **DEFERRED to executor's discretion within D-04 hard rule:** D-04 states `libs/observability` ships both reactive + servlet MDC filter classes; the conditional registration pattern (Code Examples §"AutoConfiguration registration") is the implementation. No manual `ServerHttpObservationFilter` registration anywhere — that part of D-04 is non-negotiable. Beyond that hard rule, Plan 03's executor chooses single-lib-two-classes vs. two-sub-modules; both satisfy D-04.
 
 ## Environment Availability
 

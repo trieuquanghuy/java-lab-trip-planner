@@ -36,7 +36,18 @@
   3. `curl localhost:8080/actuator/health` returns `{"status":"UP"}` through the gateway
   4. The frontend dev server at `localhost:5173` renders a React page without console errors
   5. All three Flyway migrations run without checksum mismatch errors; per-service history tables (`auth_flyway_schema_history`, `trip_flyway_schema_history`, `destination_flyway_schema_history`) are present in their respective schemas
-**Plans**: TBD
+**Plans**: 10 plans
+Plans:
+- [ ] 00-01-PLAN.md — Gradle multi-module skeleton + version catalog (Spring Cloud 2025.0.x per D-30) + .env.example + root README
+- [ ] 00-02-PLAN.md — scripts/smoke.sh (D-33 Wave 1 phase-gate verifier) + scripts/README.md
+- [ ] 00-03-PLAN.md — libs/observability fully wired (D-04): @AutoConfiguration + servlet + reactive MDC filters + shared logback-spring-base.xml
+- [ ] 00-04-PLAN.md — libs/error-handling (D-05 stubs: ProblemDetailFactory + 2-baseline ErrorCode) + libs/api-contracts (D-06 empty module)
+- [ ] 00-05-PLAN.md — eureka-server skeleton (port 8761, no DB, register-with-eureka false)
+- [ ] 00-06-PLAN.md — api-gateway skeleton (port 8080, Spring Cloud Gateway 4.2.x, /__health/<svc> static-URI routing per D-02)
+- [ ] 00-07-PLAN.md — auth/trip/destination service skeletons (per-service Flyway history table per D-09 / Pitfall 3, V1 baseline migrations, /__health controllers)
+- [ ] 00-08-PLAN.md — infra/postgres/init.sql (D-08 schemas + per-service users) + infra/docker-compose.yml (D-18/D-20/D-22) + root alias (D-19) + per-service Dockerfiles
+- [ ] 00-09-PLAN.md — Frontend Vite 6 + React 18 + Tailwind v3.4 + provider stack + UI-SPEC landing page + shadcn@2.x init checkpoint (D-32)
+- [ ] 00-10-PLAN.md — .github/workflows/backend.yml + frontend.yml (D-15 skeleton CI) + final smoke validation checkpoint
 **Notes**:
   - Use Spring Boot **3.5.x** (not 3.3.x from docs/02-architecture.md — 3.3.x is EOL June 2025); Spring Cloud **2024.0.x** release train to match
   - Add `org.flywaydb:flyway-database-postgresql` explicitly to each service's `build.gradle.kts` — missing it causes "Unsupported Database: PostgreSQL 16.x" at startup (Pitfall 3)
@@ -231,7 +242,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 0. Monorepo Scaffolding | 0/? | Not started | - |
+| 0. Monorepo Scaffolding | 0/10 | Not started | - |
 | 1. API Gateway | 0/? | Not started | - |
 | 2. Auth Service | 0/? | Not started | - |
 | 3. Destination Service — Search | 0/? | Not started | - |

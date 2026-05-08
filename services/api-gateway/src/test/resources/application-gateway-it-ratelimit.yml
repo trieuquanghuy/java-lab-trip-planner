@@ -1,0 +1,103 @@
+# Test profile for LoginRateLimiterIT (plan 01-05 / SC#5 / D-14 test #8 partial — IP leg only).
+# Activated by @ActiveProfiles("gateway-it-ratelimit") in LoginRateLimiterIT.
+# This profile defines ALL gateway routes with rate limiting enabled on auth-login + auth-signup.
+# It REPLACES the gateway-it profile for LoginRateLimiterIT.
+#
+# Convention C35-P1: Source: 01-CONTEXT.md D-05 (Phase 1 ships IP-only 30/15min login rate limit).
+# Threat: T-01-05 (Phase 1 leg — IP-only rate limit; full mitigation requires Phase 2 IP+email).
+#
+# Rate-limiter override for test tractability:
+#   Production replenishRate=30/burstCapacity=30/requestedTokens=900 enforces 30/15min steady state.
+#   Test uses replenishRate=1/burstCapacity=30/requestedTokens=1 for tractable runtime assertion
+#   that the WIRING works (31st request is rejected with 429). Production math is verified by
+#   plan 01-03's application.yml grep gate — two separate validation concerns.
+#
+# Redis: @ServiceConnection in LoginRateLimiterIT wires spring.data.redis.* to Testcontainers
+# redis:7-alpine, overriding the host/port values below.
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cloud:
+    gateway:
+      routes:
+        # Phase 0 health routes
+        - id: health-gateway
+          uri: http://localhost:8080
+          predicates:
+            - Path=/__health/gateway
+          filters:
+            - SetPath=/__health
+        - id: health-auth
+          uri: http://localhost:${auth.stub.port:8081}
+          predicates:
+            - Path=/__health/auth
+          filters:
+            - SetPath=/__health
+        - id: health-trip
+          uri: http://localhost:${trip.stub.port:8082}
+          predicates:
+            - Path=/__health/trip
+          filters:
+            - SetPath=/__health
+        - id: health-destination
+          uri: http://localhost:${destination.stub.port:8083}
+          predicates:
+            - Path=/__health/destination
+          filters:
+            - SetPath=/__health
+        # Phase 1 auth routes — auth-login + auth-signup have rate limiting
+        - id: auth-login
+          uri: http://localhost:${auth.stub.port}
+          predicates:
+            - Path=/api/auth/login
+            - Method=POST
+          filters:
+            # Test rate-limiter triple: replenishRate=1/burst=30/requestedTokens=1
+            # First 30 requests pass (burst allows 30 tokens × cost=1 each);
+            # 31st request finds bucket empty → 429 code=auth.rate_limited.
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 1
+                redis-rate-limiter.burstCapacity: 30
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+        - id: auth-signup
+          uri: http://localhost:${auth.stub.port}
+          predicates:
+            - Path=/api/auth/signup
+            - Method=POST
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 1
+                redis-rate-limiter.burstCapacity: 3
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+        - id: auth-verify
+          uri: http://localhost:${auth.stub.port}
+          predicates:
+            - Path=/api/auth/verify
+        - id: auth-refresh
+          uri: http://localhost:${auth.stub.port}
+          predicates:
+            - Path=/api/auth/refresh
+        - id: auth-other
+          uri: http://localhost:${auth.stub.port}
+          predicates:
+            - Path=/api/auth/**
+        # Phase 1 search + destinations
+        - id: search
+          uri: http://localhost:${destination.stub.port}
+          predicates:
+            - Path=/api/search/**
+        - id: destinations
+          uri: http://localhost:${destination.stub.port}
+          predicates:
+            - Path=/api/destinations/**
+        # Phase 1 trips
+        - id: trips
+          uri: http://localhost:${trip.stub.port}
+          predicates:
+            - Path=/api/trips/**

@@ -1,0 +1,86 @@
+# Test profile for gateway integration tests (plan 01-05) except LoginRateLimiterIT.
+# Activated by @ActiveProfiles("gateway-it") in IT classes.
+# LoginRateLimiterIT uses @ActiveProfiles("gateway-it-ratelimit") to enable rate limiting.
+#
+# Convention C35-P1: Source: 01-CONTEXT.md D-11 (JWT secret override) + D-13 (test stack).
+#
+# Route URIs reference property placeholders injected by @ConfigureWireMock(portProperties={...}).
+# WireMockContextCustomizer registers these properties via TestPropertyValues.applyTo() BEFORE
+# @ConfigurationProperties binding, so ${...} placeholders resolve correctly.
+#
+# RequestRateLimiter filters are REMOVED from this profile because:
+#   - Rate-limiting tests (SC#5 / LoginRateLimiterIT) use a separate profile gateway-it-ratelimit
+#     that includes rate limiting WITH a Testcontainers Redis (@ServiceConnection).
+#   - Non-rate-limit ITs only need the full filter chain (JWT auth, X-User-Id injection, CORS,
+#     ProblemDetail entry point) — not the rate limiter.
+#   - Removing rate limiters here avoids Redis connection errors in tests without Redis running.
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  cloud:
+    gateway:
+      routes:
+        # Phase 0 health routes — URIs left as-is
+        - id: health-gateway
+          uri: http://localhost:8080
+          predicates:
+            - Path=/__health/gateway
+          filters:
+            - SetPath=/__health
+        - id: health-auth
+          uri: http://localhost:${auth.stub.port:8081}
+          predicates:
+            - Path=/__health/auth
+          filters:
+            - SetPath=/__health
+        - id: health-trip
+          uri: http://localhost:${trip.stub.port:8082}
+          predicates:
+            - Path=/__health/trip
+          filters:
+            - SetPath=/__health
+        - id: health-destination
+          uri: http://localhost:${destination.stub.port:8083}
+          predicates:
+            - Path=/__health/destination
+          filters:
+            - SetPath=/__health
+        # Phase 1 auth routes (NO rate limiting in this profile)
+        - id: auth-login
+          uri: http://localhost:${auth.stub.port}
+          predicates:
+            - Path=/api/auth/login
+            - Method=POST
+        - id: auth-signup
+          uri: http://localhost:${auth.stub.port}
+          predicates:
+            - Path=/api/auth/signup
+            - Method=POST
+        - id: auth-verify
+          uri: http://localhost:${auth.stub.port}
+          predicates:
+            - Path=/api/auth/verify
+        - id: auth-refresh
+          uri: http://localhost:${auth.stub.port}
+          predicates:
+            - Path=/api/auth/refresh
+        - id: auth-other
+          uri: http://localhost:${auth.stub.port}
+          predicates:
+            - Path=/api/auth/**
+        # Phase 1 search + destinations routes (NO rate limiting in this profile)
+        - id: search
+          uri: http://localhost:${destination.stub.port}
+          predicates:
+            - Path=/api/search/**
+        - id: destinations
+          uri: http://localhost:${destination.stub.port}
+          predicates:
+            - Path=/api/destinations/**
+        # Phase 1 trips route (NO rate limiting in this profile)
+        - id: trips
+          uri: http://localhost:${trip.stub.port}
+          predicates:
+            - Path=/api/trips/**

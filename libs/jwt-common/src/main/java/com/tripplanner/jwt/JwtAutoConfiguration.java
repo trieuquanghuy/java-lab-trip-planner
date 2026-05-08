@@ -33,9 +33,12 @@ public class JwtAutoConfiguration {
     static class ServletConfig {
 
         @Bean
-        public FilterRegistrationBean<ServletJwtCommonFilter> servletJwtFilter(JwtVerifier verifier) {
+        public FilterRegistrationBean<ServletJwtCommonFilter> servletJwtFilter(JwtVerifier verifier,
+                com.fasterxml.jackson.databind.ObjectMapper objectMapper) {
+            // Inject Spring Boot's auto-configured ObjectMapper so ProblemDetailJacksonMixin is
+            // registered — flattens ProblemDetail extension properties (e.g. "code") to JSON root.
             FilterRegistrationBean<ServletJwtCommonFilter> bean =
-                    new FilterRegistrationBean<>(new ServletJwtCommonFilter(verifier));
+                    new FilterRegistrationBean<>(new ServletJwtCommonFilter(verifier, objectMapper));
             // After observability MDC filter (Integer.MIN_VALUE + 100), before any controller filter.
             bean.setOrder(Integer.MIN_VALUE + 200);
             return bean;

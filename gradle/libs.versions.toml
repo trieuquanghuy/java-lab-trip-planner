@@ -83,6 +83,12 @@ spring-boot-starter-data-redis-reactive = { module = "org.springframework.boot:s
 spring-security-test = { module = "org.springframework.security:spring-security-test" }
 testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter" }
 
+# --- Testing (Phase 1 — H2 in-memory DB for security ITs that don't need a live PostgreSQL) ---
+# [Rule 3 auto-fix] Security ITs exclude Flyway/JPA but spring-boot-starter-data-jpa still registers
+# a DataSource autoconfiguration that needs a driver. H2 satisfies the autoconfiguration check
+# without requiring a running PostgreSQL container (test isolation, no docker-compose in unit CI).
+h2 = { module = "com.h2database:h2" }
+
 [bundles]
 # Pitfall 7 — Pull the full observability stack with one accessor (libs.bundles.observability).
 # Every service depending on libs/observability ALSO declares this bundle so the runtime

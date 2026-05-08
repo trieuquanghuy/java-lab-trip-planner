@@ -29,7 +29,14 @@ import java.io.IOException;
 @Component
 public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    // Spring Boot's auto-configured ObjectMapper has ProblemDetailJacksonMixin registered,
+    // which flattens ProblemDetail extension properties (code, etc.) to the JSON root level.
+    // Using new ObjectMapper() would nest them under "properties" — wrong for $.code assertions.
+    private final ObjectMapper mapper;
+
+    public RestAuthenticationEntryPoint(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 
     @Override
     public void commence(HttpServletRequest request,

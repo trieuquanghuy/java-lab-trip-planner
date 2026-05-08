@@ -41,10 +41,14 @@ public class ServletJwtCommonFilter extends OncePerRequestFilter {
     );
 
     private final JwtVerifier verifier;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
 
-    public ServletJwtCommonFilter(JwtVerifier verifier) {
+    // Accept Spring Boot's auto-configured ObjectMapper so ProblemDetailJacksonMixin is registered.
+    // The mixin flattens ProblemDetail extension properties (code, etc.) to the JSON root level,
+    // enabling $.code assertions in tests. Using new ObjectMapper() nests them under "properties".
+    public ServletJwtCommonFilter(JwtVerifier verifier, ObjectMapper mapper) {
         this.verifier = verifier;
+        this.mapper = mapper;
     }
 
     @Override

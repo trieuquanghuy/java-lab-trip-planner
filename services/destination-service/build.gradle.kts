@@ -33,7 +33,7 @@ dependencies {
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.spring.security.test)                        // NEW Phase 1
     testImplementation(testFixtures(project(":libs:jwt-common")))        // NEW Phase 1
-    testImplementation(libs.spring.boot.testcontainers)   // catalogued; first integration test arrives in Phase 1+
+    testImplementation(libs.spring.boot.testcontainers)
 }
 
 dependencyManagement {

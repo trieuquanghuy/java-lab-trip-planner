@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-last_updated: "2026-05-08T16:31:18.875Z"
+last_updated: "2026-05-08T16:45:22.809Z"
 progress:
   total_phases: 11
   completed_phases: 1
   total_plans: 16
-  completed_plans: 11
-  percent: 69
+  completed_plans: 12
+  percent: 75
 ---
 
 # Project State: Trip Planner
@@ -37,9 +37,9 @@ progress:
 **Current plan:** 1
 
 ```
-Progress: [███████░░░] 69%
+Progress: [████████░░] 75%
 Phase: 01 (api-gateway) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
                   ^
                   HERE
 ```
@@ -57,6 +57,7 @@ Plan: 2 of 6
 | Backend line coverage | ≥ 70% | N/A |
 | Auth + ownership coverage | 100% | N/A |
 | Search p95 latency | < 500 ms | N/A |
+| Phase 01 P02 | 8min | 5 tasks | 17 files |
 
 ### Plan Execution Log
 
@@ -105,6 +106,12 @@ Plan: 2 of 6
 - **00-06:** Gateway route table contains 4 STATIC-URI entries (D-02 / Convention C9 hard rule — zero `lb://` schemes anywhere). Routes `/__health/{gateway,auth,trip,destination}` forward via `http://service-name:port` URIs with `SetPath=/__health` filter. Header comment locks the Phase 1 append-below convention so `/api/<svc>/**` entries land later without reordering. Optional `/__health/gateway` route INCLUDED at TOP of route list per plan recommendation for naming uniformity (loops back to `http://localhost:8080`).
 - **00-06:** Reactive trace context bridge (Pitfall 7 mitigation) registered TRANSITIVELY via `libs/observability` auto-config — `ObservabilityAutoConfiguration`'s `@ConditionalOnClass(name = "org.springframework.web.server.WebFilter")` activates `ReactiveMdcEnrichmentFilter` on the gateway. NO manual `@Bean ServerHttpObservationFilter` (Convention C7 hard rule). Cross-trace assertion (single trace ID across gateway → downstream) deferred to Phase 1 per Pitfall 7 step 4.
 - **00-06:** Local `compileJava` workaround documented — developer `JAVA_HOME` defaults to homebrew openjdk JDK 25, which Gradle 8.14.2's bundled Kotlin compiler chokes on at `JavaVersion.parse('25.0.2')`. Fix: invoke gradle with `JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/...`; `JavaLanguageVersion.of(21)` toolchain still drives the Java compiler. CI is unaffected (`actions/setup-java@v4 java-version: 21`). Same friction Plan 00-01 SUMMARY's open Todo tracks.
+- **01-02:** jjwt 0.13.0 modern API only — `Jwts.parser().verifyWith(signingKey).build().parseSignedClaims(jws)`. `parserBuilder()`/`setSigningKey()` absent from all source. C27-P1.
+- **01-02:** UserContext is a `record` implementing `java.security.Principal` — `getName()` returns `userId` for audit logging. C32-P1.
+- **01-02:** WR-02 closed — `@ConditionalOnWebApplication` replaces `@ConditionalOnClass` in `ObservabilityAutoConfiguration` + `JwtAutoConfiguration`. Convention C31-P1 now uniform across all autoconfigs.
+- **01-02:** jwt-common filter chain ordering: `MdcEnrichmentFilter @ Integer.MIN_VALUE + 100` → `ServletJwtCommonFilter @ Integer.MIN_VALUE + 200`. traceId/spanId populated before userId written to MDC.
+- **01-02:** `JwtVerifier` constructor throws `IllegalStateException` on null or <32-byte secret — fail-fast at startup (C28-P1).
+- **01-02:** `junit-platform-launcher` must be `testRuntimeOnly` on all modules using `useJUnitPlatform()` with JUnit Platform 1.12.x (engine/launcher version alignment).
 - **00-06:** Actuator surface limited to `health,info,prometheus` ONLY (T-00-20 mitigation — `env`, `configprops`, `beans`, `mappings` NOT exposed). `management.tracing.sampling.probability=1.0` set in dev/docker for Pitfall 7 step-4 trace-continuity verification in Phase 1.
 - **00-07:** All 3 DB-backed services (`auth-service`/`trip-service`/`destination-service`) share **byte-for-byte-identical `build.gradle.kts`** files (modulo a small comment). Catalog accessors are not service-specific — service identity lives in `application.yml` + package names + V1 comment block. Convention C5 (Pitfall A 3x) and C16 (single-source-of-truth catalog) audits become a single-grep verification per file.
 - **00-07:** Per-service Flyway history table convention enforced **in artifact form** — three distinct table names locked in 3 application.yml files: `auth_flyway_schema_history` / `trip_flyway_schema_history` / `destination_flyway_schema_history`. Pitfall 3 / D-09 / Convention C4 mitigation now testable by SC#5 once Wave 6 compose lands. Combined with `spring.flyway.schemas` + `default-schema` + `hibernate.default_schema` per-service, no Flyway run can ever collide across the three services.
@@ -168,4 +175,4 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-08T16:31:18.862Z
+**Last session:** 2026-05-08T16:45:22.795Z

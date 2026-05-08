@@ -77,6 +77,12 @@ resilience4j-spring-boot3 = { module = "io.github.resilience4j:resilience4j-spri
 # --- Test infrastructure ---
 wiremock-spring-boot = { module = "org.wiremock.integrations:wiremock-spring-boot", version.ref = "wiremockSpringBoot" }
 
+# --- Spring Security (Phase 1 — JWT filter chains on gateway + servlet services) ---
+spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-starter-security" }
+spring-boot-starter-data-redis-reactive = { module = "org.springframework.boot:spring-boot-starter-data-redis-reactive" }
+spring-security-test = { module = "org.springframework.security:spring-security-test" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter" }
+
 [bundles]
 # Pitfall 7 — Pull the full observability stack with one accessor (libs.bundles.observability).
 # Every service depending on libs/observability ALSO declares this bundle so the runtime

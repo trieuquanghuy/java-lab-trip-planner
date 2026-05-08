@@ -22,6 +22,7 @@ include(
     ":libs:observability",
     ":libs:error-handling",
     ":libs:api-contracts",
+    ":libs:jwt-common",            // NEW Phase 1 — explicit LIFT of Phase 0 D-07 per 01-CONTEXT.md Open Question 1
     ":services:eureka-server",
     ":services:api-gateway",
     ":services:auth-service",

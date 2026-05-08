@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 3
+current_plan: 5
 status: executing
-last_updated: "2026-05-08T04:27:45.848Z"
+last_updated: "2026-05-08T04:37:54.922Z"
 progress:
   total_phases: 11
   completed_phases: 0
   total_plans: 10
-  completed_plans: 3
-  percent: 30
+  completed_plans: 4
+  percent: 40
 ---
 
 # Project State: Trip Planner
@@ -34,17 +34,17 @@ progress:
 
 **Phase:** Phase 0 — Monorepo Scaffolding
 **Status:** Executing Phase 00
-**Current plan:** 4
+**Current plan:** 5
 
 ```
-Progress: [███░░░░░░░] 30%
+Progress: [████░░░░░░] 40%
 Phase: 00 (monorepo-scaffolding) — EXECUTING
-Plan: 4 of 10
+Plan: 5 of 10
            ^
            HERE
 ```
 
-**Next action:** Execute Plan 00-04 (`.planning/phases/00-monorepo-scaffolding/00-04-PLAN.md`).
+**Next action:** Execute Plan 00-05 (`.planning/phases/00-monorepo-scaffolding/00-05-PLAN.md`).
 
 ---
 
@@ -65,6 +65,7 @@ Plan: 4 of 10
 | 00-monorepo-scaffolding P01 | 63min | 3 | 14 |
 | 00-monorepo-scaffolding P02 | 3min | 2 | 2 |
 | 00-monorepo-scaffolding P03 | 8min | 3 | 6 |
+| 00-monorepo-scaffolding P04 | 3min | 2 | 5 |
 
 ---
 
@@ -88,6 +89,9 @@ Plan: 4 of 10
 - **00-03:** Pitfall 7 single-pin enforced — `mavenBom("io.micrometer:micrometer-tracing-bom:...")` appears EXACTLY ONCE in the entire monorepo (in `libs/observability/build.gradle.kts`); verified by `find libs services -name '*.kts' -exec grep -h ... {} +`. Consumers get the BOM transitively via `dependencyManagement`.
 - **00-03:** `ServerHttpObservationFilter` is NEVER registered manually anywhere (Convention C7 hard rule) — auto-configured by Spring Boot 3.2+ via `WebHttpHandlerBuilder`. Encoded in build-file Pitfall-7 header comment + Java source comments + plan acceptance grep.
 - **00-03:** `ReactiveMdcEnrichmentFilter` uses `doOnEach` + `doFinally` Phase-0 minimal pattern; Phase 10 may upgrade to `contextWrite` + `Hooks.enableAutomaticContextPropagation()` if async trace-context loss surfaces in real usage.
+- **00-04:** `libs/error-handling` ships ONLY `ProblemDetailFactory` static helper + 2-code `ErrorCode` enum (`AUTH_UNAUTHORIZED`, `AUTH_RATE_LIMITED`) per D-05. No `@ControllerAdvice` / `GlobalExceptionHandler` in Phase 0 — those are added per-service in Phase 1+ when real endpoints exist.
+- **00-04:** `libs/api-contracts` is the empty-module shape per D-06 — `java-library` plugin only + `src/main/java/.gitkeep`. Phase 1 lands `com.tripplanner.contracts.UserContext` here without modifying `settings.gradle.kts` or any service `build.gradle.kts` (the dependency graph is already wired in Wave 1).
+- **00-04:** ProblemDetail envelope shape locked — `type` URI = `https://tripplanner.example.com/errors/<code>`; `code` extension property = `code.code()` (machine-readable string identifier per `docs/04-api-spec.md §6`). Phase 1+ MUST go through `ProblemDetailFactory.of(...)` — never construct `ProblemDetail` directly. Convention C22 preserved: `libs/jwt-common` does NOT exist (Phase 1 owns its creation).
 
 ### Critical Pitfalls to Watch
 
@@ -126,4 +130,4 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-08T04:24Z — Stopped at: Completed 00-03-PLAN.md — Resume from: 00-04-PLAN.md
+**Last session:** 2026-05-08T04:33Z — Stopped at: Completed 00-04-PLAN.md — Resume from: 00-05-PLAN.md

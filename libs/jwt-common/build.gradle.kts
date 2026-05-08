@@ -38,6 +38,9 @@ dependencies {
     compileOnly("org.springframework:spring-webflux")
 
     testImplementation(libs.spring.boot.starter.test)
+    // junit-platform-launcher required on testRuntimeClasspath for Gradle's useJUnitPlatform()
+    // to work with JUnit Platform 1.12.x (platform-engine / platform-launcher version alignment).
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     // testFixtures classpath — JwtFixtures (Wave 0b) only needs jjwt to mint test tokens.
     testFixturesApi(libs.jjwt.api)

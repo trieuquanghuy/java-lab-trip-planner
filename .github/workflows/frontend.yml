@@ -1,0 +1,30 @@
+# frontend.yml — Phase 0 SKELETON CI per D-15.
+# Phase 10 will add E2E browser tests, accessibility scans, and performance audits.
+# Source: 00-CONTEXT.md D-15/D-16/D-17, 00-PATTERNS.md Bucket H, docs/08-deployment.md §4.2
+name: frontend
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Enable Corepack (auto-bootstraps pnpm 9 from packageManager field)
+        run: corepack enable
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm lint
+      - name: Test
+        run: pnpm test --run
+      - name: Build
+        run: pnpm build

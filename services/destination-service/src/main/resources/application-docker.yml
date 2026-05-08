@@ -1,0 +1,24 @@
+# Phase 0 docker-profile overrides for destination-service.
+#
+# Source: 00-RESEARCH.md lines 513-528; 00-PATTERNS.md Bucket E substitution table applied.
+#
+# Switches the JDBC URL to compose-network DNS `postgres` (?currentSchema=destination) and the
+# Eureka URL to `eureka-server:8761`. Adds D-21 / Pitfall 10 / C13 client tuning (5s/5s/10s).
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=destination
+eureka:
+  client:
+    service-url:
+      defaultZone: http://eureka-server:8761/eureka
+    registry-fetch-interval-seconds: 5         # D-21
+  instance:
+    lease-renewal-interval-in-seconds: 5       # D-21
+    lease-expiration-duration-in-seconds: 10   # D-21
+management:
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_BASE_URL:http://zipkin:9411}/api/v2/spans

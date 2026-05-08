@@ -1,0 +1,10 @@
+<!--
+  Source: 00-PATTERNS.md Bucket C (lines 415-422) — same single-line include pattern used by every
+  service that depends on libs/observability (Convention C8).
+
+  destination-service is on the trace path (servlet stack — MdcEnrichmentFilter activates via
+  ObservabilityAutoConfiguration's @ConditionalOnClass(jakarta.servlet.Filter)).
+-->
+<configuration>
+    <include resource="logback-spring-base.xml" />
+</configuration>

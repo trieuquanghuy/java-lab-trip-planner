@@ -1,0 +1,60 @@
+# Phase 0 base config for destination-service.
+#
+# Source: 00-RESEARCH.md lines 465-512 (Pattern 2); 00-PATTERNS.md Bucket E substitution table
+# applied (<service>=destination, <port>=8083, <DbUserEnv>=DESTINATION_DB_USER, etc.).
+#
+# Critical conventions encoded here:
+#   - D-25 / Pitfall 7 / C3: spring.application.name=destination-service.
+#   - D-09 / Pitfall 3 / C4: spring.flyway.table=destination_flyway_schema_history.
+#   - D-08 / C8: per-service DB user via DESTINATION_DB_USER/DESTINATION_DB_PASSWORD; JDBC
+#     ?currentSchema=destination pins the search_path.
+#   - C15: spring.jpa.hibernate.ddl-auto=validate — NEVER `update`.
+#   - D-23 / C2: only dev/docker/test profiles; NO `prod` block.
+#   - T-00-29 mitigation: actuator surface limited to health,info,prometheus.
+#   - D-04 / Pitfall 7 step 4: tracing.sampling.probability=1.0 in dev.
+spring:
+  application:
+    name: destination-service          # D-25 (Pitfall 7)
+  profiles:
+    default: dev
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:tripplanner}?currentSchema=destination
+    username: ${DESTINATION_DB_USER:destination_svc}
+    password: ${DESTINATION_DB_PASSWORD:destination_svc}
+  flyway:
+    enabled: true
+    schemas: destination                              # D-09 (Pitfall 3) — single-schema operation
+    default-schema: destination
+    table: destination_flyway_schema_history          # D-09 (Pitfall 3) — per-service history
+    locations: classpath:db/migration
+  jpa:
+    hibernate:
+      ddl-auto: validate                              # NEVER `update` (anti-pattern / C15)
+    properties:
+      hibernate.default_schema: destination
+server:
+  port: 8083
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0                                # D-04
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+    fetch-registry: true
+    register-with-eureka: true

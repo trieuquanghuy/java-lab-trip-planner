@@ -64,7 +64,14 @@ public class XUserIdInjectionGlobalFilter implements GlobalFilter, Ordered {
                                 h.set("X-Request-Id", reqId);
                             })
                             .build();
-                    return chain.filter(exchange.mutate().request(mutated).build());
+                    ServerWebExchange mutatedExchange = exchange.mutate().request(mutated).build();
+                    // D-18: echo X-Request-Id into the response so the client can correlate.
+                    // Use beforeCommit so headers are set before Netty writes them to the channel.
+                    mutatedExchange.getResponse().beforeCommit(() -> {
+                        mutatedExchange.getResponse().getHeaders().set("X-Request-Id", reqId);
+                        return Mono.empty();
+                    });
+                    return chain.filter(mutatedExchange);
                 })
                 // No SecurityContext (public route) — still strip any client-supplied X-User-Id
                 // so a public route can never spoof identity onto a downstream call later.
@@ -80,7 +87,13 @@ public class XUserIdInjectionGlobalFilter implements GlobalFilter, Ordered {
                                 h.set("X-Request-Id", reqId);
                             })
                             .build();
-                    return chain.filter(exchange.mutate().request(mutated).build());
+                    ServerWebExchange mutatedExchange = exchange.mutate().request(mutated).build();
+                    // D-18: echo X-Request-Id into the response so the client can correlate.
+                    mutatedExchange.getResponse().beforeCommit(() -> {
+                        mutatedExchange.getResponse().getHeaders().set("X-Request-Id", reqId);
+                        return Mono.empty();
+                    });
+                    return chain.filter(mutatedExchange);
                 }));
     }
 

@@ -15,6 +15,7 @@ import com.tripplanner.contracts.UserContext;
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import reactor.core.publisher.Mono;
@@ -26,8 +27,17 @@ public class KeyResolverConfig {
      * IP-based key resolver for rate limiting.
      * Uses the actual remote address; X-Forwarded-For is NOT trusted (CVE-2025-41235 / C33-P1).
      * The defensive ternary satisfies C30-P1 (non-empty Mono guarantee).
+     *
+     * @Primary: required because RequestRateLimiterGatewayFilterFactory autowires KeyResolver
+     * by type; with two KeyResolver beans (ipKeyResolver + userIdKeyResolver) Spring cannot
+     * pick a default without @Primary. ipKeyResolver is the sensible default — it is used on
+     * all public routes. Routes that need userIdKeyResolver reference it explicitly via SpEL
+     * key-resolver: "#{@userIdKeyResolver}".
+     * [Rule 3 auto-fix] Plan 01-05 probe tests surfaced NoUniqueBeanDefinitionException on
+     * RequestRateLimiterGatewayFilterFactory startup — a pre-existing production startup blocker.
      */
     @Bean
+    @Primary
     public KeyResolver ipKeyResolver() {
         return exchange -> {
             var remote = exchange.getRequest().getRemoteAddress();

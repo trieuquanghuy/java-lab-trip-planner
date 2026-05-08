@@ -20,6 +20,7 @@ import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.security.web.server.authentication.AuthenticationWebFilter;
+import org.springframework.security.web.server.authentication.ServerAuthenticationEntryPointFailureHandler;
 import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
@@ -41,6 +42,11 @@ public class WebFluxSecurityConfig {
         AuthenticationWebFilter jwtFilter = new AuthenticationWebFilter(authManager);
         jwtFilter.setServerAuthenticationConverter(bearerConverter);
         jwtFilter.setSecurityContextRepository(NoOpServerSecurityContextRepository.getInstance());
+        // Rule 1 fix: without this, authentication failure (wrong/expired/forged JWT) invokes
+        // AuthenticationWebFilter's default HttpBasicServerAuthenticationEntryPoint, returning
+        // "WWW-Authenticate: Basic realm=Realm" with no body instead of our RFC 7807 entry point.
+        jwtFilter.setAuthenticationFailureHandler(
+                new ServerAuthenticationEntryPointFailureHandler(entryPoint));
 
         return http
                 .cors(c -> c.configurationSource(corsSource()))

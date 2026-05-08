@@ -1,0 +1,60 @@
+# Phase 0 base config for trip-service.
+#
+# Source: 00-RESEARCH.md lines 465-512 (Pattern 2); 00-PATTERNS.md Bucket E substitution table
+# applied (<service>=trip, <port>=8082, <DbUserEnv>=TRIP_DB_USER, etc.).
+#
+# Critical conventions encoded here:
+#   - D-25 / Pitfall 7 / C3: spring.application.name=trip-service.
+#   - D-09 / Pitfall 3 / C4: spring.flyway.table=trip_flyway_schema_history.
+#   - D-08 / C8: per-service DB user via TRIP_DB_USER/TRIP_DB_PASSWORD; JDBC ?currentSchema=trip
+#     pins the search_path to the trip schema.
+#   - C15: spring.jpa.hibernate.ddl-auto=validate — NEVER `update`.
+#   - D-23 / C2: only dev/docker/test profiles; NO `prod` block.
+#   - T-00-29 mitigation: actuator surface limited to health,info,prometheus.
+#   - D-04 / Pitfall 7 step 4: tracing.sampling.probability=1.0 in dev.
+spring:
+  application:
+    name: trip-service          # D-25 (Pitfall 7)
+  profiles:
+    default: dev
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:tripplanner}?currentSchema=trip
+    username: ${TRIP_DB_USER:trip_svc}
+    password: ${TRIP_DB_PASSWORD:trip_svc}
+  flyway:
+    enabled: true
+    schemas: trip                              # D-09 (Pitfall 3) — single-schema operation
+    default-schema: trip
+    table: trip_flyway_schema_history          # D-09 (Pitfall 3) — per-service history
+    locations: classpath:db/migration
+  jpa:
+    hibernate:
+      ddl-auto: validate                       # NEVER `update` (anti-pattern / C15)
+    properties:
+      hibernate.default_schema: trip
+server:
+  port: 8082
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0                         # D-04
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+    fetch-registry: true
+    register-with-eureka: true

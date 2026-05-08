@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 7
+current_plan: 8
 status: executing
-last_updated: "2026-05-08T05:13:25.743Z"
+last_updated: "2026-05-08T05:35:56.286Z"
 progress:
   total_phases: 11
   completed_phases: 0
   total_plans: 10
-  completed_plans: 6
-  percent: 60
+  completed_plans: 7
+  percent: 70
 ---
 
 # Project State: Trip Planner
@@ -34,17 +34,17 @@ progress:
 
 **Phase:** Phase 0 — Monorepo Scaffolding
 **Status:** Ready to execute
-**Current plan:** 7
+**Current plan:** 8
 
 ```
-Progress: [██████░░░░] 60%
+Progress: [███████░░░] 70%
 Phase: 00 (monorepo-scaffolding) — EXECUTING
-Plan: 7 of 10
+Plan: 8 of 10
            ^
            HERE
 ```
 
-**Next action:** Execute Plan 00-07 (`.planning/phases/00-monorepo-scaffolding/00-07-PLAN.md`).
+**Next action:** Execute Plan 00-08 (`.planning/phases/00-monorepo-scaffolding/00-08-PLAN.md`).
 
 ---
 
@@ -68,6 +68,7 @@ Plan: 7 of 10
 | 00-monorepo-scaffolding P04 | 3min | 2 | 5 |
 | 00-monorepo-scaffolding P05 | 6min | 2 | 4 |
 | 00-monorepo-scaffolding P06 | 5min | 2 | 6 |
+| 00-monorepo-scaffolding P07 | 8min | 3 | 21 |
 
 ---
 
@@ -102,6 +103,12 @@ Plan: 7 of 10
 - **00-06:** Reactive trace context bridge (Pitfall 7 mitigation) registered TRANSITIVELY via `libs/observability` auto-config — `ObservabilityAutoConfiguration`'s `@ConditionalOnClass(name = "org.springframework.web.server.WebFilter")` activates `ReactiveMdcEnrichmentFilter` on the gateway. NO manual `@Bean ServerHttpObservationFilter` (Convention C7 hard rule). Cross-trace assertion (single trace ID across gateway → downstream) deferred to Phase 1 per Pitfall 7 step 4.
 - **00-06:** Local `compileJava` workaround documented — developer `JAVA_HOME` defaults to homebrew openjdk JDK 25, which Gradle 8.14.2's bundled Kotlin compiler chokes on at `JavaVersion.parse('25.0.2')`. Fix: invoke gradle with `JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/...`; `JavaLanguageVersion.of(21)` toolchain still drives the Java compiler. CI is unaffected (`actions/setup-java@v4 java-version: 21`). Same friction Plan 00-01 SUMMARY's open Todo tracks.
 - **00-06:** Actuator surface limited to `health,info,prometheus` ONLY (T-00-20 mitigation — `env`, `configprops`, `beans`, `mappings` NOT exposed). `management.tracing.sampling.probability=1.0` set in dev/docker for Pitfall 7 step-4 trace-continuity verification in Phase 1.
+- **00-07:** All 3 DB-backed services (`auth-service`/`trip-service`/`destination-service`) share **byte-for-byte-identical `build.gradle.kts`** files (modulo a small comment). Catalog accessors are not service-specific — service identity lives in `application.yml` + package names + V1 comment block. Convention C5 (Pitfall A 3x) and C16 (single-source-of-truth catalog) audits become a single-grep verification per file.
+- **00-07:** Per-service Flyway history table convention enforced **in artifact form** — three distinct table names locked in 3 application.yml files: `auth_flyway_schema_history` / `trip_flyway_schema_history` / `destination_flyway_schema_history`. Pitfall 3 / D-09 / Convention C4 mitigation now testable by SC#5 once Wave 6 compose lands. Combined with `spring.flyway.schemas` + `default-schema` + `hibernate.default_schema` per-service, no Flyway run can ever collide across the three services.
+- **00-07:** Servlet stack (NOT WebFlux) on auth/trip/destination — `spring-boot-starter-web` only. Verified: 0 webflux references in `services/{auth,trip,destination}-service/build.gradle.kts`. **Convention locked: this project has exactly one reactive service** (api-gateway, Plan 00-06). All other Spring Boot services are servlet-stack.
+- **00-07:** `spring.jpa.hibernate.ddl-auto: validate` (NEVER `update`) on all 3 services per C15. Anti-pattern absent — `grep -r 'ddl-auto: update' services/` returns 0 matches. Phase 0 has no entities so it's effectively a no-op now; from Phase 2/3/5 onward Hibernate will reject any entity↔schema drift on boot, forcing all schema changes through Flyway.
+- **00-07:** JDBC `?currentSchema=<svc>` URL parameter is the **primary lock** for the per-service-DB-user model (D-08). Combined with `spring.flyway.schemas` + `flyway.default-schema` + `hibernate.default_schema`, every persistence-stack layer agrees on the schema each service operates on. Wave 6's `infra/postgres/init.sql` will set each user's `search_path` to its own schema as defense-in-depth, but the JDBC URL is the application-side guarantee.
+- **00-07:** Initial git-add ordering caused Task 7.1's first commit (`2625bf7`) to include only the `.gitkeep` deletion. Caught immediately via `git status` and amended into `2508472` to merge the source-file additions. Tasks 7.2/7.3 used the same git-add pattern and committed cleanly on the first attempt — only `2508472`/`74bf90c`/`91a709f` appear in the final commit history for plan 00-07.
 
 ### Critical Pitfalls to Watch
 
@@ -140,4 +147,4 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-08T05:00Z — Stopped at: Completed 00-06-PLAN.md — Resume from: 00-07-PLAN.md
+**Last session:** 2026-05-08T05:34:35.507Z — Stopped at: Completed 00-07-PLAN.md — Resume from: 00-08-PLAN.md

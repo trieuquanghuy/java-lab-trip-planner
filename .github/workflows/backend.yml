@@ -1,0 +1,72 @@
+# backend.yml — Phase 0 SKELETON CI per D-15.
+# Phase 10 will add: vulnerability scanning, security-tagged tests, integration jobs, coverage thresholds.
+# Source: 00-CONTEXT.md D-15/D-16/D-17, 00-PATTERNS.md Bucket H, docs/08-deployment.md §4.1
+name: backend
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  detect:
+    runs-on: ubuntu-24.04
+    outputs:
+      eureka:      ${{ steps.filter.outputs.eureka }}
+      gateway:     ${{ steps.filter.outputs.gateway }}
+      auth:        ${{ steps.filter.outputs.auth }}
+      trip:        ${{ steps.filter.outputs.trip }}
+      destination: ${{ steps.filter.outputs.destination }}
+      libs:        ${{ steps.filter.outputs.libs }}
+      gradle:      ${{ steps.filter.outputs.gradle }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            eureka:
+              - 'services/eureka-server/**'
+            gateway:
+              - 'services/api-gateway/**'
+            auth:
+              - 'services/auth-service/**'
+            trip:
+              - 'services/trip-service/**'
+            destination:
+              - 'services/destination-service/**'
+            libs:
+              - 'libs/**'
+            gradle:
+              - 'gradle/**'
+              - 'settings.gradle.kts'
+              - 'build.gradle.kts'
+              - 'gradle.properties'
+
+  check:
+    needs: detect
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - { id: eureka,      gradle: ":services:eureka-server:check" }
+          - { id: gateway,     gradle: ":services:api-gateway:check" }
+          - { id: auth,        gradle: ":services:auth-service:check" }
+          - { id: trip,        gradle: ":services:trip-service:check" }
+          - { id: destination, gradle: ":services:destination-service:check" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v3
+      - name: Build & test ${{ matrix.module.id }}
+        if: |
+          (matrix.module.id == 'eureka'      && (needs.detect.outputs.eureka == 'true'      || needs.detect.outputs.libs == 'true' || needs.detect.outputs.gradle == 'true')) ||
+          (matrix.module.id == 'gateway'     && (needs.detect.outputs.gateway == 'true'     || needs.detect.outputs.libs == 'true' || needs.detect.outputs.gradle == 'true')) ||
+          (matrix.module.id == 'auth'        && (needs.detect.outputs.auth == 'true'        || needs.detect.outputs.libs == 'true' || needs.detect.outputs.gradle == 'true')) ||
+          (matrix.module.id == 'trip'        && (needs.detect.outputs.trip == 'true'        || needs.detect.outputs.libs == 'true' || needs.detect.outputs.gradle == 'true')) ||
+          (matrix.module.id == 'destination' && (needs.detect.outputs.destination == 'true' || needs.detect.outputs.libs == 'true' || needs.detect.outputs.gradle == 'true'))
+        run: ./gradlew ${{ matrix.module.gradle }} --no-daemon

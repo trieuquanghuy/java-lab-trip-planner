@@ -1,0 +1,37 @@
+<!--
+  Source: 00-RESEARCH.md lines 1122-1150, docs/02-architecture.md §6.3, 00-CONTEXT.md D-04.
+  Shared Logback include consumed by every service via:
+      <configuration>
+          <include resource="logback-spring-base.xml" />
+      </configuration>
+  Emits one JSON object per log event to stdout with fields:
+      timestamp, level, service, traceId, spanId, userId, requestId, message, stackTrace
+  The MDC keys (traceId/spanId/userId/requestId) appear in the JSON even when their values
+  are absent — phase-0's MDC filters populate traceId/spanId/requestId; userId stays empty
+  until Phase 1's JwtCommonFilter wires it.
+-->
+<included>
+    <appender name="JSON_STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp><fieldName>timestamp</fieldName></timestamp>
+                <logLevel><fieldName>level</fieldName></logLevel>
+                <pattern>
+                    <pattern>{"service":"${spring.application.name:-unknown}"}</pattern>
+                </pattern>
+                <mdc>
+                    <includeMdcKeyName>traceId</includeMdcKeyName>
+                    <includeMdcKeyName>spanId</includeMdcKeyName>
+                    <includeMdcKeyName>userId</includeMdcKeyName>
+                    <includeMdcKeyName>requestId</includeMdcKeyName>
+                </mdc>
+                <message><fieldName>message</fieldName></message>
+                <stackTrace><fieldName>stackTrace</fieldName></stackTrace>
+            </providers>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="JSON_STDOUT" />
+    </root>
+</included>

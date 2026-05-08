@@ -5,3 +5,8 @@ coverage
 .env
 .env.local
 .DS_Store
+
+# TS project-references build outputs (emitted by `tsc -b` during `pnpm build`)
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js

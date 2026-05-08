@@ -13,6 +13,15 @@
 #   the Gradle multi-module root) + build.dockerfile: services/<svc>/Dockerfile.
 # - frontend Dockerfile is owned by Plan 09 (BLOCKER 3); this file only
 #   references it via build.context: ../frontend.
+#
+# Phase 1 (01-06-PLAN.md): api-gateway.depends_on extended with redis +
+# {auth,trip,destination}-service all gated on service_healthy. Closes
+# Pitfall H (gateway booting before Redis → RedisConnectionFailureException
+# on first request) and Pitfall J (gateway booting before downstream
+# services → 502 from NettyRoutingFilter). Source: .planning/phases/01-api-
+# gateway/01-RESEARCH.md Pitfall H (lines 960-965) + Pitfall J (lines 974-
+# 977); 01-CONTEXT.md D-05/D-06 (RedisRateLimiter on 5 routes) + D-08
+# (static-URI routing has no Eureka fallback). Convention C11-P1.
 
 name: tripplanner
 
@@ -81,6 +90,14 @@ services:
       - "0.0.0.0:8080:8080"                    # public surface
     depends_on:
       eureka-server:
+        condition: service_healthy
+      redis:                            # NEW Phase 1 — Pitfall H: gateway needs Redis healthy before boot
+        condition: service_healthy
+      auth-service:                     # NEW Phase 1 — Pitfall J: avoid first-request 502 on /api/auth/**
+        condition: service_healthy
+      trip-service:                     # NEW Phase 1 — Pitfall J: avoid first-request 502 on /api/trips/**
+        condition: service_healthy
+      destination-service:              # NEW Phase 1 — Pitfall J: avoid first-request 502 on /api/{search,destinations}/**
         condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker

@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 3
 status: executing
-last_updated: "2026-05-08T04:08:00.000Z"
+last_updated: "2026-05-08T04:27:45.848Z"
 progress:
   total_phases: 11
   completed_phases: 0
   total_plans: 10
-  completed_plans: 2
-  percent: 20
+  completed_plans: 3
+  percent: 30
 ---
 
 # Project State: Trip Planner
@@ -34,17 +34,17 @@ progress:
 
 **Phase:** Phase 0 — Monorepo Scaffolding
 **Status:** Executing Phase 00
-**Current plan:** 3
+**Current plan:** 4
 
 ```
-Progress: [██░░░░░░░░] 20%
+Progress: [███░░░░░░░] 30%
 Phase: 00 (monorepo-scaffolding) — EXECUTING
-Plan: 3 of 10
+Plan: 4 of 10
            ^
            HERE
 ```
 
-**Next action:** Execute Plan 00-03 (`./planning/phases/00-monorepo-scaffolding/00-03-PLAN.md`).
+**Next action:** Execute Plan 00-04 (`.planning/phases/00-monorepo-scaffolding/00-04-PLAN.md`).
 
 ---
 
@@ -64,6 +64,7 @@ Plan: 3 of 10
 |------|----------|-------|-------|
 | 00-monorepo-scaffolding P01 | 63min | 3 | 14 |
 | 00-monorepo-scaffolding P02 | 3min | 2 | 2 |
+| 00-monorepo-scaffolding P03 | 8min | 3 | 6 |
 
 ---
 
@@ -83,6 +84,10 @@ Plan: 3 of 10
 - **00-02:** `scripts/smoke.sh` lands in Wave 1 per D-33 (NOT a final wave) so each subsequent wave's containers can be smoke-tested incrementally as they come online via `--criterion <N>` per-criterion gating
 - **00-02:** NFR-04 free-tier audit uses an enumerated grep deny-list (31 tokens: 11 Java + 10 npm + 10 compose) — concrete verification of `requirements: [NFR-04]`, NOT a vague "no paid deps" heuristic (BLOCKER 4 fix)
 - **00-02:** Smoke script has jq detection with grep fallback for SC#2/#3/#3-route/#4 — usable in minimal CI environments without an extra package install
+- **00-03:** `libs/observability` is FULLY WIRED — `@AutoConfiguration` registered via SB 3.x `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`; two nested `@Configuration` classes with `@ConditionalOnClass` gate filter registration (servlet `MdcEnrichmentFilter` for auth/trip/destination; reactive `ReactiveMdcEnrichmentFilter` for api-gateway). Wave-3+ services need only `implementation(project(":libs:observability"))` + `<include resource="logback-spring-base.xml"/>`.
+- **00-03:** Pitfall 7 single-pin enforced — `mavenBom("io.micrometer:micrometer-tracing-bom:...")` appears EXACTLY ONCE in the entire monorepo (in `libs/observability/build.gradle.kts`); verified by `find libs services -name '*.kts' -exec grep -h ... {} +`. Consumers get the BOM transitively via `dependencyManagement`.
+- **00-03:** `ServerHttpObservationFilter` is NEVER registered manually anywhere (Convention C7 hard rule) — auto-configured by Spring Boot 3.2+ via `WebHttpHandlerBuilder`. Encoded in build-file Pitfall-7 header comment + Java source comments + plan acceptance grep.
+- **00-03:** `ReactiveMdcEnrichmentFilter` uses `doOnEach` + `doFinally` Phase-0 minimal pattern; Phase 10 may upgrade to `contextWrite` + `Hooks.enableAutomaticContextPropagation()` if async trace-context loss surfaces in real usage.
 
 ### Critical Pitfalls to Watch
 
@@ -121,4 +126,4 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-08T04:08Z — Stopped at: Completed 00-02-PLAN.md — Resume from: 00-03-PLAN.md
+**Last session:** 2026-05-08T04:24Z — Stopped at: Completed 00-03-PLAN.md — Resume from: 00-04-PLAN.md

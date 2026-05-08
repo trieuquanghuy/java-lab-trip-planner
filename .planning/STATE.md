@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 5
 status: executing
-last_updated: "2026-05-08T04:37:54.922Z"
+last_updated: "2026-05-08T04:52:34.893Z"
 progress:
   total_phases: 11
   completed_phases: 0
   total_plans: 10
-  completed_plans: 4
-  percent: 40
+  completed_plans: 5
+  percent: 50
 ---
 
 # Project State: Trip Planner
@@ -34,17 +34,17 @@ progress:
 
 **Phase:** Phase 0 — Monorepo Scaffolding
 **Status:** Executing Phase 00
-**Current plan:** 5
+**Current plan:** 6
 
 ```
-Progress: [████░░░░░░] 40%
+Progress: [█████░░░░░] 50%
 Phase: 00 (monorepo-scaffolding) — EXECUTING
-Plan: 5 of 10
+Plan: 6 of 10
            ^
            HERE
 ```
 
-**Next action:** Execute Plan 00-05 (`.planning/phases/00-monorepo-scaffolding/00-05-PLAN.md`).
+**Next action:** Execute Plan 00-06 (`.planning/phases/00-monorepo-scaffolding/00-06-PLAN.md`).
 
 ---
 
@@ -66,6 +66,7 @@ Plan: 5 of 10
 | 00-monorepo-scaffolding P02 | 3min | 2 | 2 |
 | 00-monorepo-scaffolding P03 | 8min | 3 | 6 |
 | 00-monorepo-scaffolding P04 | 3min | 2 | 5 |
+| 00-monorepo-scaffolding P05 | 6min | 2 | 4 |
 
 ---
 
@@ -92,6 +93,9 @@ Plan: 5 of 10
 - **00-04:** `libs/error-handling` ships ONLY `ProblemDetailFactory` static helper + 2-code `ErrorCode` enum (`AUTH_UNAUTHORIZED`, `AUTH_RATE_LIMITED`) per D-05. No `@ControllerAdvice` / `GlobalExceptionHandler` in Phase 0 — those are added per-service in Phase 1+ when real endpoints exist.
 - **00-04:** `libs/api-contracts` is the empty-module shape per D-06 — `java-library` plugin only + `src/main/java/.gitkeep`. Phase 1 lands `com.tripplanner.contracts.UserContext` here without modifying `settings.gradle.kts` or any service `build.gradle.kts` (the dependency graph is already wired in Wave 1).
 - **00-04:** ProblemDetail envelope shape locked — `type` URI = `https://tripplanner.example.com/errors/<code>`; `code` extension property = `code.code()` (machine-readable string identifier per `docs/04-api-spec.md §6`). Phase 1+ MUST go through `ProblemDetailFactory.of(...)` — never construct `ProblemDetail` directly. Convention C22 preserved: `libs/jwt-common` does NOT exist (Phase 1 owns its creation).
+- **00-05:** `services/eureka-server` is the standalone Netflix Eureka registry — `register-with-eureka=false` + `fetch-registry=false` + `enable-self-preservation=false`; D-21 client tuning (`registry-fetch-interval-seconds`/`lease-renewal-interval-in-seconds`) deliberately NOT applied here (Convention C13: tuning is for clients, eureka is the SERVER); D-11 honored (no Flyway, no datasource, no JPA, no Postgres deps); `spring.application.name=eureka-server` set per D-25/Pitfall 7.
+- **00-05:** Logback Option A chosen — eureka-server uses Spring Boot's default Logback config (pass-through `logback-spring.xml` with documented Option B switch instructions). NO `libs/observability` dependency in `services/eureka-server/build.gradle.kts`; registry traffic is not in the application trace path in Phase 0 (00-PATTERNS.md line 425). Phase 10 may switch to Option B if cross-service log correlation needs Eureka to match.
+- **00-05:** Local `java -jar` smoke deferred to Wave 4 compose. bootJar artifact is class-file 65 (JDK 21) and developer host has no JDK 21 installed (homebrew openjdk@17, openjdk 25, Corretto 11). Plan acceptance was met via successful `bootJar` — full runtime smoke (port 8761 + dashboard + `/actuator/health` + `/eureka/apps`) runs in compose with `eclipse-temurin:21-jre` image; CI uses `actions/setup-java@v4 java-version: 21`. Same ergonomic pattern Plan 00-03 SUMMARY documented.
 
 ### Critical Pitfalls to Watch
 
@@ -130,4 +134,4 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-08T04:33Z — Stopped at: Completed 00-04-PLAN.md — Resume from: 00-05-PLAN.md
+**Last session:** 2026-05-08T04:47Z — Stopped at: Completed 00-05-PLAN.md — Resume from: 00-06-PLAN.md

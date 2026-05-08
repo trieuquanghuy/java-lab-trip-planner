@@ -42,7 +42,7 @@ Plans:
 - [x] 00-02-PLAN.md — scripts/smoke.sh (D-33 Wave 1 phase-gate verifier) + scripts/README.md
 - [x] 00-03-PLAN.md — libs/observability fully wired (D-04): @AutoConfiguration + servlet + reactive MDC filters + shared logback-spring-base.xml
 - [x] 00-04-PLAN.md — libs/error-handling (D-05 stubs: ProblemDetailFactory + 2-baseline ErrorCode) + libs/api-contracts (D-06 empty module)
-- [ ] 00-05-PLAN.md — eureka-server skeleton (port 8761, no DB, register-with-eureka false)
+- [x] 00-05-PLAN.md — eureka-server skeleton (port 8761, no DB, register-with-eureka false)
 - [ ] 00-06-PLAN.md — api-gateway skeleton (port 8080, Spring Cloud Gateway 4.2.x, /__health/<svc> static-URI routing per D-02)
 - [ ] 00-07-PLAN.md — auth/trip/destination service skeletons (per-service Flyway history table per D-09 / Pitfall 3, V1 baseline migrations, /__health controllers)
 - [ ] 00-08-PLAN.md — infra/postgres/init.sql (D-08 schemas + per-service users) + infra/docker-compose.yml (D-18/D-20/D-22) + root alias (D-19) + per-service Dockerfiles

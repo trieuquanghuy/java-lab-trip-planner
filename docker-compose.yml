@@ -1,0 +1,13 @@
+# Root alias so `docker compose up` works from repo root (D-19).
+# Two compose files exist: this thin alias + infra/docker-compose.yml (canonical).
+# Future contributors: do NOT delete this file — it is the ergonomic entry point
+# documented in the root README and infra/README.md.
+#
+# Uses Compose 2.20+ `include:` (Docker Desktop 4.30+, Docker Engine 26+).
+# If your Compose is older, run from infra/ instead:
+#     docker compose -f infra/docker-compose.yml up -d --wait
+
+name: tripplanner
+
+include:
+  - ./infra/docker-compose.yml

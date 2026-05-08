@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-last_updated: "2026-05-08T16:55:59.512Z"
+last_updated: "2026-05-08T17:10:29.408Z"
 progress:
   total_phases: 11
   completed_phases: 1
   total_plans: 16
-  completed_plans: 13
-  percent: 81
+  completed_plans: 14
+  percent: 88
 ---
 
 # Project State: Trip Planner
@@ -37,9 +37,9 @@ progress:
 **Current plan:** 1
 
 ```
-Progress: [████████░░] 81%
+Progress: [█████████░] 88%
 Phase: 01 (api-gateway) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
                   ^
                   HERE
 ```
@@ -59,6 +59,7 @@ Plan: 4 of 6
 | Search p95 latency | < 500 ms | N/A |
 | Phase 01 P02 | 8min | 5 tasks | 17 files |
 | Phase 01 P03 | 6min | 3 tasks | 7 files |
+| Phase 01 P04 | 15 | 3 tasks | 13 files |
 
 ### Plan Execution Log
 
@@ -144,6 +145,10 @@ Plan: 4 of 6
 - **01-03:** D-05 sub-1-rps token bucket formula for /api/auth/login: replenishRate=30, requestedTokens=900, burstCapacity=30 = 30 req/15 min IP-only; Phase 2 auth-service adds IP+email leg.
 - **01-03:** KeyResolver bean names are exactly ipKeyResolver and userIdKeyResolver to match #{@ipKeyResolver}/#{@userIdKeyResolver} SpEL refs in application.yml (default Spring bean-name-from-method-name).
 - **01-03:** NoOpServerSecurityContextRepository in WebFluxSecurityConfig keeps gateway stateless between requests (T-01-04 defense-in-depth). Gateway validates JWT once; downstream services re-validate via ServletJwtCommonFilter (T-01-01).
+- **01-04:** `FilterRegistrationBean<ServletJwtCommonFilter>.getFilter()` used in `addFilterBefore` — `JwtAutoConfiguration.ServletConfig` only exposes `FilterRegistrationBean`, not a bare `ServletJwtCommonFilter` bean; T-01-11 explicit chain-ordering mitigation.
+- **01-04:** Spring Boot auto-configured `ObjectMapper` injected into `ServletJwtCommonFilter` + `RestAuthenticationEntryPoint` — `ProblemDetailJacksonMixin` flattens `ProblemDetail` extension properties to JSON root (enables `$.code` jsonPath assertion in ITs). `new ObjectMapper()` nests them under `"properties"`.
+- **01-04:** H2 in-memory DB added to `libs.versions.toml` as `testRuntimeOnly` in trip-service + destination-service — security ITs disable Flyway (`spring.flyway.enabled=false`) but Spring context still needs a DataSource; H2 satisfies without docker-compose.
+- **01-04:** SC#4 / Pitfall 1 closed: `DirectServiceAccessWithoutGatewayReturns401IT` green in BOTH trip-service and destination-service. Direct hit on `localhost:<port>/api/trips/_ping` with forged `X-User-Id` + no Authorization returns 401 `application/problem+json` code=auth.unauthorized.
 
 ### Critical Pitfalls to Watch
 
@@ -182,4 +187,4 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-08T16:55:59.503Z
+**Last session:** 2026-05-08T17:10:29.397Z

@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-last_updated: "2026-05-08T16:45:22.809Z"
+last_updated: "2026-05-08T16:55:59.512Z"
 progress:
   total_phases: 11
   completed_phases: 1
   total_plans: 16
-  completed_plans: 12
-  percent: 75
+  completed_plans: 13
+  percent: 81
 ---
 
 # Project State: Trip Planner
@@ -37,9 +37,9 @@ progress:
 **Current plan:** 1
 
 ```
-Progress: [████████░░] 75%
+Progress: [████████░░] 81%
 Phase: 01 (api-gateway) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
                   ^
                   HERE
 ```
@@ -58,6 +58,7 @@ Plan: 3 of 6
 | Auth + ownership coverage | 100% | N/A |
 | Search p95 latency | < 500 ms | N/A |
 | Phase 01 P02 | 8min | 5 tasks | 17 files |
+| Phase 01 P03 | 6min | 3 tasks | 7 files |
 
 ### Plan Execution Log
 
@@ -73,6 +74,7 @@ Plan: 3 of 6
 | 00-monorepo-scaffolding P08 | 11min | 2 | 10 |
 | 00-monorepo-scaffolding P09 | 28min | 4 | 25 |
 | 00-monorepo-scaffolding P10 | 12min | 3 | 2 |
+| 01-api-gateway P03 | 6min | 3 | 7 |
 
 ---
 
@@ -137,6 +139,11 @@ Plan: 3 of 6
 - **00-10:** Skeleton CI uses `ubuntu-24.04` + `actions/setup-java@v4` (temurin 21) + `actions/setup-node@v4` (node 20) per D-16; Corepack auto-bootstraps `pnpm 9.15.0` from frontend/package.json's `packageManager` field — no manual `npm i -g pnpm`, no `pnpm/action-setup` action. Triggers per D-17: `push:` (any branch — no `branches:` filter; runs on every commit) + `pull_request:` to main. T-00-48 (unbounded CI runs) accepted in Phase 0; Phase 10 may add `concurrency: cancel-in-progress`.
 - **00-10:** `dorny/paths-filter@v3` explicit YAML-block syntax with 7 named filters (5 services + libs + gradle root). Lib/Gradle changes fan out to all services via per-matrix-entry `if:` clauses combining the service's own filter output with `libs` and `gradle`. `gradle/wrapper-validation-action@v3` runs unconditionally before any matrix step (T-00-46 mitigation — verifies committed gradle-wrapper.jar sha256 against official Gradle distribution).
 - **00-10:** Final Phase 0 phase-gate cleared via Task 10.3 `checkpoint:human-verify` — user signal "approved — smoke passed, all 5 SCs + NFR-04 green" after running `docker compose down -v && docker compose up -d --wait && bash scripts/smoke.sh` on a fresh checkout. Per-criterion wall-clock not captured at agent level (acceptable — `scripts/smoke.sh` asserts SC#1's «<60s» internally on warm cache, so user's aggregate "approved" signal implicitly carries the timing assertion). With this plan complete, Phase 0 declared complete (10/10 plans done); ready for Phase 1.
+- **01-03:** XUserIdInjectionGlobalFilter strips X-User-Id/X-User-Email on BOTH authenticated and public branches (Pitfall 1 keystone T-01-04); injection only on authenticated branch from validated JWT UserContext.
+- **01-03:** ProblemDetailAuthEntryPoint distinguishes AUTH_TOKEN_EXPIRED / AUTH_INVALID_TOKEN / AUTH_UNAUTHORIZED by inspecting ex.getCause() instanceof JwtAuthenticationException with .contains("expired").
+- **01-03:** D-05 sub-1-rps token bucket formula for /api/auth/login: replenishRate=30, requestedTokens=900, burstCapacity=30 = 30 req/15 min IP-only; Phase 2 auth-service adds IP+email leg.
+- **01-03:** KeyResolver bean names are exactly ipKeyResolver and userIdKeyResolver to match #{@ipKeyResolver}/#{@userIdKeyResolver} SpEL refs in application.yml (default Spring bean-name-from-method-name).
+- **01-03:** NoOpServerSecurityContextRepository in WebFluxSecurityConfig keeps gateway stateless between requests (T-01-04 defense-in-depth). Gateway validates JWT once; downstream services re-validate via ServletJwtCommonFilter (T-01-01).
 
 ### Critical Pitfalls to Watch
 
@@ -175,4 +182,4 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-08T16:45:22.795Z
+**Last session:** 2026-05-08T16:55:59.503Z

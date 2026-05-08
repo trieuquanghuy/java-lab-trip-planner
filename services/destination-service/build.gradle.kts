@@ -18,8 +18,10 @@ dependencies {
     implementation(project(":libs:observability"))
     implementation(project(":libs:error-handling"))
     implementation(project(":libs:api-contracts"))
+    implementation(project(":libs:jwt-common"))                          // NEW Phase 1
 
     implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.security)                    // NEW Phase 1 (Spring Security Servlet)
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.spring.cloud.starter.netflix.eureka.client)
@@ -29,6 +31,8 @@ dependencies {
     implementation(libs.bundles.observability)
 
     testImplementation(libs.spring.boot.starter.test)
+    testImplementation(libs.spring.security.test)                        // NEW Phase 1
+    testImplementation(testFixtures(project(":libs:jwt-common")))        // NEW Phase 1
     testImplementation(libs.spring.boot.testcontainers)   // catalogued; first integration test arrives in Phase 1+
 }
 

@@ -1,0 +1,15 @@
+<!--
+  Source: 00-PATTERNS.md Bucket C (lines 415-422) — same single-line include pattern used by every
+  service that depends on libs/observability.
+
+  The shared logback-spring-base.xml is on the classpath via implementation(project(":libs:observability"))
+  in build.gradle.kts. It defines the JSON encoder + MDC field set (timestamp, level, service, traceId,
+  spanId, userId, message) per docs/02-architecture.md §6.3.
+
+  Convention C8: every service except eureka-server includes this base config. eureka-server opted for
+  Logback Option A (default Spring Boot config) per 00-PATTERNS.md line 425; api-gateway is on the
+  trace path so Option B (the shared base) is mandatory here.
+-->
+<configuration>
+    <include resource="logback-spring-base.xml" />
+</configuration>

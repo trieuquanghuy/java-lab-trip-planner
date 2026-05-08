@@ -1,0 +1,74 @@
+# PHASE 0 ROUTE TABLE: /__health/<svc> entries sit at the TOP. Phase 1 will append /api/<svc>/** entries below.
+# Convention (00-CONTEXT.md "Cross-phase handoff" line 274): do NOT remove the /__health/<svc> entries when
+# Phase 1 lands — they stay as ops debug endpoints forever.
+#
+# D-02 / Convention C9 hard rule: every downstream URI is STATIC (http://service-name:port). NEVER use the
+# Eureka-routed scheme. Rationale:
+#   - Phase 0 cold-start: a load-balanced scheme would 503 until the Eureka registry warms (Pitfall 10).
+#   - Phase 0 routing path is intentionally NOT through Eureka — Eureka is in the observability path
+#     (dashboard) only (D-03).
+#
+# D-25 / Pitfall 7: spring.application.name=api-gateway is set so Zipkin / log JSON attribute spans
+# correctly. Missing this would group all gateway spans under the default "application" name.
+#
+# D-04: management.tracing.sampling.probability=1.0 in dev so every request produces a trace
+# (Pitfall 7 step 4 verification in Phase 1).
+spring:
+  application:
+    name: api-gateway          # D-25 (Pitfall 7) — Zipkin service name
+  profiles:
+    default: dev
+  cloud:
+    gateway:
+      routes:
+        # P0 health-routing convention — STATIC URIs per D-02 (no Eureka load-balanced scheme).
+        # /__health/gateway routes back to this gateway's own GatewayHealthController for naming
+        # consistency with the /__health/<svc> family. The smoke script can iterate over a uniform
+        # set including "gateway" if SC#3-route ever needs to verify the gateway placeholder
+        # through the route table.
+        - id: health-gateway
+          uri: http://localhost:8080
+          predicates:
+            - Path=/__health/gateway
+          filters:
+            - SetPath=/__health
+        - id: health-auth
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/__health/auth
+          filters:
+            - SetPath=/__health
+        - id: health-trip
+          uri: http://trip-service:8082
+          predicates:
+            - Path=/__health/trip
+          filters:
+            - SetPath=/__health
+        - id: health-destination
+          uri: http://destination-service:8083
+          predicates:
+            - Path=/__health/destination
+          filters:
+            - SetPath=/__health
+        # Phase 1 will append /api/auth/**, /api/search/**, /api/destinations*/**, /api/trips/** below this comment.
+server:
+  port: 8080
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus    # T-00-20: env/configprops/beans/mappings INTENTIONALLY NOT exposed
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  tracing:
+    sampling:
+      probability: 1.0   # D-04 — full sampling in dev
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+    fetch-registry: true
+    register-with-eureka: true

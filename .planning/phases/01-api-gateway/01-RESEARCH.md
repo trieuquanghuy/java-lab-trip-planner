@@ -1205,32 +1205,27 @@ These are repo-wide directives the planner MUST verify against. Phase 1 plans sh
 
 **If A1 or A2 fail at scaffold time, escalate before Wave 1.** The other assumptions are low-risk verification chores.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **`@ConditionalOnWebApplication(SERVLET|REACTIVE)` vs the existing `@ConditionalOnClass` pattern in `libs/observability`**
-   - What we know: Phase 0 WR-02 documents the bug; the recommended fix is `@ConditionalOnWebApplication`. Phase 1's `libs/jwt-common` faces the same choice.
-   - What's unclear: Should Phase 1 also fix `libs/observability`'s `ReactiveConfig` discriminator while we're touching the autoconfig family, or leave it as Phase 10 carry-over?
-   - Recommendation: Fix both in Phase 1 (one-line change + comment update). Bundling reduces the "10 minor lib bugs" tail.
+1. **RESOLVED:** `@ConditionalOnWebApplication(SERVLET|REACTIVE)` vs the existing `@ConditionalOnClass` pattern in `libs/observability`.
+   Phase 0 WR-02 documents the bug; the recommended fix is `@ConditionalOnWebApplication`. Phase 1's `libs/jwt-common` faces the same choice.
+   **Decision:** Fix both in Phase 1 (one-line change + comment update). Bundling reduces the "10 minor lib bugs" tail. Implemented as a dedicated task in plan 01-02 (split from JwtAutoConfiguration creation per plan-checker B4 feedback).
 
-2. **`UserContext` as `record` vs `class implements Principal`**
-   - What we know: D-04 Claude's Discretion ("Whether `JwtVerifier` returns `Optional<UserContext>` or throws...").
-   - What's unclear: Should `UserContext` implement `java.security.Principal` to make `@AuthenticationPrincipal Principal user` work generically?
-   - Recommendation: `record UserContext(String userId, String email, boolean verified) implements Principal { @Override public String getName() { return userId; } }`. Tiny annotation surface; plays with Spring Security audit logging out of the box.
+2. **RESOLVED:** `UserContext` as `record` vs `class implements Principal`.
+   D-04 Claude's Discretion left this open.
+   **Decision:** `record UserContext(String userId, String email, boolean verified) implements Principal { @Override public String getName() { return userId; } }`. Tiny annotation surface; plays with Spring Security audit logging out of the box. Implemented in plan 01-02.
 
-3. **Should `_ping` controllers be excluded from rate limiting?**
-   - What we know: D-12 says `_ping` is a permanent debug endpoint. Phase 1's rate-limit table doesn't list `/api/trips/_ping`.
-   - What's unclear: Does the catch-all `/api/trips/**` route's rate limiter apply to `/api/trips/_ping`?
-   - Recommendation: Yes, let it apply. `_ping` is authenticated and the userId-keyed limiter is generous (120/min). If `_ping` becomes a hot probe path in Phase 5+, the rate limiter wisely caps it.
+3. **RESOLVED:** Should `_ping` controllers be excluded from rate limiting?
+   D-12 says `_ping` is a permanent debug endpoint. Phase 1's rate-limit table doesn't list `/api/trips/_ping`.
+   **Decision:** Let the catch-all `/api/trips/**` route's rate limiter apply. `_ping` is authenticated and the userId-keyed limiter is generous (120/min). If `_ping` becomes a hot probe path in Phase 5+, the rate limiter wisely caps it.
 
-4. **Single shared `JwtVerifier` bean across services or per-service instance?**
-   - What we know: D-16 says single `AUTH_JWT_SECRET` env var loaded via `@ConfigurationProperties("auth.jwt")` in `libs/jwt-common`.
-   - What's unclear: Auto-configuration creates one `JwtVerifier` per Spring context. The "shared" piece is the secret + class, not the bean instance.
-   - Recommendation: Per-service bean (auto-configured). The verifier is stateless; sharing the instance across JVMs is impossible anyway.
+4. **RESOLVED:** Single shared `JwtVerifier` bean across services or per-service instance?
+   D-16 says single `AUTH_JWT_SECRET` env var loaded via `@ConfigurationProperties("auth.jwt")` in `libs/jwt-common`.
+   **Decision:** Per-service bean (auto-configured). The verifier is stateless; sharing the instance across JVMs is impossible anyway. The "shared" piece is the secret + class, not the bean instance.
 
-5. **Rename `spring-cloud-starter-gateway` to `spring-cloud-starter-gateway-server-webflux` in Phase 1 or defer to Phase 10?**
-   - What we know: Pitfall D — old artifact emits deprecation warning at startup.
-   - What's unclear: Does the rename require any property migration in our `application.yml` route table?
-   - Recommendation: **Defer to Phase 10.** The deprecation warning is cosmetic; the route YAML works with both. Phase 1 has enough surface area; rename is a clean Phase 10 hardening task with `spring-boot-properties-migrator` providing automated property rename.
+5. **RESOLVED:** Rename `spring-cloud-starter-gateway` to `spring-cloud-starter-gateway-server-webflux` in Phase 1 or defer to Phase 10?
+   Pitfall D — old artifact emits deprecation warning at startup.
+   **Decision:** **Defer to Phase 10.** The deprecation warning is cosmetic; the route YAML works with both. Phase 1 has enough surface area; rename is a clean Phase 10 hardening task with `spring-boot-properties-migrator` providing automated property rename.
 
 ## Environment Availability
 

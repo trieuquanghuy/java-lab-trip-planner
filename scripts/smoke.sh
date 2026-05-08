@@ -15,6 +15,16 @@
 # Exit codes:
 #   0 — all selected criteria PASS
 #   1 — any selected criterion FAIL (label printed to stderr)
+#
+# Phase 1 extension (01-06-PLAN.md):
+#   Adds 3 new criteria — phase-01-bypass / phase-01-routing /
+#   phase-01-rate-limit — that exercise the assembled Phase 1 stack at
+#   runtime. They complement (do NOT replace) the per-service IT suite
+#   shipped by plans 01-04 (DirectServiceAccessIT) and 01-05 (gateway IT
+#   suite). Source: .planning/phases/01-api-gateway/01-RESEARCH.md
+#   "Validation Architecture / Wave 0 Gaps" lines 1280-1283; 01-CONTEXT.md
+#   D-05/D-06 (rate-limit topology) + D-15 (every SC needs an IT/smoke);
+#   01-PATTERNS.md Bucket E.
 
 set -euo pipefail
 
@@ -62,6 +72,9 @@ Criteria (use with --criterion):
   4         SC#4: frontend reachable at :5173
   5         SC#5: per-service Flyway history tables present
   nfr-04    NFR-04: free-tier audit (no paid SaaS deps)
+  phase-01-bypass     T-01-04 / Pitfall 1: direct :8082 with X-User-Id+no-JWT → 401
+  phase-01-routing    SC#1: 4 gateway routes (/api/{auth,trips,search,destinations}) forward (no 502/503)
+  phase-01-rate-limit SC#5 IP-only: 35 POST /api/auth/login → ≥1 × 429
 
 Environment overrides (defaults shown):
   COMPOSE_FILE=infra/docker-compose.yml
@@ -82,6 +95,9 @@ Available criteria for `scripts/smoke.sh --criterion <N>`:
   4         — SC#4: frontend reachable at :5173
   5         — SC#5: per-service Flyway history tables present
   nfr-04    — NFR-04: free-tier audit (no paid SaaS deps)
+  phase-01-bypass     — T-01-04 / Pitfall 1: direct :8082 with X-User-Id+no-JWT → 401
+  phase-01-routing    — SC#1: 4 gateway routes forward (no 502/503)
+  phase-01-rate-limit — SC#5 IP-only: 35 POST /api/auth/login → ≥1 × 429
 EOF
 }
 
@@ -356,6 +372,105 @@ check_nfr_04() {
 }
 
 # -----------------------------------------------------------------------------
+# Phase 1 — phase-01-bypass: T-01-04 / Pitfall 1 keystone runtime regression gate
+#
+# Direct hit on trip-service's loopback-bound port (Phase 0 D-22 = 127.0.0.1:8082)
+# carrying a crafted X-User-Id but NO Authorization header. ServletJwtCommonFilter
+# (libs/jwt-common, plan 01-02) + ServletSecurityConfig (plan 01-04) MUST cause
+# this to return 401. If it returns 200, Pitfall 1 has regressed and a future
+# plan accidentally removed the defense-in-depth filter. This complements (does
+# NOT replace) plan 01-04's DirectServiceAccessWithoutGatewayReturns401IT.
+# -----------------------------------------------------------------------------
+check_phase_01_bypass() {
+  local code
+  code=$(curl -s -o /dev/null -w '%{http_code}' \
+          -H 'X-User-Id: attacker' \
+          http://127.0.0.1:8082/api/trips/_ping 2>/dev/null || echo "000")
+  if [ "$code" != "401" ]; then
+    fail "phase-01-bypass: direct hit on 127.0.0.1:8082/api/trips/_ping with crafted X-User-Id and no Authorization returned HTTP $code (expected 401). T-01-04 / Pitfall 1 has regressed — verify ServletSecurityConfig (plan 01-04) and ServletJwtCommonFilter wiring (plan 01-02) are intact."
+  fi
+  pass "phase-01-bypass /api/trips/_ping with spoofed X-User-Id (no JWT) returns 401"
+}
+
+# -----------------------------------------------------------------------------
+# Phase 1 — phase-01-routing: SC#1 / Pitfall J runtime gate
+#
+# Asserts the gateway's Path-predicate routing (plan 01-03 application.yml) is
+# working AT RUNTIME by sending a curl to each of the 3 main route prefixes and
+# asserting the response code is NOT 502 and NOT 503. A 502 means Pitfall J has
+# regressed (downstream service unreachable / depends_on misconfigured); a 503
+# typically means rate-limited-with-empty-bucket which can also indicate the
+# Redis backing store is unreachable. Any other code (200/401/404/500) proves
+# the gateway forwarded the request — Phase 1 doesn't ship real endpoints, so
+# downstream may legitimately reject (e.g. 401 from a missing/invalid Bearer).
+#
+# The Authorization header carries a placeholder Bearer that may or may not be
+# accepted by the JwtVerifier; we only need the gateway to FORWARD the request,
+# not for the downstream to authenticate it.
+# -----------------------------------------------------------------------------
+check_phase_01_routing() {
+  local paths=(
+    "/api/auth/anything"
+    "/api/trips/anything"
+    "/api/search/anything"
+    "/api/destinations/anything"
+  )
+  local placeholder_token="${SMOKE_PLACEHOLDER_TOKEN:-eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzbW9rZSJ9.invalid-on-purpose}"
+  for path in "${paths[@]}"; do
+    local code
+    code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -H "Authorization: Bearer $placeholder_token" \
+            "http://localhost:8080$path" 2>/dev/null || echo "000")
+    case "$code" in
+      502)
+        fail "phase-01-routing: $path returned 502 — Pitfall J: downstream service unreachable from gateway. Check api-gateway.depends_on in infra/docker-compose.yml (plan 01-06) and that the downstream service is up (docker compose ps)." ;;
+      503)
+        fail "phase-01-routing: $path returned 503 — likely Redis unreachable (Pitfall H) or rate-limit empty-bucket. Check redis container health and api-gateway → redis depends_on." ;;
+      000)
+        fail "phase-01-routing: $path — curl could not reach gateway at localhost:8080. Is the stack up? (scripts/smoke.sh --up)" ;;
+      *)
+        : # any other code (200/401/403/404/500) proves the gateway forwarded
+        ;;
+    esac
+  done
+  pass "phase-01-routing 4 route prefixes (/api/{auth,trips,search,destinations}) forward through gateway (no 502/503)"
+}
+
+# -----------------------------------------------------------------------------
+# Phase 1 — phase-01-rate-limit: SC#5 D-05 IP-only leg runtime gate
+#
+# Fires 35 successive POSTs to /api/auth/login. Plan 01-03's RedisRateLimiter
+# is configured per RESEARCH.md Pattern 5 lines 698-700 (replenishRate=30,
+# burstCapacity=30, requestedTokens=900) — burst of 30 is consumed in the first
+# 30 requests; the 31st should be 429. We fire 35 to give a 5-request margin.
+# If at least one response is 429, the rate limiter is wired and Redis is
+# reachable. The body content is meaningless to the rate-limiter (it counts
+# before reaching auth-service); a stub /api/auth/login from Phase 1 will
+# 401/404 on most requests, which is fine — the assertion is purely on 429
+# being SEEN at least once in the 35-request burst.
+# -----------------------------------------------------------------------------
+check_phase_01_rate_limit() {
+  local saw_429=0
+  local i
+  for i in $(seq 1 35); do
+    local code
+    code=$(curl -s -o /dev/null -w '%{http_code}' \
+            -X POST \
+            -H 'Content-Type: application/json' \
+            -d '{"email":"smoke@example.com","password":"smoke"}' \
+            "http://localhost:8080/api/auth/login" 2>/dev/null || echo "000")
+    if [ "$code" = "429" ]; then
+      saw_429=1
+      break
+    fi
+  done
+  if [ "$saw_429" -ne 1 ]; then
+    fail "phase-01-rate-limit: 35 successive POST /api/auth/login returned no 429 — RedisRateLimiter not enforcing (plan 01-03 application.yml). Verify (a) redis container healthy (docker compose ps redis), (b) spring.data.redis.host=redis in application-docker.yml (plan 01-03), (c) RedisRateLimiter filter on the auth-login route with replenishRate=30 burstCapacity=30 requestedTokens=900 (Pattern 5)."
+  fi
+  pass "phase-01-rate-limit POST /api/auth/login burst → 429 observed within 35 requests (D-05 IP-only leg)"
+}
+
+# -----------------------------------------------------------------------------
 # Subcommand dispatch — first arg selects mode.
 # -----------------------------------------------------------------------------
 run_full_gate() {
@@ -366,7 +481,10 @@ run_full_gate() {
   check_sc4
   check_sc5
   check_nfr_04
-  echo "[smoke] ALL PASS — Phase 0 ROADMAP success criteria #1-#5 + NFR-04 met"
+  check_phase_01_bypass
+  check_phase_01_routing
+  check_phase_01_rate_limit
+  echo "[smoke] ALL PASS — Phase 0 SC#1-#5 + NFR-04 + Phase 1 (bypass / routing / rate-limit) met"
 }
 
 run_criterion() {
@@ -379,6 +497,9 @@ run_criterion() {
     4)        check_sc4 ;;
     5)        check_sc5 ;;
     nfr-04)   check_nfr_04 ;;
+    phase-01-bypass)     check_phase_01_bypass ;;
+    phase-01-routing)    check_phase_01_routing ;;
+    phase-01-rate-limit) check_phase_01_rate_limit ;;
     *)        fail "Unknown criterion '$CRITERION'. Use --list to see available criteria." ;;
   esac
 }
@@ -410,7 +531,7 @@ main() {
       ;;
     --criterion)
       if [ "$#" -lt 2 ]; then
-        fail "--criterion requires a value (1, 2, 3, 3-route, 4, 5, nfr-04). Use --list to enumerate."
+        fail "--criterion requires a value (1, 2, 3, 3-route, 4, 5, nfr-04, phase-01-bypass, phase-01-routing, phase-01-rate-limit). Use --list to enumerate."
       fi
       run_criterion "$2"
       ;;

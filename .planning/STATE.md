@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 1
 status: executing
-last_updated: "2026-05-08T17:10:29.408Z"
+last_updated: "2026-05-08T18:49:36.878Z"
 progress:
   total_phases: 11
   completed_phases: 1
   total_plans: 16
-  completed_plans: 14
-  percent: 88
+  completed_plans: 15
+  percent: 94
 ---
 
 # Project State: Trip Planner
@@ -37,9 +37,9 @@ progress:
 **Current plan:** 1
 
 ```
-Progress: [█████████░] 88%
+Progress: [█████████░] 94%
 Phase: 01 (api-gateway) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
                   ^
                   HERE
 ```
@@ -60,6 +60,7 @@ Plan: 5 of 6
 | Phase 01 P02 | 8min | 5 tasks | 17 files |
 | Phase 01 P03 | 6min | 3 tasks | 7 files |
 | Phase 01 P04 | 15 | 3 tasks | 13 files |
+| Phase 01-api-gateway P05 | 4h | 3 tasks | 9 files |
 
 ### Plan Execution Log
 
@@ -149,6 +150,10 @@ Plan: 5 of 6
 - **01-04:** Spring Boot auto-configured `ObjectMapper` injected into `ServletJwtCommonFilter` + `RestAuthenticationEntryPoint` — `ProblemDetailJacksonMixin` flattens `ProblemDetail` extension properties to JSON root (enables `$.code` jsonPath assertion in ITs). `new ObjectMapper()` nests them under `"properties"`.
 - **01-04:** H2 in-memory DB added to `libs.versions.toml` as `testRuntimeOnly` in trip-service + destination-service — security ITs disable Flyway (`spring.flyway.enabled=false`) but Spring context still needs a DataSource; H2 satisfies without docker-compose.
 - **01-04:** SC#4 / Pitfall 1 closed: `DirectServiceAccessWithoutGatewayReturns401IT` green in BOTH trip-service and destination-service. Direct hit on `localhost:<port>/api/trips/_ping` with forged `X-User-Id` + no Authorization returns 401 `application/problem+json` code=auth.unauthorized.
+- **01-05:** `GatewayTracingObservationConfig` uses `ContextRefreshedEvent` (not `SmartInitializingSingleton`) to register `GatewayPropagatingSenderTracingObservationHandler` with `ObservationRegistry` after all beans initialize — avoids circular OTel bean-ordering issue where handler depends on Tracer which depends on ObservationRegistry during startup.
+- **01-05:** `GatewayTracingTestConfig` provides explicit `ContextPropagators(W3CTraceContextPropagator)` in test context — fixes `otelContextPropagators(ObjectProvider<TextMapPropagator>)` building with an empty list and producing `NoopTextMapPropagator` due to bean ordering in the test application context.
+- **01-05:** `RateLimitProblemDetailFilter` overrides both `writeWith()` and `setComplete()` in `ServerHttpResponseDecorator` — `RequestRateLimiterGatewayFilterFactory` uses the empty-body `setComplete()` path for rate-limited requests, bypassing a `writeWith()`-only override and leaving `Content-Type: null`.
+- **01-05:** `spring.reactor.context-propagation: auto` required in gateway-it test profile to activate `Hooks.enableAutomaticContextPropagation()` via `ReactorAutoConfiguration` — without it, `Slf4JEventListener` cannot propagate OTel span context (traceId/spanId) across reactive thread switches, so MDC is empty in SCG log events captured by `ListAppender`.
 
 ### Critical Pitfalls to Watch
 
@@ -187,4 +192,4 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-08T17:10:29.397Z
+**Last session:** 2026-05-08T18:49:36.867Z

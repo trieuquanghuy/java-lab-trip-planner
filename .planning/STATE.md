@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 8
 status: executing
-last_updated: "2026-05-08T05:35:56.286Z"
+last_updated: "2026-05-08T06:02:15.608Z"
 progress:
   total_phases: 11
   completed_phases: 0
   total_plans: 10
-  completed_plans: 7
-  percent: 70
+  completed_plans: 8
+  percent: 80
 ---
 
 # Project State: Trip Planner
@@ -34,17 +34,17 @@ progress:
 
 **Phase:** Phase 0 — Monorepo Scaffolding
 **Status:** Ready to execute
-**Current plan:** 8
+**Current plan:** 9
 
 ```
-Progress: [███████░░░] 70%
+Progress: [████████░░] 80%
 Phase: 00 (monorepo-scaffolding) — EXECUTING
-Plan: 8 of 10
+Plan: 9 of 10
            ^
            HERE
 ```
 
-**Next action:** Execute Plan 00-08 (`.planning/phases/00-monorepo-scaffolding/00-08-PLAN.md`).
+**Next action:** Execute Plan 00-09 (`.planning/phases/00-monorepo-scaffolding/00-09-PLAN.md`).
 
 ---
 
@@ -69,6 +69,7 @@ Plan: 8 of 10
 | 00-monorepo-scaffolding P05 | 6min | 2 | 4 |
 | 00-monorepo-scaffolding P06 | 5min | 2 | 6 |
 | 00-monorepo-scaffolding P07 | 8min | 3 | 21 |
+| 00-monorepo-scaffolding P08 | 11min | 2 | 10 |
 
 ---
 
@@ -109,6 +110,13 @@ Plan: 8 of 10
 - **00-07:** `spring.jpa.hibernate.ddl-auto: validate` (NEVER `update`) on all 3 services per C15. Anti-pattern absent — `grep -r 'ddl-auto: update' services/` returns 0 matches. Phase 0 has no entities so it's effectively a no-op now; from Phase 2/3/5 onward Hibernate will reject any entity↔schema drift on boot, forcing all schema changes through Flyway.
 - **00-07:** JDBC `?currentSchema=<svc>` URL parameter is the **primary lock** for the per-service-DB-user model (D-08). Combined with `spring.flyway.schemas` + `flyway.default-schema` + `hibernate.default_schema`, every persistence-stack layer agrees on the schema each service operates on. Wave 6's `infra/postgres/init.sql` will set each user's `search_path` to its own schema as defense-in-depth, but the JDBC URL is the application-side guarantee.
 - **00-07:** Initial git-add ordering caused Task 7.1's first commit (`2625bf7`) to include only the `.gitkeep` deletion. Caught immediately via `git status` and amended into `2508472` to merge the source-file additions. Tasks 7.2/7.3 used the same git-add pattern and committed cleanly on the first attempt — only `2508472`/`74bf90c`/`91a709f` appear in the final commit history for plan 00-07.
+- **00-08:** Multi-stage backend Dockerfiles use `build.context: ..` (repo root from `infra/`) + `dockerfile: services/<svc>/Dockerfile` (BLOCKER 2 fix). The builder stage runs `./gradlew :services:<svc>:bootJar` inside an `eclipse-temurin:21-jdk-alpine` container; the runtime stage uses `eclipse-temurin:21-jre-alpine`. Eliminates the "must run `./gradlew bootJar` before `docker compose up`" trap — satisfies ROADMAP SC#1's "no manual intervention" requirement. No parent-relative `COPY ../...` anywhere (WARNING 3 elimination).
+- **00-08:** `frontend/Dockerfile` is owned by Plan 00-09 (BLOCKER 3 fix). Plan 00-08's compose `frontend` block only references it via `build.context: ../frontend` + `dockerfile: Dockerfile` + `args.VITE_API_URL`. Verified: `test -e frontend/Dockerfile` returns false; `test -e infra/frontend.Dockerfile` returns false.
+- **00-08:** D-22 binding audit clean — 7 loopback bindings (postgres, redis, mailhog SMTP, auth, trip, destination, eureka) + 4 public bindings (api-gateway, frontend, mailhog UI, zipkin UI). 8 `condition: service_healthy` assertions across dependents (api-gateway → eureka; auth/trip/destination → postgres + eureka).
+- **00-08:** Postgres `init.sql` is idempotent via `CREATE SCHEMA IF NOT EXISTS` + `DO $$ ... pg_roles WHERE rolname='X' THEN CREATE ROLE X` guards. Creates 3 schemas (auth/trip/destination) + 3 service users (auth_svc/trip_svc/destination_svc) + schema-scoped `USAGE,CREATE` grants + `ALTER ROLE search_path` defaults. Mounted ro at `/docker-entrypoint-initdb.d/init.sql:ro`. Re-runnable after `docker compose down -v`.
+- **00-08:** Redis healthcheck uses `["CMD-SHELL", "redis-cli ping | grep -q PONG"]` (not array form `["CMD", "redis-cli", "ping"]`). Two reasons: the plan's verify grep needs the literal phrase `redis-cli ping` to appear in compose; the explicit PONG match makes the healthcheck strictly fail-fast on non-PONG responses. Backend Dockerfiles use `wget -qO- http://localhost:<port>/actuator/health | grep -q '"status":"UP"'` for the runtime HEALTHCHECK (more correct than `curl -f` which only checks HTTP status, not body content — Spring Boot Actuator returns HTTP 200 even when subsystems are DOWN).
+- **00-08:** Root `docker-compose.yml` is a 14-line `include:` alias for `infra/docker-compose.yml` (D-19 / Compose 2.20+). Both files declare `name: tripplanner` so containers get the same project prefix regardless of which directory `docker compose` is invoked from. README documents the `include:` portability fallback (`docker compose -f infra/docker-compose.yml up`) for older Compose installs.
+- **00-08:** Eureka server's HEALTHCHECK uses `start-period=25s` (vs 20s for the other 4 backends) to absorb its self-bootstrap timing. All other healthcheck params (interval=10s, timeout=5s, retries=6) stay identical. Worst-case fail window: 85s for eureka, 80s for others — both fit within `--wait-timeout 60` once warm-cache hits.
 
 ### Critical Pitfalls to Watch
 
@@ -147,4 +155,4 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-08T05:34:35.507Z — Stopped at: Completed 00-07-PLAN.md — Resume from: 00-08-PLAN.md
+**Last session:** 2026-05-08T05:59:03.825Z

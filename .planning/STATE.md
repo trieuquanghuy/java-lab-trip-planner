@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 8
+current_plan: 10
 status: executing
-last_updated: "2026-05-08T06:02:15.608Z"
+last_updated: "2026-05-08T06:52:44.737Z"
 progress:
   total_phases: 11
   completed_phases: 0
   total_plans: 10
-  completed_plans: 8
-  percent: 80
+  completed_plans: 9
+  percent: 90
 ---
 
 # Project State: Trip Planner
@@ -34,17 +34,17 @@ progress:
 
 **Phase:** Phase 0 — Monorepo Scaffolding
 **Status:** Ready to execute
-**Current plan:** 9
+**Current plan:** 10
 
 ```
-Progress: [████████░░] 80%
+Progress: [█████████░] 90%
 Phase: 00 (monorepo-scaffolding) — EXECUTING
-Plan: 9 of 10
+Plan: 10 of 10
            ^
            HERE
 ```
 
-**Next action:** Execute Plan 00-09 (`.planning/phases/00-monorepo-scaffolding/00-09-PLAN.md`).
+**Next action:** Execute Plan 00-10 (`.planning/phases/00-monorepo-scaffolding/00-10-PLAN.md`).
 
 ---
 
@@ -70,6 +70,7 @@ Plan: 9 of 10
 | 00-monorepo-scaffolding P06 | 5min | 2 | 6 |
 | 00-monorepo-scaffolding P07 | 8min | 3 | 21 |
 | 00-monorepo-scaffolding P08 | 11min | 2 | 10 |
+| 00-monorepo-scaffolding P09 | 28min | 4 | 25 |
 
 ---
 
@@ -117,6 +118,13 @@ Plan: 9 of 10
 - **00-08:** Redis healthcheck uses `["CMD-SHELL", "redis-cli ping | grep -q PONG"]` (not array form `["CMD", "redis-cli", "ping"]`). Two reasons: the plan's verify grep needs the literal phrase `redis-cli ping` to appear in compose; the explicit PONG match makes the healthcheck strictly fail-fast on non-PONG responses. Backend Dockerfiles use `wget -qO- http://localhost:<port>/actuator/health | grep -q '"status":"UP"'` for the runtime HEALTHCHECK (more correct than `curl -f` which only checks HTTP status, not body content — Spring Boot Actuator returns HTTP 200 even when subsystems are DOWN).
 - **00-08:** Root `docker-compose.yml` is a 14-line `include:` alias for `infra/docker-compose.yml` (D-19 / Compose 2.20+). Both files declare `name: tripplanner` so containers get the same project prefix regardless of which directory `docker compose` is invoked from. README documents the `include:` portability fallback (`docker compose -f infra/docker-compose.yml up`) for older Compose installs.
 - **00-08:** Eureka server's HEALTHCHECK uses `start-period=25s` (vs 20s for the other 4 backends) to absorb its self-bootstrap timing. All other healthcheck params (interval=10s, timeout=5s, retries=6) stay identical. Worst-case fail window: 85s for eureka, 80s for others — both fit within `--wait-timeout 60` once warm-cache hits.
+- **00-09:** shadcn CLI deviation — used `pnpm dlx shadcn@2.x init --base-color slate --css-variables` non-interactively (arrow-down + Enter for Style=Default) instead of plan-mandated `shadcn@latest`. The latest shadcn CLI (as of 2026-05) eliminated the Tailwind v3 prompts in favor of preset-based config defaulting to Tailwind v4 + React 19 — incompatible with our locked v3 + React 18 stack (CLAUDE.md SHADCN gotcha; UI-SPEC line 34 anticipated this). shadcn@2.x still respects the v3 path AND retains the Style prompt. Outcomes match D-32 verbatim — `components.json` has `tailwind.config: tailwind.config.ts` (NOT `.js`), `cssVariables: true`, `baseColor: slate`, all aliases right. Documented in `frontend/README.md` so Phase 7 reproduces the same path. Both `shadcn@2.x` and `shadcn@latest` work for subsequent `add` commands because committed `components.json` is the source of truth.
+- **00-09:** Console-silent contract automated via Vitest mocks (UI-SPEC §Copywriting Contract automated for the React render path — ROADMAP SC#4). `App.test.tsx` spies on `console.error` + `console.warn` via `vi.spyOn`, renders `<App />` inside `<StrictMode>` (which double-invokes to surface React warnings — missing keys, deprecated APIs, dangerous lifecycles), and asserts both spies have zero calls. Catches the entire React render-path silent-console contract automatically. Browser-only console errors (asset 404s, runtime CORS, fetch failures) still need DevTools manual inspection per UI-SPEC §Phase 0 Verification Checklist.
+- **00-09:** Provider stack pre-wired in `src/main.tsx` (`StrictMode > QueryClientProvider > BrowserRouter > App`). Phase 7+ feature pages just add `<Routes>` inside `<App>`; no `main.tsx` changes needed. `apiClient` singleton ships with `withCredentials: true` from day one (Phase 2 cookie flow doesn't retrofit) + `X-Request-Id` stamper request-interceptor placeholder (Phase 1 trace correlation + Phase 7 Authorization header attaches in same interceptor). Zustand v5 `useAppStore` typed for `theme: 'light' | 'dark'` so Phase 9 dark-mode toggle drops in without store rewrite.
+- **00-09:** Multi-stage frontend Dockerfile — `node:20-alpine` builder (`pnpm install --frozen-lockfile` + `pnpm build` with `ARG VITE_API_URL` baked into the JS bundle at build time, since Vite inlines `import.meta.env.VITE_API_URL` at compile time) → `nginx:alpine` runtime (serves `/usr/share/nginx/html` on `:5173` with `try_files` SPA fallback for React Router). HEALTHCHECK greps `<title>Trip Planner</title>` from the served bundle — catches `index.html` template regressions. Self-contained per ROADMAP SC#1 ('no manual intervention'): `docker compose up --wait` works on a fresh checkout without prior local `pnpm install` or `pnpm build`. Mirrors Plan 00-08's backend-Dockerfile pattern (which does the same thing for `./gradlew bootJar`).
+- **00-09:** Rule 3 auto-fixes for `tsc -b` to compile `vite.config.ts`: added `@types/node` devDep (so `import path from 'node:path'` resolves), added `/// <reference types="vitest" />` to `vite.config.ts` (so the `test:` block typechecks against `UserConfigExport`), added `types: ['node', 'vitest']` to `tsconfig.node.json`. Plan's PATTERNS.md template referenced `'node:path'` verbatim but didn't list `@types/node` in the dep table — without it `pnpm build` fails with `Cannot find module 'node:path'`. Also gitignored `*.tsbuildinfo` + `vite.config.{d.ts,js}` (TS project-references emits) so future builds don't pollute `git status`.
+- **00-09:** `tailwind.config.ts` `darkMode` normalized from shadcn@2.x init's quirky `['class', 'class']` (it appends instead of replacing when the file already has `darkMode: 'class'`) back to canonical single-string `'class'`. Both forms are functionally equivalent in Tailwind (treated as class-based dark mode); single-string form matches verify grep + UI-SPEC §Design System spec.
+- **00-09:** `frontend/Dockerfile` uses `nginx:alpine` runtime serving the production bundle (NOT `node:alpine` running `pnpm dev`) — the production-bundle path supports a real HEALTHCHECK + faster boot + faithful 'production-like dev'. A future phase can swap to a Vite-dev-server runtime stage for hot-reload-in-container if needed; Phase 0 doesn't need that. Manual `docker build` runtime smoke deferred to Plan 00-10 / first user `docker compose up --wait` (docker daemon was not running on dev host) — same convention as Plan 00-08.
 
 ### Critical Pitfalls to Watch
 
@@ -155,4 +163,4 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-08T05:59:03.825Z
+**Last session:** 2026-05-08T06:52:44.729Z

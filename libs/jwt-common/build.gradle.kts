@@ -29,6 +29,10 @@ dependencies {
 
     // For @AutoConfiguration / @ConditionalOnWebApplication.
     implementation("org.springframework.boot:spring-boot-autoconfigure")
+    // Jackson ObjectMapper used by ServletJwtCommonFilter to write ProblemDetail JSON.
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+    // SLF4J MDC used by ServletJwtCommonFilter for userId MDC population (C29-P1).
+    implementation("org.slf4j:slf4j-api")
 
     // Spring Security shared types — compileOnly so reactive-only and servlet-only consumers
     // can independently choose which Security stack to pull at runtime.
@@ -41,6 +45,11 @@ dependencies {
     // junit-platform-launcher required on testRuntimeClasspath for Gradle's useJUnitPlatform()
     // to work with JUnit Platform 1.12.x (platform-engine / platform-launcher version alignment).
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // Spring Security needed on test classpath (JwtAuthenticationException extends AuthenticationException)
+    testImplementation("org.springframework.security:spring-security-web")
+    testImplementation("org.springframework.security:spring-security-config")
+    // JwtFixtures from testFixtures source set consumed by JwtVerifierTest + JwtFixturesSmokeMintTask
+    testImplementation(testFixtures(project(":libs:jwt-common")))
 
     // testFixtures classpath — JwtFixtures (Wave 0b) only needs jjwt to mint test tokens.
     testFixturesApi(libs.jjwt.api)

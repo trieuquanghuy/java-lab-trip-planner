@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 5
+current_plan: 7
 status: executing
-last_updated: "2026-05-08T04:52:34.893Z"
+last_updated: "2026-05-08T05:13:25.743Z"
 progress:
   total_phases: 11
   completed_phases: 0
   total_plans: 10
-  completed_plans: 5
-  percent: 50
+  completed_plans: 6
+  percent: 60
 ---
 
 # Project State: Trip Planner
@@ -33,18 +33,18 @@ progress:
 ## Current Position
 
 **Phase:** Phase 0 — Monorepo Scaffolding
-**Status:** Executing Phase 00
-**Current plan:** 6
+**Status:** Ready to execute
+**Current plan:** 7
 
 ```
-Progress: [█████░░░░░] 50%
+Progress: [██████░░░░] 60%
 Phase: 00 (monorepo-scaffolding) — EXECUTING
-Plan: 6 of 10
+Plan: 7 of 10
            ^
            HERE
 ```
 
-**Next action:** Execute Plan 00-06 (`.planning/phases/00-monorepo-scaffolding/00-06-PLAN.md`).
+**Next action:** Execute Plan 00-07 (`.planning/phases/00-monorepo-scaffolding/00-07-PLAN.md`).
 
 ---
 
@@ -67,6 +67,7 @@ Plan: 6 of 10
 | 00-monorepo-scaffolding P03 | 8min | 3 | 6 |
 | 00-monorepo-scaffolding P04 | 3min | 2 | 5 |
 | 00-monorepo-scaffolding P05 | 6min | 2 | 4 |
+| 00-monorepo-scaffolding P06 | 5min | 2 | 6 |
 
 ---
 
@@ -96,6 +97,11 @@ Plan: 6 of 10
 - **00-05:** `services/eureka-server` is the standalone Netflix Eureka registry — `register-with-eureka=false` + `fetch-registry=false` + `enable-self-preservation=false`; D-21 client tuning (`registry-fetch-interval-seconds`/`lease-renewal-interval-in-seconds`) deliberately NOT applied here (Convention C13: tuning is for clients, eureka is the SERVER); D-11 honored (no Flyway, no datasource, no JPA, no Postgres deps); `spring.application.name=eureka-server` set per D-25/Pitfall 7.
 - **00-05:** Logback Option A chosen — eureka-server uses Spring Boot's default Logback config (pass-through `logback-spring.xml` with documented Option B switch instructions). NO `libs/observability` dependency in `services/eureka-server/build.gradle.kts`; registry traffic is not in the application trace path in Phase 0 (00-PATTERNS.md line 425). Phase 10 may switch to Option B if cross-service log correlation needs Eureka to match.
 - **00-05:** Local `java -jar` smoke deferred to Wave 4 compose. bootJar artifact is class-file 65 (JDK 21) and developer host has no JDK 21 installed (homebrew openjdk@17, openjdk 25, Corretto 11). Plan acceptance was met via successful `bootJar` — full runtime smoke (port 8761 + dashboard + `/actuator/health` + `/eureka/apps`) runs in compose with `eclipse-temurin:21-jre` image; CI uses `actions/setup-java@v4 java-version: 21`. Same ergonomic pattern Plan 00-03 SUMMARY documented.
+- **00-06:** `services/api-gateway` is the only public-facing backend in Phase 0 — Spring Cloud Gateway 4.x (reactive WebFlux variant) via `spring-cloud-starter-gateway` from the Spring Cloud 2025.0.x train (D-30); `spring-boot-starter-web` (servlet) deliberately ABSENT — including it would crash startup with "Spring MVC found on classpath, which is incompatible with Spring Cloud Gateway". All three libs (`observability`, `error-handling`, `api-contracts`) wired as `project(...)` deps now so Phase 1 lands without modifying `build.gradle.kts`.
+- **00-06:** Gateway route table contains 4 STATIC-URI entries (D-02 / Convention C9 hard rule — zero `lb://` schemes anywhere). Routes `/__health/{gateway,auth,trip,destination}` forward via `http://service-name:port` URIs with `SetPath=/__health` filter. Header comment locks the Phase 1 append-below convention so `/api/<svc>/**` entries land later without reordering. Optional `/__health/gateway` route INCLUDED at TOP of route list per plan recommendation for naming uniformity (loops back to `http://localhost:8080`).
+- **00-06:** Reactive trace context bridge (Pitfall 7 mitigation) registered TRANSITIVELY via `libs/observability` auto-config — `ObservabilityAutoConfiguration`'s `@ConditionalOnClass(name = "org.springframework.web.server.WebFilter")` activates `ReactiveMdcEnrichmentFilter` on the gateway. NO manual `@Bean ServerHttpObservationFilter` (Convention C7 hard rule). Cross-trace assertion (single trace ID across gateway → downstream) deferred to Phase 1 per Pitfall 7 step 4.
+- **00-06:** Local `compileJava` workaround documented — developer `JAVA_HOME` defaults to homebrew openjdk JDK 25, which Gradle 8.14.2's bundled Kotlin compiler chokes on at `JavaVersion.parse('25.0.2')`. Fix: invoke gradle with `JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/...`; `JavaLanguageVersion.of(21)` toolchain still drives the Java compiler. CI is unaffected (`actions/setup-java@v4 java-version: 21`). Same friction Plan 00-01 SUMMARY's open Todo tracks.
+- **00-06:** Actuator surface limited to `health,info,prometheus` ONLY (T-00-20 mitigation — `env`, `configprops`, `beans`, `mappings` NOT exposed). `management.tracing.sampling.probability=1.0` set in dev/docker for Pitfall 7 step-4 trace-continuity verification in Phase 1.
 
 ### Critical Pitfalls to Watch
 
@@ -134,4 +140,4 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-08T04:47Z — Stopped at: Completed 00-05-PLAN.md — Resume from: 00-06-PLAN.md
+**Last session:** 2026-05-08T05:00Z — Stopped at: Completed 00-06-PLAN.md — Resume from: 00-07-PLAN.md

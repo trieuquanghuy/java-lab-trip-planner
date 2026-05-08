@@ -43,7 +43,7 @@ Plans:
 - [x] 00-03-PLAN.md — libs/observability fully wired (D-04): @AutoConfiguration + servlet + reactive MDC filters + shared logback-spring-base.xml
 - [x] 00-04-PLAN.md — libs/error-handling (D-05 stubs: ProblemDetailFactory + 2-baseline ErrorCode) + libs/api-contracts (D-06 empty module)
 - [x] 00-05-PLAN.md — eureka-server skeleton (port 8761, no DB, register-with-eureka false)
-- [ ] 00-06-PLAN.md — api-gateway skeleton (port 8080, Spring Cloud Gateway 4.2.x, /__health/<svc> static-URI routing per D-02)
+- [x] 00-06-PLAN.md — api-gateway skeleton (port 8080, Spring Cloud Gateway 4.2.x, /__health/<svc> static-URI routing per D-02)
 - [ ] 00-07-PLAN.md — auth/trip/destination service skeletons (per-service Flyway history table per D-09 / Pitfall 3, V1 baseline migrations, /__health controllers)
 - [ ] 00-08-PLAN.md — infra/postgres/init.sql (D-08 schemas + per-service users) + infra/docker-compose.yml (D-18/D-20/D-22) + root alias (D-19) + per-service Dockerfiles
 - [ ] 00-09-PLAN.md — Frontend Vite 6 + React 18 + Tailwind v3.4 + provider stack + UI-SPEC landing page + shadcn@2.x init checkpoint (D-32)
@@ -242,7 +242,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 0. Monorepo Scaffolding | 3/10 | In progress | - |
+| 0. Monorepo Scaffolding | 6/10 | In Progress|  |
 | 1. API Gateway | 0/? | Not started | - |
 | 2. Auth Service | 0/? | Not started | - |
 | 3. Destination Service — Search | 0/? | Not started | - |

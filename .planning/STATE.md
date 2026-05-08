@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_plan: 10
-status: executing
-last_updated: "2026-05-08T06:52:44.737Z"
+status: verifying
+last_updated: "2026-05-08T07:09:49.217Z"
 progress:
   total_phases: 11
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 10
-  completed_plans: 9
-  percent: 90
+  completed_plans: 10
+  percent: 100
 ---
 
 # Project State: Trip Planner
@@ -33,18 +33,18 @@ progress:
 ## Current Position
 
 **Phase:** Phase 0 — Monorepo Scaffolding
-**Status:** Ready to execute
-**Current plan:** 10
+**Status:** Phase 0 complete — ready for Phase 1 transition
+**Current plan:** 10 (final plan of Phase 0; all 10 plans complete)
 
 ```
-Progress: [█████████░] 90%
-Phase: 00 (monorepo-scaffolding) — EXECUTING
-Plan: 10 of 10
-           ^
-           HERE
+Progress: [██████████] 100%
+Phase: 00 (monorepo-scaffolding) — DONE
+Plan: 10 of 10 — DONE
+                  ^
+                  HERE
 ```
 
-**Next action:** Execute Plan 00-10 (`.planning/phases/00-monorepo-scaffolding/00-10-PLAN.md`).
+**Next action:** Phase 0 closure — verifier sweep, then transition to Phase 1 (API Gateway hardening + JWT validation). All 10 Phase 0 plans complete; user-approved smoke run cleared phase-gate ("approved — smoke passed, all 5 SCs + NFR-04 green").
 
 ---
 
@@ -52,7 +52,7 @@ Plan: 10 of 10
 
 | Metric | Target | Current |
 |--------|--------|---------|
-| Phases complete | 11 | 0 |
+| Phases complete | 11 | 1 |
 | Requirements delivered | 31 | 1 |
 | Backend line coverage | ≥ 70% | N/A |
 | Auth + ownership coverage | 100% | N/A |
@@ -71,6 +71,7 @@ Plan: 10 of 10
 | 00-monorepo-scaffolding P07 | 8min | 3 | 21 |
 | 00-monorepo-scaffolding P08 | 11min | 2 | 10 |
 | 00-monorepo-scaffolding P09 | 28min | 4 | 25 |
+| 00-monorepo-scaffolding P10 | 12min | 3 | 2 |
 
 ---
 
@@ -125,6 +126,10 @@ Plan: 10 of 10
 - **00-09:** Rule 3 auto-fixes for `tsc -b` to compile `vite.config.ts`: added `@types/node` devDep (so `import path from 'node:path'` resolves), added `/// <reference types="vitest" />` to `vite.config.ts` (so the `test:` block typechecks against `UserConfigExport`), added `types: ['node', 'vitest']` to `tsconfig.node.json`. Plan's PATTERNS.md template referenced `'node:path'` verbatim but didn't list `@types/node` in the dep table — without it `pnpm build` fails with `Cannot find module 'node:path'`. Also gitignored `*.tsbuildinfo` + `vite.config.{d.ts,js}` (TS project-references emits) so future builds don't pollute `git status`.
 - **00-09:** `tailwind.config.ts` `darkMode` normalized from shadcn@2.x init's quirky `['class', 'class']` (it appends instead of replacing when the file already has `darkMode: 'class'`) back to canonical single-string `'class'`. Both forms are functionally equivalent in Tailwind (treated as class-based dark mode); single-string form matches verify grep + UI-SPEC §Design System spec.
 - **00-09:** `frontend/Dockerfile` uses `nginx:alpine` runtime serving the production bundle (NOT `node:alpine` running `pnpm dev`) — the production-bundle path supports a real HEALTHCHECK + faster boot + faithful 'production-like dev'. A future phase can swap to a Vite-dev-server runtime stage for hot-reload-in-container if needed; Phase 0 doesn't need that. Manual `docker build` runtime smoke deferred to Plan 00-10 / first user `docker compose up --wait` (docker daemon was not running on dev host) — same convention as Plan 00-08.
+- **00-10:** CI scope intentionally minimal per D-15 — `backend.yml` runs only `./gradlew :services:<svc>:check` (per-service matrix); `frontend.yml` runs only `pnpm install --frozen-lockfile && pnpm lint && pnpm test --run && pnpm build`. NO OWASP Dependency-Check, NO security-tagged JUnit suite, NO integration tests with Testcontainers, NO Playwright E2E, NO Lighthouse — all deferred to Phase 10 with the header comment of each workflow file documenting what's missing. Branch protection NOT configured (manual GitHub UI follow-up; deferred to Phase 10).
+- **00-10:** Skeleton CI uses `ubuntu-24.04` + `actions/setup-java@v4` (temurin 21) + `actions/setup-node@v4` (node 20) per D-16; Corepack auto-bootstraps `pnpm 9.15.0` from frontend/package.json's `packageManager` field — no manual `npm i -g pnpm`, no `pnpm/action-setup` action. Triggers per D-17: `push:` (any branch — no `branches:` filter; runs on every commit) + `pull_request:` to main. T-00-48 (unbounded CI runs) accepted in Phase 0; Phase 10 may add `concurrency: cancel-in-progress`.
+- **00-10:** `dorny/paths-filter@v3` explicit YAML-block syntax with 7 named filters (5 services + libs + gradle root). Lib/Gradle changes fan out to all services via per-matrix-entry `if:` clauses combining the service's own filter output with `libs` and `gradle`. `gradle/wrapper-validation-action@v3` runs unconditionally before any matrix step (T-00-46 mitigation — verifies committed gradle-wrapper.jar sha256 against official Gradle distribution).
+- **00-10:** Final Phase 0 phase-gate cleared via Task 10.3 `checkpoint:human-verify` — user signal "approved — smoke passed, all 5 SCs + NFR-04 green" after running `docker compose down -v && docker compose up -d --wait && bash scripts/smoke.sh` on a fresh checkout. Per-criterion wall-clock not captured at agent level (acceptable — `scripts/smoke.sh` asserts SC#1's «<60s» internally on warm cache, so user's aggregate "approved" signal implicitly carries the timing assertion). With this plan complete, Phase 0 declared complete (10/10 plans done); ready for Phase 1.
 
 ### Critical Pitfalls to Watch
 
@@ -163,4 +168,4 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-08T06:52:44.729Z
+**Last session:** 2026-05-08T07:09:43.726Z

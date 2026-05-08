@@ -1,0 +1,64 @@
+# Phase 0 base config for auth-service.
+#
+# Source: 00-RESEARCH.md lines 465-512 (Pattern 2); 00-PATTERNS.md Bucket E substitution table
+# applied (<service>=auth, <port>=8081, <DbUserEnv>=AUTH_DB_USER, etc.).
+#
+# Critical conventions encoded here:
+#   - D-25 / Pitfall 7 / C3: spring.application.name=auth-service (Zipkin service-name attribution).
+#   - D-09 / Pitfall 3 / C4: spring.flyway.table=auth_flyway_schema_history (per-service history
+#     table prevents checksum collision across schemas in the shared Postgres instance).
+#   - D-08 / C8: per-service DB user via env (AUTH_DB_USER/AUTH_DB_PASSWORD) — schema-scoped grants
+#     come from infra/postgres/init.sql (Wave 6). JDBC ?currentSchema=auth pins the search_path.
+#   - C15 (anti-pattern absent): spring.jpa.hibernate.ddl-auto=validate — NEVER `update`. Real schema
+#     comes from Flyway V2+ (Phase 2); Hibernate validates entities against the migrated schema on boot.
+#   - D-23 / C2: only dev/docker/test profiles exist in v1 — NO `prod` block.
+#   - T-00-29 mitigation: management.endpoints.web.exposure.include = health,info,prometheus only —
+#     no env / configprops / beans / mappings.
+#   - D-04 / Pitfall 7 step 4: management.tracing.sampling.probability=1.0 in dev for trace continuity
+#     verification in Phase 1.
+spring:
+  application:
+    name: auth-service          # D-25 (Pitfall 7)
+  profiles:
+    default: dev
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:tripplanner}?currentSchema=auth
+    username: ${AUTH_DB_USER:auth_svc}
+    password: ${AUTH_DB_PASSWORD:auth_svc}
+  flyway:
+    enabled: true
+    schemas: auth                              # D-09 (Pitfall 3) — single-schema operation
+    default-schema: auth
+    table: auth_flyway_schema_history          # D-09 (Pitfall 3) — per-service history
+    locations: classpath:db/migration
+  jpa:
+    hibernate:
+      ddl-auto: validate                       # NEVER `update` (anti-pattern / C15)
+    properties:
+      hibernate.default_schema: auth
+server:
+  port: 8081
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+  tracing:
+    sampling:
+      probability: 1.0                         # D-04
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+    fetch-registry: true
+    register-with-eureka: true

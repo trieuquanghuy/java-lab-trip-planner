@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 2
+current_plan: 3
 status: executing
-last_updated: "2026-05-08T04:01:41.032Z"
+last_updated: "2026-05-08T04:08:00.000Z"
 progress:
   total_phases: 11
   completed_phases: 0
   total_plans: 10
-  completed_plans: 1
-  percent: 10
+  completed_plans: 2
+  percent: 20
 ---
 
 # Project State: Trip Planner
@@ -34,17 +34,17 @@ progress:
 
 **Phase:** Phase 0 — Monorepo Scaffolding
 **Status:** Executing Phase 00
-**Current plan:** 2
+**Current plan:** 3
 
 ```
-Progress: [█░░░░░░░░░] 10%
+Progress: [██░░░░░░░░] 20%
 Phase: 00 (monorepo-scaffolding) — EXECUTING
-Plan: 2 of 10
+Plan: 3 of 10
            ^
            HERE
 ```
 
-**Next action:** Execute Plan 00-02 (`./planning/phases/00-monorepo-scaffolding/00-02-PLAN.md`).
+**Next action:** Execute Plan 00-03 (`./planning/phases/00-monorepo-scaffolding/00-03-PLAN.md`).
 
 ---
 
@@ -63,6 +63,7 @@ Plan: 2 of 10
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | 00-monorepo-scaffolding P01 | 63min | 3 | 14 |
+| 00-monorepo-scaffolding P02 | 3min | 2 | 2 |
 
 ---
 
@@ -79,6 +80,9 @@ Plan: 2 of 10
 - **00-01:** `micrometer-tracing-bom` and observability bundle pinned ONCE in catalog (Pitfall 7 / Convention C6) — never overridden per-service
 - **00-01:** Subproject directories created with `.gitkeep` so newer Gradle launchers do not error on missing project paths during settings evaluation; build files arrive in Wave 2+
 - **00-01:** Gradle 8.14.2 wrapper distribution side-loaded after network flake; SHA256 verified against services.gradle.org (`7197a12f…0a6999`)
+- **00-02:** `scripts/smoke.sh` lands in Wave 1 per D-33 (NOT a final wave) so each subsequent wave's containers can be smoke-tested incrementally as they come online via `--criterion <N>` per-criterion gating
+- **00-02:** NFR-04 free-tier audit uses an enumerated grep deny-list (31 tokens: 11 Java + 10 npm + 10 compose) — concrete verification of `requirements: [NFR-04]`, NOT a vague "no paid deps" heuristic (BLOCKER 4 fix)
+- **00-02:** Smoke script has jq detection with grep fallback for SC#2/#3/#3-route/#4 — usable in minimal CI environments without an extra package install
 
 ### Critical Pitfalls to Watch
 
@@ -117,4 +121,4 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-08T03:58Z — Stopped at: Completed 00-01-PLAN.md — Resume from: 00-02-PLAN.md
+**Last session:** 2026-05-08T04:08Z — Stopped at: Completed 00-02-PLAN.md — Resume from: 00-03-PLAN.md

@@ -39,7 +39,7 @@
 **Plans**: 10 plans
 Plans:
 - [x] 00-01-PLAN.md — Gradle multi-module skeleton + version catalog (Spring Cloud 2025.0.x per D-30) + .env.example + root README
-- [ ] 00-02-PLAN.md — scripts/smoke.sh (D-33 Wave 1 phase-gate verifier) + scripts/README.md
+- [x] 00-02-PLAN.md — scripts/smoke.sh (D-33 Wave 1 phase-gate verifier) + scripts/README.md
 - [ ] 00-03-PLAN.md — libs/observability fully wired (D-04): @AutoConfiguration + servlet + reactive MDC filters + shared logback-spring-base.xml
 - [ ] 00-04-PLAN.md — libs/error-handling (D-05 stubs: ProblemDetailFactory + 2-baseline ErrorCode) + libs/api-contracts (D-06 empty module)
 - [ ] 00-05-PLAN.md — eureka-server skeleton (port 8761, no DB, register-with-eureka false)
@@ -242,7 +242,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 0. Monorepo Scaffolding | 0/10 | Not started | - |
+| 0. Monorepo Scaffolding | 2/10 | In progress | - |
 | 1. API Gateway | 0/? | Not started | - |
 | 2. Auth Service | 0/? | Not started | - |
 | 3. Destination Service — Search | 0/? | Not started | - |

@@ -14,6 +14,13 @@
 #
 # Redis: @ServiceConnection in LoginRateLimiterIT wires spring.data.redis.* to Testcontainers
 # redis:7-alpine, overriding the host/port values below.
+management:
+  tracing:
+    sampling:
+      probability: 1.0   # D-04 / D-19 — 100% sampling in tests
+    baggage:
+      enabled: false     # Activates PropagationWithoutBaggage → provides W3C TextMapPropagator bean
+
 spring:
   data:
     redis:

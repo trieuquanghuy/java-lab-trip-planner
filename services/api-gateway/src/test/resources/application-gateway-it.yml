@@ -14,7 +14,16 @@
 #   - Non-rate-limit ITs only need the full filter chain (JWT auth, X-User-Id injection, CORS,
 #     ProblemDetail entry point) — not the rate limiter.
 #   - Removing rate limiters here avoids Redis connection errors in tests without Redis running.
+management:
+  tracing:
+    sampling:
+      probability: 1.0   # D-04 / D-19 — 100% sampling in tests so SC#6 trace continuity is deterministic
+    baggage:
+      enabled: false     # Activates PropagationWithoutBaggage → provides W3C TextMapPropagator bean
+
 spring:
+  reactor:
+    context-propagation: auto   # Required for Slf4JEventListener to populate MDC on reactive threads (SC#6)
   data:
     redis:
       host: localhost

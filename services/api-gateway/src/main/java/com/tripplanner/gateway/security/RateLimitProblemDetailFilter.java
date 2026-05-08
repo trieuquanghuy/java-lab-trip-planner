@@ -3,9 +3,13 @@
 // Source: 01-RESEARCH.md Pattern 6 (lines 832-862); 01-CONTEXT.md D-07.
 //
 // Spring Cloud Gateway's RequestRateLimiter writes 429 with empty body. This decorator
-// intercepts writeWith and, when status == 429, replaces the body with
+// intercepts writeWith and setComplete; when status == 429, replaces the body with
 // ProblemDetailFactory.of(TOO_MANY_REQUESTS, AUTH_RATE_LIMITED, ...). docs/04-api-spec.md §6
 // expects code "auth.rate_limited".
+//
+// Rule 1 fix: RequestRateLimiterGatewayFilterFactory calls setComplete() (empty body path)
+// rather than writeWith() when rejecting a request. Override setComplete() to detect 429 and
+// write the ProblemDetail body so Content-Type application/problem+json is always present.
 //
 // T-01-06 (trace ID leakage): the body does NOT include the trace identifier; only ErrorCode + detail.
 package com.tripplanner.gateway.security;
@@ -47,19 +51,36 @@ public class RateLimitProblemDetailFilter implements WebFilter {
             @Override
             public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
                 if (HttpStatus.TOO_MANY_REQUESTS.equals(getStatusCode())) {
-                    getHeaders().setContentType(MediaType.APPLICATION_PROBLEM_JSON);
-                    ProblemDetail pd = ProblemDetailFactory.of(
-                            HttpStatus.TOO_MANY_REQUESTS,
-                            ErrorCode.AUTH_RATE_LIMITED,
-                            "Rate limit exceeded for this route");
-                    try {
-                        byte[] bytes = mapper.writeValueAsBytes(pd);
-                        return super.writeWith(Mono.just(bufferFactory().wrap(bytes)));
-                    } catch (JsonProcessingException ex) {
-                        return Mono.error(ex);
-                    }
+                    return writeProblemDetail();
                 }
                 return super.writeWith(body);
+            }
+
+            /**
+             * RequestRateLimiterGatewayFilterFactory calls setComplete() (empty-body path)
+             * rather than writeWith() when rejecting a request. We intercept here to ensure
+             * the 429 response always has a proper RFC 7807 body and Content-Type header.
+             */
+            @Override
+            public Mono<Void> setComplete() {
+                if (HttpStatus.TOO_MANY_REQUESTS.equals(getStatusCode())) {
+                    return writeProblemDetail();
+                }
+                return super.setComplete();
+            }
+
+            private Mono<Void> writeProblemDetail() {
+                getHeaders().setContentType(MediaType.APPLICATION_PROBLEM_JSON);
+                ProblemDetail pd = ProblemDetailFactory.of(
+                        HttpStatus.TOO_MANY_REQUESTS,
+                        ErrorCode.AUTH_RATE_LIMITED,
+                        "Rate limit exceeded for this route");
+                try {
+                    byte[] bytes = mapper.writeValueAsBytes(pd);
+                    return super.writeWith(Mono.just(bufferFactory().wrap(bytes)));
+                } catch (JsonProcessingException ex) {
+                    return Mono.error(ex);
+                }
             }
         };
         return chain.filter(exchange.mutate().response(decorated).build());

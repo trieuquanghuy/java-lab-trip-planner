@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Source: 00-PATTERNS.md Bucket C (lines 415-426); Plan 00-05 Task 5.2 Option A.
+
+  eureka-server uses Spring Boot's default Logback config. Other services
+  pull in libs/observability's logback-spring-base.xml include for unified
+  JSON output + MDC (traceId, spanId, requestId, userId). Eureka is not in
+  the trace path in Phase 0 (00-PATTERNS.md line 425; 00-CONTEXT.md "Reusable
+  assets"), so its log shape may differ from the other services — accepted
+  trade-off for minimum surface (no libs/observability dep in build.gradle.kts).
+
+  This pass-through file exists so Spring Boot's logback subsystem reads it
+  without warnings. If a future phase needs unified Eureka log format,
+  swap to Option B by:
+    1) adding `implementation(project(":libs:observability"))` to build.gradle.kts
+    2) replacing the body below with `<include resource="logback-spring-base.xml"/>`
+-->
+<configuration>
+    <!-- intentionally empty: rely on Spring Boot defaults (D-11 + Plan 00-05 Option A) -->
+</configuration>

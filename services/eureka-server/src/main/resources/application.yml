@@ -1,0 +1,30 @@
+# Source: 00-RESEARCH.md Pattern 4 (lines 588-606); Open Question #5 resolved
+# (set spring.application.name even though Eureka does not trace itself — D-25 / Pitfall 7
+# — for log clarity).
+#
+# D-11: Eureka has NO datasource, NO Flyway. This file therefore has no spring.datasource,
+#       no spring.flyway, and no JPA settings.
+# D-22: Compose binds eureka to 127.0.0.1:8761 — happens in infra/docker-compose.yml (Wave 4),
+#       NOT here.
+# D-21 NOTE: do NOT set eureka.client.registry-fetch-interval-seconds here. That tuning is for
+#       client services. eureka-server is the SERVER — it does not fetch.
+spring:
+  application:
+    name: eureka-server          # D-25 (Pitfall 7) — set even though Eureka doesn't trace itself
+server:
+  port: 8761
+eureka:
+  client:
+    register-with-eureka: false  # standalone — does NOT register with itself
+    fetch-registry: false
+  server:
+    enable-self-preservation: false   # OK in single-instance dev — disables the Eureka feature that retains stale leases
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info       # actuator health needed for compose healthcheck (D-20)
+  endpoint:
+    health:
+      probes:
+        enabled: true

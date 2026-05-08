@@ -18,8 +18,15 @@ spring:
     name: api-gateway          # D-25 (Pitfall 7) — Zipkin service name
   profiles:
     default: dev
+  data:                        # Phase 1 (01-03-PLAN.md) — RedisRateLimiter backing store (D-05/D-06)
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   cloud:
     gateway:
+      httpclient:               # Phase 1 (D-10) — fail-fast timeouts
+        connect-timeout: 1000   # 1s — fail-fast on stuck downstream
+        response-timeout: 10s   # 10s — generous window for cold-cache search and bcrypt-12 login
       routes:
         # P0 health-routing convention — STATIC URIs per D-02 (no Eureka load-balanced scheme).
         # /__health/gateway routes back to this gateway's own GatewayHealthController for naming
@@ -51,6 +58,87 @@ spring:
           filters:
             - SetPath=/__health
         # Phase 1 will append /api/auth/**, /api/search/**, /api/destinations*/**, /api/trips/** below this comment.
+        # --- Phase 1 routes (Source: 01-RESEARCH.md Pattern 5 lines 670-763; 01-CONTEXT.md
+        #     D-05/D-06/D-08/D-10; this PLAN: 01-03-PLAN.md). Static URIs only (C9-P1).
+        #     KeyResolver bean refs ipKeyResolver / userIdKeyResolver are defined in
+        #     services/api-gateway/.../routing/KeyResolverConfig.java. ---
+        # --- AUTH (D-03 public allowlist; D-05 IP-only rate limit on /login) ---
+        - id: auth-login
+          uri: http://auth-service:8081           # C9-P1 static URI; D-08
+          predicates:
+            - Path=/api/auth/login
+            - Method=POST
+          filters:
+            # D-05 IP-only 30 req / 900 s (Phase 1 leg of the split; Phase 2 adds IP+email in auth-service).
+            # Sub-1-rps formula: replenishRate=30, requestedTokens=900, burstCapacity=30
+            # → 30-token bucket refilling at 30 tokens/sec but each request costs 900 tokens
+            # → steady-state allowed rate = 30 tokens / 900 token-cost = 1 req per 30 s = 30 req/15 min.
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 30
+                redis-rate-limiter.burstCapacity: 30
+                redis-rate-limiter.requestedTokens: 900
+                key-resolver: "#{@ipKeyResolver}"
+        - id: auth-signup
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/api/auth/signup
+            - Method=POST
+          filters:
+            # D-06: 3 / hour by IP — replenishRate=3, requestedTokens=3600, burst=3.
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 3
+                redis-rate-limiter.burstCapacity: 3
+                redis-rate-limiter.requestedTokens: 3600
+                key-resolver: "#{@ipKeyResolver}"
+        - id: auth-verify
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/api/auth/verify
+        - id: auth-refresh
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/api/auth/refresh
+        - id: auth-other
+          uri: http://auth-service:8081
+          predicates:
+            - Path=/api/auth/**
+        # --- SEARCH (D-03 public; D-06 IP-rate-limited 60/min) ---
+        - id: search
+          uri: http://destination-service:8083
+          predicates:
+            - Path=/api/search/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 1
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@ipKeyResolver}"
+        # --- DESTINATIONS (D-03 public; D-06 IP-rate-limited 60/min) ---
+        - id: destinations
+          uri: http://destination-service:8083
+          predicates:
+            - Path=/api/destinations/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 1
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@ipKeyResolver}"
+        # --- TRIPS (authenticated; D-06 userId-rate-limited 120/min — RequestRateLimiter
+        #     runs AFTER AuthenticationWebFilter, so SecurityContext.principal is populated
+        #     when userIdKeyResolver reads it.) ---
+        - id: trips
+          uri: http://trip-service:8082
+          predicates:
+            - Path=/api/trips/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 120
+                key-resolver: "#{@userIdKeyResolver}"
 server:
   port: 8080
 management:

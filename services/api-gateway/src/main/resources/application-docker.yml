@@ -1,9 +1,11 @@
 # Source: 00-PATTERNS.md Bucket D (lines 480-498); 00-CONTEXT.md D-21 (Eureka warm-up tuning, Pitfall 10 / C13)
+# Phase 1 (01-03-PLAN.md): adds spring.data.redis.host=redis for RedisRateLimiter (D-05/D-06).
 #
 # Activated when SPRING_PROFILES_ACTIVE=docker (compose). Overrides the dev defaults in application.yml:
 #   - Eureka URL switches from localhost to compose-network DNS name eureka-server.
 #   - Eureka client tuning: 5s/5s/10s for fast cold-start (<60s per ROADMAP SC #1).
 #   - Zipkin endpoint switches to compose-network DNS name zipkin.
+#   - Redis host switches from localhost to compose-network DNS name redis.
 #
 # Convention C13 reinforced: registry-fetch-interval-seconds / lease-renewal / lease-expiration
 # are CLIENT settings — eureka-server itself does NOT carry them.
@@ -11,6 +13,10 @@ spring:
   config:
     activate:
       on-profile: docker
+  data:                # Phase 1 (01-03-PLAN.md) — compose-network DNS for RedisRateLimiter
+    redis:
+      host: redis
+      port: 6379
 eureka:
   client:
     service-url:

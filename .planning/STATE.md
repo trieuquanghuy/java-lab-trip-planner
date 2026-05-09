@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 3
+current_plan: 6
 status: executing
-stopped_at: Plan 02-04 complete
-last_updated: "2026-05-09T16:02:29.845Z"
+stopped_at: Plan 02-05 complete
+last_updated: "2026-05-09T16:14:04Z"
 progress:
   total_phases: 11
   completed_phases: 2
   total_plans: 23
-  completed_plans: 20
-  percent: 87
+  completed_plans: 21
+  percent: 91
 ---
 
 # Project State: Trip Planner
@@ -35,15 +35,15 @@ progress:
 
 **Phase:** 2
 **Status:** Ready to execute
-**Current plan:** 3
+**Current plan:** 6
 
 ```
-Progress: [█████████░] 87%
+Progress: [█████████░] 91%
 Phase: 02 (auth-service) — EXECUTING
-Plan: 5 of 7
+Plan: 6 of 7
 ```
 
-**Next action:** Phase 2 planning — Auth Service (signup → verify email → login → refresh → logout + 8 mandatory security tests).
+**Next action:** Phase 2 Plan 06 — integration tests (4 mandatory @Tag("security") ITs + AuthControllerIT happy-path + AuthControllerAdviceIT BL-01 + 2 unit tests + BL-01 negative-assertion gateway updates).
 
 ---
 
@@ -65,6 +65,7 @@ Plan: 5 of 7
 | Phase 02-auth-service P02 | 6min | 2 tasks | 3 files |
 | Phase 02-auth-service P03 | 5min | 3 tasks | 20 files |
 | Phase 02 P04 | 4min | 2 tasks | 9 files |
+| Phase 02 P05 | 8min | 3 tasks | 3 files |
 
 ### Plan Execution Log
 
@@ -84,6 +85,8 @@ Plan: 5 of 7
 | 02-auth-service P01 | 13min | 3 | 12 |
 | 02-auth-service P02 | 6min | 2 | 3 |
 | 02-auth-service P03 | 5min | 3 | 20 |
+| 02-auth-service P04 | 4min | 2 | 9 |
+| 02-auth-service P05 | 8min | 3 | 3 |
 
 ---
 
@@ -185,6 +188,13 @@ Plan: 5 of 7
 - **02-04:** TokenCleanupJob inner methods (`cleanupEmailTokens` / `cleanupRefreshTokens`) are public to permit AOP proxy interception. The `@Scheduled cleanup()` invocation arrives via the proxied bean reference (Spring's TaskScheduler holds the proxy); whether each `this.cleanup*()` self-call gets its own transaction depends on the AOP proxy mode. End-to-end two-transaction confirmation deferred to Plan 06 IT per the plan's `<output>` directive — if IT shows single-Tx behavior, the inner methods will be extracted to a separate `@Component` to force the proxy hop.
 - **02-04:** DTO record convention locked — six DTOs as Java records with Jakarta Bean Validation annotations on record components (NOT a separate validation layer). Field names `email` / `password` are deliberately uniform across `SignupRequest` / `LoginRequest` so Plan 05's `AuthControllerAdvice` can use a single field-discrimination function across both endpoints. Zero `javax.validation` imports anywhere — Spring Boot 3.x is on Jakarta EE 9+.
 - **02-04:** `VerificationEmailRequestedEvent` is a plain `record` — no `extends ApplicationEvent`. Spring's `ApplicationEventPublisher` accepts any object as an event since Spring 4.2. The publish/listen indirection is the keystone Pitfall-1 mitigation: `EmailVerificationSender` is a separate Spring bean, so the listener invocation arrives via the bean's AOP proxy and `@Async("authAsyncExecutor")` actually goes async. Plan 05's `AuthService.signup` will publish the event after the signup transaction commits.
+- **02-05:** `AuthService` is the orchestrator with explicit `@Transactional` boundaries (D-21) — `signup()`/`login()`/`logout()` REQUIRED + `findUserByIdOrThrow()` readOnly. Login order is rate-limit-then-bcrypt-then-verified-check (D-05) with a hardcoded bcrypt-12 dummy hash on the user-not-found path for timing-attack defense (~250ms constant-latency regardless of email existence). Hash value `$2a$12$WzpEMRHVmEpoF4zgbWiLoOoTHqdaJJa/svHYM/l9Aaq4aD2HfDb1y` is bcrypt-of-empty-string; independently regenerable via `BCryptPasswordEncoder(12).encode("")`. Frozen at impl time — a per-request `encode("")` would itself leak timing.
+- **02-05:** D-23 re-signup branch + D-24 / Open Q5 Option A both implemented in `AuthService.signup`: existing-unverified mints fresh token + sends email; existing-verified returns opaque 201 with `emailSent=false` (no email re-sent). `EmailAlreadyRegisteredException` is NEVER thrown from `/signup` — verified by `git grep -F 'throw new EmailAlreadyRegisteredException' services/auth-service/src/main/java/` returning 0 matches.
+- **02-05:** `AuthController.findUserByIdOrThrow` is the keystone defense-in-depth on the refresh path (T-2-05-06). After `RefreshTokenService.rotate` succeeds (returning only `userId/rawValue/expiresAt`), the controller re-fetches the User via `AuthService.findUserByIdOrThrow` to obtain `email/email_verified` for the new access JWT. If the user was deleted/banned in the 0..7d refresh window, the helper throws `RefreshInvalidException` -> 401 — chain may still be valid in `auth.refresh_tokens` but the JWT mint is gated.
+- **02-05:** `AuthControllerAdvice` ships the 9 verbatim UI-SPEC §Server-Driven Copy detail strings byte-for-byte. Each string appears once in code body (handler return value) AND once in the advice header comment as machine-greppable documentation. Every handler routes through `ProblemDetailFactory.of(...)` and sets `application/problem+json` content-type; never `new ObjectMapper()` (BL-01 / Pitfall 7). Comment-stripped grep across the entire `services/auth-service/src/main/java/com/tripplanner/auth/` tree returns 0 actual code instances of `new ObjectMapper()` (only doc comments warning future maintainers).
+- **02-05:** D-12 cookie scope verbatim wired in `buildRefreshCookie(rawValue, maxAge)` private helper in `AuthController`: `ResponseCookie.from("refresh_token", v).httpOnly(true).secure(props.getAuth().getCookie().isSecure()).sameSite("Strict").path("/api/auth").maxAge(...).build()`. Logout's cookie-clear is the same builder with empty value + `maxAge(0)`. The "Secure" flag is profile-toggled — `false` in dev/test (HTTP localhost), `true` in any future deployed profile.
+- **02-05:** Verify endpoint is HTTP-layer-only (no `AuthService.verify()` method). Controller calls `EmailVerificationService.consume(token)` directly because the response is a 302 redirect to `${app.frontend.base-url}/verify?status={success|invalid|expired}` — pure HTTP concern. Service returns the lowercase status string verbatim per UI-SPEC §Redirect Query-Param Contract.
+- **02-05:** X-Forwarded-For first-token IP resolution implemented in `resolveClientIp(http)` private helper. Comma-separated proxy chain handled by `int comma = fwd.indexOf(','); return (comma >= 0 ? fwd.substring(0, comma) : fwd).trim();`. Falls back to `http.getRemoteAddr()` for tests / direct hits — but Phase 1's `DirectServiceAccessWithoutGatewayReturns401IT` already 401s direct hits in production, so a forged X-Forwarded-For never reaches this code.
 
 ### Critical Pitfalls to Watch
 
@@ -223,6 +233,6 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-09T16:02:29.836Z
-**Stopped at:** Plan 02-04 complete
+**Last session:** 2026-05-09T16:14:04Z
+**Stopped at:** Plan 02-05 complete
 **Resume file:** None

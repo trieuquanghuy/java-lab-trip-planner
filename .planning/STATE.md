@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 3
 status: executing
-stopped_at: Phase 2 UI-SPEC approved
-last_updated: "2026-05-09T15:53:53.609Z"
+stopped_at: Plan 02-04 complete
+last_updated: "2026-05-09T16:02:29.845Z"
 progress:
   total_phases: 11
   completed_phases: 2
   total_plans: 23
-  completed_plans: 19
-  percent: 83
+  completed_plans: 20
+  percent: 87
 ---
 
 # Project State: Trip Planner
@@ -38,9 +38,9 @@ progress:
 **Current plan:** 3
 
 ```
-Progress: [████████░░] 83%
+Progress: [█████████░] 87%
 Phase: 02 (auth-service) — EXECUTING
-Plan: 4 of 7
+Plan: 5 of 7
 ```
 
 **Next action:** Phase 2 planning — Auth Service (signup → verify email → login → refresh → logout + 8 mandatory security tests).
@@ -64,6 +64,7 @@ Plan: 4 of 7
 | Phase 02-auth-service P01 | 13min | 3 tasks | 12 files |
 | Phase 02-auth-service P02 | 6min | 2 tasks | 3 files |
 | Phase 02-auth-service P03 | 5min | 3 tasks | 20 files |
+| Phase 02 P04 | 4min | 2 tasks | 9 files |
 
 ### Plan Execution Log
 
@@ -179,6 +180,11 @@ Plan: 4 of 7
 - **02-03:** Skinny exception classes — 7 custom RuntimeException subclasses with no-arg ctors and no message. Plan 04 ControllerAdvice supplies the canonical UI-SPEC `detail` strings; prevents English-text drift across throw sites.
 - **02-03:** Rule 2 deviation — wired `AUTH_JWT_SECRET` passthrough into `infra/docker-compose.yml` `auth-service.environment` block. Variable was declared in `.env.example` since Phase 1 (D-16) but never wired through to the auth-service container; without the passthrough, application.yml's `${AUTH_JWT_SECRET}` placeholder would fail to resolve at compose-startup.
 - **02-03:** EmailVerificationService.consume returns verbatim UI-SPEC `"success"|"invalid"|"expired"`. Per docs/05 §9.1 (account-enumeration policy), unknown AND consumed both return `"invalid"` — same code, no enumeration leak.
+- **02-04:** Em-dash in EmailVerificationSender body written as the literal U+2014 character (`—`) directly in Java source — NOT a Unicode escape. Compiler accepts both forms identically; literal form keeps source readable and makes the "byte-for-byte verbatim per UI-SPEC" acceptance criterion grep-checkable. Spring Boot Gradle plugin's UTF-8 source encoding default carries through; verified via `hexdump` showing the `e2 80 94` byte sequence at the sign-off line.
+- **02-04:** EmailVerificationSender body uses concatenated string literals with explicit `\n\n` separators (NOT Java text blocks). Text blocks would normalize to platform-default line endings, risking CRLF on Windows builds and breaking UI-SPEC's "single `\n` separators" contract. Concatenation is verbose but byte-deterministic.
+- **02-04:** TokenCleanupJob inner methods (`cleanupEmailTokens` / `cleanupRefreshTokens`) are public to permit AOP proxy interception. The `@Scheduled cleanup()` invocation arrives via the proxied bean reference (Spring's TaskScheduler holds the proxy); whether each `this.cleanup*()` self-call gets its own transaction depends on the AOP proxy mode. End-to-end two-transaction confirmation deferred to Plan 06 IT per the plan's `<output>` directive — if IT shows single-Tx behavior, the inner methods will be extracted to a separate `@Component` to force the proxy hop.
+- **02-04:** DTO record convention locked — six DTOs as Java records with Jakarta Bean Validation annotations on record components (NOT a separate validation layer). Field names `email` / `password` are deliberately uniform across `SignupRequest` / `LoginRequest` so Plan 05's `AuthControllerAdvice` can use a single field-discrimination function across both endpoints. Zero `javax.validation` imports anywhere — Spring Boot 3.x is on Jakarta EE 9+.
+- **02-04:** `VerificationEmailRequestedEvent` is a plain `record` — no `extends ApplicationEvent`. Spring's `ApplicationEventPublisher` accepts any object as an event since Spring 4.2. The publish/listen indirection is the keystone Pitfall-1 mitigation: `EmailVerificationSender` is a separate Spring bean, so the listener invocation arrives via the bean's AOP proxy and `@Async("authAsyncExecutor")` actually goes async. Plan 05's `AuthService.signup` will publish the event after the signup transaction commits.
 
 ### Critical Pitfalls to Watch
 
@@ -217,6 +223,6 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-09T15:53:24.671Z
-**Stopped at:** Phase 2 UI-SPEC approved
+**Last session:** 2026-05-09T16:02:29.836Z
+**Stopped at:** Plan 02-04 complete
 **Resume file:** None

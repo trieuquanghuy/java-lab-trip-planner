@@ -9,9 +9,9 @@
 // a non-null code extension field. Covers 401 missing JWT, 401 forged JWT, 401 expired JWT, and
 // the T-01-12 regression gate (error body must not leak stack traces or internal class names).
 //
-// ProblemDetail code JSON path note (deviation from plan spec, Rule 1 fix):
-//   ProblemDetailAuthEntryPoint uses new ObjectMapper() without ProblemDetailJacksonMixin.
-//   Extension properties serialize under $.properties.code, not $.code. Tests use $.properties.code.
+// ProblemDetail code JSON path note:
+//   ProblemDetailAuthEntryPoint uses Spring Boot's auto-configured ObjectMapper with ProblemDetailJacksonMixin.
+//   Extension properties serialize at $.code (flattened to root level).
 //   The 429 ProblemDetail rendering is asserted in LoginRateLimiterIT (Test 1), not duplicated here.
 //
 // WebTestClient wiring note (same pattern as GatewayRoutingIT):
@@ -87,7 +87,7 @@ class GatewayProblemDetailRenderingIT {
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
                 .jsonPath("$.title").isNotEmpty()
-                .jsonPath("$.properties.code").isEqualTo("auth.unauthorized");
+                .jsonPath("$.code").isEqualTo("auth.unauthorized");
     }
 
     /**
@@ -106,7 +106,7 @@ class GatewayProblemDetailRenderingIT {
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
                 .jsonPath("$.title").isNotEmpty()
-                .jsonPath("$.properties.code").isEqualTo("auth.invalid_token");
+                .jsonPath("$.code").isEqualTo("auth.invalid_token");
     }
 
     /**
@@ -125,7 +125,7 @@ class GatewayProblemDetailRenderingIT {
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
                 .jsonPath("$.title").isNotEmpty()
-                .jsonPath("$.properties.code").isEqualTo("auth.token_expired");
+                .jsonPath("$.code").isEqualTo("auth.token_expired");
     }
 
     /**

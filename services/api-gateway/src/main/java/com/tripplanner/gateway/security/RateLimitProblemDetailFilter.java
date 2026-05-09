@@ -31,6 +31,8 @@ import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * Decorates the response to translate any HTTP 429 (Too Many Requests) status
  * written by Spring Cloud Gateway's RequestRateLimiter into a proper RFC 7807
@@ -43,11 +45,17 @@ import reactor.core.publisher.Mono;
 @Order(-2)
 public class RateLimitProblemDetailFilter implements WebFilter {
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
+
+    public RateLimitProblemDetailFilter(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpResponseDecorator decorated = new ServerHttpResponseDecorator(exchange.getResponse()) {
+            private final AtomicBoolean written = new AtomicBoolean(false);
+
             @Override
             public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
                 if (HttpStatus.TOO_MANY_REQUESTS.equals(getStatusCode())) {
@@ -70,6 +78,14 @@ public class RateLimitProblemDetailFilter implements WebFilter {
             }
 
             private Mono<Void> writeProblemDetail() {
+                if (!written.compareAndSet(false, true)) {
+                    return Mono.empty();
+                }
+                // Echo X-Request-Id from the request to the response (WR-02).
+                String reqId = exchange.getRequest().getHeaders().getFirst("X-Request-Id");
+                if (reqId != null) {
+                    getHeaders().set("X-Request-Id", reqId);
+                }
                 getHeaders().setContentType(MediaType.APPLICATION_PROBLEM_JSON);
                 ProblemDetail pd = ProblemDetailFactory.of(
                         HttpStatus.TOO_MANY_REQUESTS,
@@ -77,6 +93,7 @@ public class RateLimitProblemDetailFilter implements WebFilter {
                         "Rate limit exceeded for this route");
                 try {
                     byte[] bytes = mapper.writeValueAsBytes(pd);
+                    getHeaders().setContentLength(bytes.length);
                     return super.writeWith(Mono.just(bufferFactory().wrap(bytes)));
                 } catch (JsonProcessingException ex) {
                     return Mono.error(ex);

@@ -9,11 +9,10 @@
 //   with code=auth.unauthorized; downstream stub receives ZERO requests (gateway short-circuits
 //   before NettyRoutingFilter).
 //
-// ProblemDetail code JSON path note (deviation from plan spec, Rule 1 fix):
-//   ProblemDetailAuthEntryPoint uses new ObjectMapper() (not the Spring Boot auto-configured bean).
-//   Without ProblemDetailJacksonMixin registered on the ObjectMapper, extension properties are
-//   serialized under "$.properties.code" rather than "$.code". Tests use $.properties.code.
-//   The auth.unauthorized code IS correct per D-07; only the JSON path differs from the plan spec.
+// ProblemDetail code JSON path note:
+//   ProblemDetailAuthEntryPoint uses Spring Boot's auto-configured ObjectMapper with ProblemDetailJacksonMixin.
+//   Extension properties serialize at $.code (flattened to root level).
+//   The auth.unauthorized code IS correct per D-07.
 //
 // WebTestClient wiring note (Rule 1 fix — same pattern as GatewayRoutingIT):
 //   @AutoConfigureWebTestClient replaced with @LocalServerPort + WebTestClient.bindToServer()
@@ -93,7 +92,7 @@ class GatewayMissingAuthHeaderIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.properties.code").isEqualTo("auth.unauthorized");
+                .jsonPath("$.code").isEqualTo("auth.unauthorized");
 
         // Gateway must short-circuit — downstream never reached.
         assertThat(tripStub.getAllServeEvents()).isEmpty();

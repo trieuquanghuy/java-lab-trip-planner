@@ -136,7 +136,7 @@ class LoginRateLimiterIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(429)
-                .jsonPath("$.properties.code").isEqualTo("auth.rate_limited");
+                .jsonPath("$.code").isEqualTo("auth.rate_limited");
 
         // 30 passed through; the 31st was rejected by the gateway before reaching the stub.
         assertThat(authStub.getAllServeEvents()).hasSize(30);

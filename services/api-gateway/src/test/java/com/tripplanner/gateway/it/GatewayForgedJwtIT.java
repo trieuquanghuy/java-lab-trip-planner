@@ -11,9 +11,9 @@
 // SC#3 + T-01-02: 6 cases of invalid/forged JWT all return 401 application/problem+json with the
 // correct error code; downstream stub receives ZERO requests in every case.
 //
-// ProblemDetail code JSON path note (deviation from plan spec, Rule 1 fix):
-//   ProblemDetailAuthEntryPoint uses new ObjectMapper() without ProblemDetailJacksonMixin.
-//   Extension properties serialized under $.properties.code, not $.code.
+// ProblemDetail code JSON path note:
+//   ProblemDetailAuthEntryPoint uses Spring Boot's auto-configured ObjectMapper with ProblemDetailJacksonMixin.
+//   Extension properties serialize at $.code (flattened to root level).
 //
 // WebTestClient wiring note (Rule 1 fix — same pattern as GatewayRoutingIT):
 //   @AutoConfigureWebTestClient replaced with @LocalServerPort + WebTestClient.bindToServer()
@@ -99,7 +99,7 @@ class GatewayForgedJwtIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.properties.code").isEqualTo("auth.invalid_token");
+                .jsonPath("$.code").isEqualTo("auth.invalid_token");
 
         assertThat(tripStub.getAllServeEvents()).isEmpty();
     }
@@ -120,7 +120,7 @@ class GatewayForgedJwtIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.properties.code").isEqualTo("auth.token_expired");
+                .jsonPath("$.code").isEqualTo("auth.token_expired");
 
         assertThat(tripStub.getAllServeEvents()).isEmpty();
     }
@@ -141,7 +141,7 @@ class GatewayForgedJwtIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.properties.code").isEqualTo("auth.invalid_token");
+                .jsonPath("$.code").isEqualTo("auth.invalid_token");
 
         assertThat(tripStub.getAllServeEvents()).isEmpty();
     }
@@ -169,7 +169,7 @@ class GatewayForgedJwtIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.properties.code").isEqualTo("auth.invalid_token");
+                .jsonPath("$.code").isEqualTo("auth.invalid_token");
 
         assertThat(tripStub.getAllServeEvents()).isEmpty();
     }
@@ -199,7 +199,7 @@ class GatewayForgedJwtIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.properties.code").isEqualTo("auth.invalid_token");
+                .jsonPath("$.code").isEqualTo("auth.invalid_token");
 
         assertThat(tripStub.getAllServeEvents()).isEmpty();
     }
@@ -227,7 +227,7 @@ class GatewayForgedJwtIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.properties.code").isEqualTo("auth.invalid_token");
+                .jsonPath("$.code").isEqualTo("auth.invalid_token");
 
         assertThat(tripStub.getAllServeEvents()).isEmpty();
     }

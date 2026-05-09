@@ -71,7 +71,7 @@ public class WebFluxSecurityConfig {
         cfg.setAllowedOrigins(List.of("http://localhost:5173"));
         cfg.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Request-Id"));
-        cfg.setExposedHeaders(List.of("X-Request-Id"));
+        cfg.setExposedHeaders(List.of("X-Request-Id", "Retry-After", "WWW-Authenticate"));
         cfg.setAllowCredentials(true);       // allowCredentials=true required for cookie-based refresh flow
         cfg.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource src = new UrlBasedCorsConfigurationSource();

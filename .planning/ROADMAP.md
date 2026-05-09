@@ -94,7 +94,7 @@ Plans:
 - [x] 02-04-PLAN.md — 6 DTOs + VerificationEmailRequestedEvent + EmailVerificationSender (UI-SPEC body verbatim) + TokenCleanupJob @Scheduled (Wave 3)
 - [x] 02-05-PLAN.md — AuthService (D-23 re-signup + D-05 timing defense) + AuthController (5 endpoints, 302 verify, ResponseCookie) + AuthControllerAdvice (9 verbatim UI-SPEC detail strings) (Wave 4)
 - [x] 02-06-PLAN.md — Wave-0 test infra + AuthControllerIT happy path + AuthControllerAdviceIT BL-01 + 4 @Tag(security) ITs + 2 unit tests + BL-01 negative-assertion gateway updates (Wave 5)
-- [ ] 02-07-PLAN.md — scripts/smoke.sh extension + fresh-stack smoke + MailHog visual checkpoint (Wave 6)
+- [x] 02-07-PLAN.md — scripts/smoke.sh extension + fresh-stack smoke + MailHog visual checkpoint (Wave 6)
 **Notes**:
   - Use jjwt **0.13.0** (not 0.12.x) — includes decompression leak fix
   - Store raw JWT access token in Zustand memory only, never in `localStorage`; refresh token in `httpOnly` cookie with `SameSite=Strict`

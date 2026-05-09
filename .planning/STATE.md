@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_plan: 6
-status: executing
-stopped_at: Plan 02-05 complete
-last_updated: "2026-05-09T16:54:11.879Z"
+status: verifying
+stopped_at: Plan 02-07 CHECKPOINT REACHED — auth-1/auth-2/auth-5 PASS, auth-3/auth-4 BLOCKED on Bearer-JWT runtime delta + MailHog visual gate awaiting user
+last_updated: "2026-05-09T17:28:53.916Z"
 progress:
   total_phases: 11
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 23
-  completed_plans: 22
-  percent: 96
+  completed_plans: 23
+  percent: 100
 ---
 
 # Project State: Trip Planner
@@ -34,11 +34,11 @@ progress:
 ## Current Position
 
 **Phase:** 2
-**Status:** Ready to execute
+**Status:** Phase complete — ready for verification
 **Current plan:** 6
 
 ```
-Progress: [██████████] 96%
+Progress: [██████████] 100%
 Phase: 02 (auth-service) — EXECUTING
 Plan: 7 of 7
 ```
@@ -67,6 +67,7 @@ Plan: 7 of 7
 | Phase 02 P04 | 4min | 2 tasks | 9 files |
 | Phase 02 P05 | 8min | 3 tasks | 3 files |
 | Phase 02 P06 | 28min | 3 tasks | 21 files |
+| Phase 02-auth-service P07 | 85min | 2 tasks | 5 files |
 
 ### Plan Execution Log
 
@@ -196,6 +197,9 @@ Plan: 7 of 7
 - **02-05:** D-12 cookie scope verbatim wired in `buildRefreshCookie(rawValue, maxAge)` private helper in `AuthController`: `ResponseCookie.from("refresh_token", v).httpOnly(true).secure(props.getAuth().getCookie().isSecure()).sameSite("Strict").path("/api/auth").maxAge(...).build()`. Logout's cookie-clear is the same builder with empty value + `maxAge(0)`. The "Secure" flag is profile-toggled — `false` in dev/test (HTTP localhost), `true` in any future deployed profile.
 - **02-05:** Verify endpoint is HTTP-layer-only (no `AuthService.verify()` method). Controller calls `EmailVerificationService.consume(token)` directly because the response is a 302 redirect to `${app.frontend.base-url}/verify?status={success|invalid|expired}` — pure HTTP concern. Service returns the lowercase status string verbatim per UI-SPEC §Redirect Query-Param Contract.
 - **02-05:** X-Forwarded-For first-token IP resolution implemented in `resolveClientIp(http)` private helper. Comma-separated proxy chain handled by `int comma = fwd.indexOf(','); return (comma >= 0 ? fwd.substring(0, comma) : fwd).trim();`. Falls back to `http.getRemoteAddr()` for tests / direct hits — but Phase 1's `DirectServiceAccessWithoutGatewayReturns401IT` already 401s direct hits in production, so a forged X-Forwarded-For never reaches this code.
+- **02-07:** scripts/smoke.sh extended with 5 auth-N criteria (1:1 to ROADMAP Phase 2 SC#1-#5). At runtime against fresh `docker compose down -v && up -d --wait`: auth-1/auth-2/auth-5 PASS; auth-3/auth-4 BLOCKED on Spring Security filter-chain runtime-vs-test delta on /api/auth/logout (Plan 02-06 AuthControllerIT GREEN locally; runtime returns 401 auth.unauthorized for valid Bearer JWTs). Plan 02-07 returns CHECKPOINT REACHED.
+- **02-07:** 4 Rule 1 / Rule 2 fixes uncovered by Task 7.2 fresh-stack smoke — (1) AUTH_JWT_SECRET env passthrough was missing on api-gateway/trip-service/destination-service in infra/docker-compose.yml (Plan 01-06 SUMMARY's "runtime gate cleared" claim was a developer-shell-leak artifact); (2) gateway login+signup RequestRateLimiter math was permanently denying every request (`requestedTokens=900` against `burstCapacity=30` — phase-01-rate-limit smoke trivially-satisfied because every request 429'd); (3) RateLimitProblemDetailFilter writeWith was clobbering downstream auth-service's verbatim UI-SPEC `auth.rate_limited` body with the gateway-internal "Rate limit exceeded for this route" string; (4) smoke MailHog token extraction failed on quoted-printable-encoded bodies + raced with @Async D-01 send under sequential pressure.
+- **02-07:** Convention added — every service consuming `libs/jwt-common` MUST add `AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}` to its compose env block (Phase 1 D-16 / Pitfall B). Phase 3+ destination/trip work that touches docker-compose.yml MUST honor this. Suggested follow-up: pre-commit lint or smoke criterion that asserts the invariant.
 
 ### Critical Pitfalls to Watch
 
@@ -213,9 +217,7 @@ Plan: 7 of 7
 
 ### Blockers
 
-None.
-
----
+- AUTH-3/AUTH-4 smoke criteria BLOCKED — Bearer-JWT 401 at /api/auth/logout at runtime (Plan 02-06 IT GREEN; runtime-vs-test delta needs investigation). User adjudication required before Phase 2 declared COMPLETE.
 
 ## Session Continuity
 
@@ -234,6 +236,6 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-09T16:53:51.194Z
-**Stopped at:** Plan 02-05 complete
-**Resume file:** None
+**Last session:** 2026-05-09T17:28:53.905Z
+**Stopped at:** Plan 02-07 CHECKPOINT REACHED — auth-1/auth-2/auth-5 PASS, auth-3/auth-4 BLOCKED on Bearer-JWT runtime delta + MailHog visual gate awaiting user
+**Resume file:** 

@@ -1,8 +1,8 @@
 ---
 phase: 01-api-gateway
 verified: 2026-05-09T00:00:00Z
-status: human_needed
-score: 5/6 must-haves verified (SC#5 partially deferred to Phase 2 per documented D-05 split)
+status: passed
+score: 6/6 must-haves verified (SC#5 IP-only leg complete; IP+email leg deferred to Phase 2 per documented D-05 split — SC#6 user-attested 2026-05-09)
 overrides_applied: 0
 deferred:
   - truth: "Login route rate-limited at 5 requests per 15 minutes per IP+email; 6th attempt returns 429"

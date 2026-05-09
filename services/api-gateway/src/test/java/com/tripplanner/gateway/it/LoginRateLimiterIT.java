@@ -136,7 +136,9 @@ class LoginRateLimiterIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(429)
-                .jsonPath("$.code").isEqualTo("auth.rate_limited");
+                .jsonPath("$.code").isEqualTo("auth.rate_limited")
+                // BL-01 negative-assertion regression gate (Plan 02-06 Task 6.3).
+                .jsonPath("$.properties.code").doesNotExist();
 
         // 30 passed through; the 31st was rejected by the gateway before reaching the stub.
         assertThat(authStub.getAllServeEvents()).hasSize(30);

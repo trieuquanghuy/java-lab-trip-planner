@@ -92,7 +92,11 @@ class GatewayMissingAuthHeaderIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.code").isEqualTo("auth.unauthorized");
+                .jsonPath("$.code").isEqualTo("auth.unauthorized")
+                // BL-01 negative-assertion regression gate (Plan 02-06 Task 6.3): if a future change
+                // ever re-introduces `new ObjectMapper()` and the code field flattens under
+                // $.properties.code, this assertion fails and fingers the regression immediately.
+                .jsonPath("$.properties.code").doesNotExist();
 
         // Gateway must short-circuit — downstream never reached.
         assertThat(tripStub.getAllServeEvents()).isEmpty();

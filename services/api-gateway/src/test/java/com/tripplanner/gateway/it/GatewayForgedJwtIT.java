@@ -99,7 +99,9 @@ class GatewayForgedJwtIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.code").isEqualTo("auth.invalid_token");
+                .jsonPath("$.code").isEqualTo("auth.invalid_token")
+                // BL-01 negative-assertion regression gate (Plan 02-06 Task 6.3).
+                .jsonPath("$.properties.code").doesNotExist();
 
         assertThat(tripStub.getAllServeEvents()).isEmpty();
     }
@@ -120,7 +122,9 @@ class GatewayForgedJwtIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.code").isEqualTo("auth.token_expired");
+                .jsonPath("$.code").isEqualTo("auth.token_expired")
+                // BL-01 negative-assertion regression gate (Plan 02-06 Task 6.3).
+                .jsonPath("$.properties.code").doesNotExist();
 
         assertThat(tripStub.getAllServeEvents()).isEmpty();
     }
@@ -141,7 +145,9 @@ class GatewayForgedJwtIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.code").isEqualTo("auth.invalid_token");
+                .jsonPath("$.code").isEqualTo("auth.invalid_token")
+                // BL-01 negative-assertion regression gate (Plan 02-06 Task 6.3).
+                .jsonPath("$.properties.code").doesNotExist();
 
         assertThat(tripStub.getAllServeEvents()).isEmpty();
     }
@@ -169,7 +175,9 @@ class GatewayForgedJwtIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.code").isEqualTo("auth.invalid_token");
+                .jsonPath("$.code").isEqualTo("auth.invalid_token")
+                // BL-01 negative-assertion regression gate (Plan 02-06 Task 6.3).
+                .jsonPath("$.properties.code").doesNotExist();
 
         assertThat(tripStub.getAllServeEvents()).isEmpty();
     }
@@ -199,7 +207,9 @@ class GatewayForgedJwtIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.code").isEqualTo("auth.invalid_token");
+                .jsonPath("$.code").isEqualTo("auth.invalid_token")
+                // BL-01 negative-assertion regression gate (Plan 02-06 Task 6.3).
+                .jsonPath("$.properties.code").doesNotExist();
 
         assertThat(tripStub.getAllServeEvents()).isEmpty();
     }
@@ -227,7 +237,9 @@ class GatewayForgedJwtIT {
             .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
-                .jsonPath("$.code").isEqualTo("auth.invalid_token");
+                .jsonPath("$.code").isEqualTo("auth.invalid_token")
+                // BL-01 negative-assertion regression gate (Plan 02-06 Task 6.3).
+                .jsonPath("$.properties.code").doesNotExist();
 
         assertThat(tripStub.getAllServeEvents()).isEmpty();
     }

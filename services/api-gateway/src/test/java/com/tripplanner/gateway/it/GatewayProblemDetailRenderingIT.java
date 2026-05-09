@@ -87,7 +87,9 @@ class GatewayProblemDetailRenderingIT {
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
                 .jsonPath("$.title").isNotEmpty()
-                .jsonPath("$.code").isEqualTo("auth.unauthorized");
+                .jsonPath("$.code").isEqualTo("auth.unauthorized")
+                // BL-01 negative-assertion regression gate (Plan 02-06 Task 6.3).
+                .jsonPath("$.properties.code").doesNotExist();
     }
 
     /**
@@ -106,7 +108,9 @@ class GatewayProblemDetailRenderingIT {
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
                 .jsonPath("$.title").isNotEmpty()
-                .jsonPath("$.code").isEqualTo("auth.invalid_token");
+                .jsonPath("$.code").isEqualTo("auth.invalid_token")
+                // BL-01 negative-assertion regression gate (Plan 02-06 Task 6.3).
+                .jsonPath("$.properties.code").doesNotExist();
     }
 
     /**
@@ -125,7 +129,9 @@ class GatewayProblemDetailRenderingIT {
             .expectBody()
                 .jsonPath("$.status").isEqualTo(401)
                 .jsonPath("$.title").isNotEmpty()
-                .jsonPath("$.code").isEqualTo("auth.token_expired");
+                .jsonPath("$.code").isEqualTo("auth.token_expired")
+                // BL-01 negative-assertion regression gate (Plan 02-06 Task 6.3).
+                .jsonPath("$.properties.code").doesNotExist();
     }
 
     /**

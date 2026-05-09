@@ -13,6 +13,7 @@ import com.tripplanner.jwt.reactive.ReactiveJwtAuthenticationManager;
 import com.tripplanner.jwt.reactive.ServerBearerTokenConverter;
 import com.tripplanner.jwt.servlet.ServletJwtCommonFilter;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -24,8 +25,15 @@ import org.springframework.context.annotation.Configuration;
 public class JwtAutoConfiguration {
 
     @Bean
+    @ConditionalOnMissingBean(JwtVerifier.class)
     public JwtVerifier jwtVerifier(JwtProperties props) {
         return new JwtVerifier(props.getSecret());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(JwtIssuer.class)
+    public JwtIssuer jwtIssuer(JwtProperties props) {
+        return new JwtIssuer(props.getSecret());
     }
 
     @Configuration

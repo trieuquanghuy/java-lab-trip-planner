@@ -62,3 +62,10 @@ dependencyManagement {
         mavenBom("org.springframework.boot:spring-boot-dependencies:${libs.versions.springBoot.get()}")
     }
 }
+
+tasks.register<JavaExec>("mintTestToken") {
+    description = "Mint a short-lived test JWT to stdout (no test-report side-effect)"
+    classpath = sourceSets["testFixtures"].runtimeClasspath
+    mainClass.set("com.tripplanner.jwt.MintTokenMain")
+    standardOutput = System.out
+}

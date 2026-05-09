@@ -8,8 +8,10 @@
 //   ./gradlew :libs:jwt-common:test --tests JwtFixturesSmokeMintTask -q --console=plain
 package com.tripplanner.jwt;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+@Disabled("Replaced by mintTestToken JavaExec task — see BL-04. Tokens should not leak into test reports.")
 class JwtFixturesSmokeMintTask {
 
     @Test

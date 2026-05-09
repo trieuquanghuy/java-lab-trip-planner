@@ -16,10 +16,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-# Run the smoke-mint task quietly. JwtFixturesSmokeMintTask prints the JWT to stdout
-# via System.out.println(token). Gradle's --console=plain + -q suppresses progress lines
-# so only test stdout reaches us. Filter for the JWT shape (three base64-url segments
-# separated by dots) to ignore any accidental gradle banner that slips through.
-./gradlew :libs:jwt-common:test --tests JwtFixturesSmokeMintTask -q --console=plain 2>/dev/null \
+# Run the mintTestToken JavaExec task quietly. MintTokenMain prints the JWT to stdout.
+# Unlike the previous approach (running a @Test class), this does NOT persist the token
+# in JUnit XML test reports under build/test-results/.
+# Filter for the JWT shape (three base64-url segments separated by dots) and require
+# length > 60 to avoid false matches on dotted class names.
+./gradlew :libs:jwt-common:mintTestToken -q 2>/dev/null \
   | grep -E '^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$' \
+  | awk 'length > 60' \
   | head -n1

@@ -11,7 +11,7 @@
 ## Phases
 
 - [x] **Phase 0: Monorepo Scaffolding** - All services boot, register in Eureka, and docker compose up is healthy
-- [ ] **Phase 1: API Gateway** - Gateway routes traffic, validates JWTs, strips and injects X-User-Id, and downstream services trust only gateway-injected headers
+- [x] **Phase 1: API Gateway** - Gateway routes traffic, validates JWTs, strips and injects X-User-Id, and downstream services trust only gateway-injected headers (completed 2026-05-09)
 - [ ] **Phase 2: Auth Service** - Full signup → verify email → login → refresh → logout works end-to-end with all 8 mandatory security tests passing
 - [ ] **Phase 3: Destination Service — Search** - City/country search with seeded GeoNames data hits the 500 ms p95 SLA
 - [ ] **Phase 4: Destination Service — Providers + Cache** - Nearby attractions and detail endpoints work with provider failure isolation via circuit breakers
@@ -243,7 +243,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 0. Monorepo Scaffolding | 10/10 | Complete | 2026-05-08 |
-| 1. API Gateway | 3/6 | In Progress|  |
+| 1. API Gateway | 6/6 | Complete   | 2026-05-09 |
 | 2. Auth Service | 0/? | Not started | - |
 | 3. Destination Service — Search | 0/? | Not started | - |
 | 4. Destination Service — Providers + Cache | 0/? | Not started | - |

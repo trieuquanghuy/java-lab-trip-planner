@@ -2,7 +2,7 @@
 phase: 01-api-gateway
 plan: 06
 subsystem: api-gateway
-status: pending_smoke_approval
+status: complete
 tags: [docker-compose, smoke-testing, depends-on, rate-limiting, redis, security-regression]
 dependency-graph:
   requires: [01-01, 01-02, 01-03, 01-04, 01-05]
@@ -29,16 +29,16 @@ decisions:
 metrics:
   duration: "~20 minutes"
   completed: "2026-05-09"
-  tasks-completed: 2
-  tasks-pending: 1
+  tasks-completed: 3
+  tasks-pending: 0
   files-changed: 4
 ---
 
 # Phase 01 Plan 06: E2E Smoke Run + Wave 6 Final Integration Summary
 
-**One-liner:** Compose depends_on chain closing Pitfall H (Redis) and Pitfall J (downstream services) + 3 new phase-01-* smoke criteria (bypass/routing/rate-limit) + mint-test-token.sh W5 helper — Phase 1 runtime validation gate, awaiting human smoke approval.
+**One-liner:** Compose depends_on chain closing Pitfall H (Redis) and Pitfall J (downstream services) + 3 new phase-01-* smoke criteria (bypass/routing/rate-limit) + mint-test-token.sh W5 helper — Phase 1 runtime gate CLEARED: clean compose up, smoke exit 0, Eureka 4 services, Zipkin SC#6 trace continuity confirmed.
 
-**Status: PENDING SMOKE APPROVAL (Task 6.3 checkpoint not yet cleared)**
+**Status: COMPLETE — All 4 human-verify checks approved 2026-05-09**
 
 ## Tasks Completed
 
@@ -46,12 +46,18 @@ metrics:
 |------|------|--------|-------|
 | 6.1 | Extend api-gateway depends_on — Pitfall H + J | 63b1259 | infra/docker-compose.yml |
 | 6.2 | Extend smoke.sh + README + mint-test-token.sh | 21ea323 | scripts/smoke.sh, scripts/README.md, scripts/mint-test-token.sh |
+| 6.3 | Final Phase 1 stack validation — human-verify gate | (docs commit) | .planning/phases/01-api-gateway/01-06-SUMMARY.md |
 
-## Task Pending Checkpoint
+## Runtime Verification Results (Task 6.3 — Approved)
 
-| Task | Name | Type | Status |
-|------|------|------|--------|
-| 6.3 | Final Phase 1 stack validation — clean compose up + bash smoke + Eureka dashboard + Zipkin SC#6 manual | checkpoint:human-verify | Awaiting user action |
+All 4 manual checks passed:
+
+| Check | Result |
+|-------|--------|
+| `docker compose down -v && up -d --wait` — all 10 services healthy <= 120s | PASS |
+| `bash scripts/smoke.sh` — exit 0, Phase 0 SC#1-5 + NFR-04 + Phase 1 (bypass/routing/rate-limit) | PASS |
+| Eureka dashboard :8761 — exactly 4 services registered | PASS |
+| Zipkin :9411 — single trace ID spanning api-gateway + trip-service (SC#6) | PASS |
 
 ## Changes Delivered
 
@@ -88,7 +94,7 @@ W5 closure: thin shell wrapper that invokes `./gradlew :libs:jwt-common:test --t
 
 ## Deviations from Plan
 
-None — plan executed exactly as written. Both tasks executed cleanly on first attempt with all acceptance criteria met.
+None — plan executed exactly as written. All 3 tasks executed cleanly. Human-verify gate cleared on first attempt with all 4 runtime checks green.
 
 ## Threat Surface Scan
 
@@ -109,3 +115,4 @@ No new network endpoints introduced. No new auth paths. No new file access patte
 | `scripts/mint-test-token.sh` exists | FOUND |
 | Commit `63b1259` exists | FOUND |
 | Commit `21ea323` exists | FOUND |
+| Runtime gate cleared (human-verify approved) | CONFIRMED |

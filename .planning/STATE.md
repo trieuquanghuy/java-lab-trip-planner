@@ -3,14 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 current_plan: 1
-status: executing
-last_updated: "2026-05-09T00:00:00.000Z"
+status: verifying
+stopped_at: "01-06-PLAN.md Task 6.3 (checkpoint:human-verify — awaiting clean compose up + bash smoke.sh + Zipkin SC#6 manual verification)"
+last_updated: "2026-05-09T02:13:10.112Z"
 progress:
   total_phases: 11
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 16
-  completed_plans: 15
-  percent: 94
+  completed_plans: 16
+  percent: 100
 ---
 
 # Project State: Trip Planner
@@ -33,18 +34,16 @@ progress:
 ## Current Position
 
 **Phase:** 01
-**Status:** Ready to execute
-**Current plan:** 1
+**Status:** Phase 1 complete — all 6 plans delivered and runtime gate cleared
+**Current plan:** 6 (complete)
 
 ```
-Progress: [█████████░] 94%
-Phase: 01 (api-gateway) — EXECUTING
-Plan: 6 of 6
-                  ^
-                  HERE
+Progress: [██████████] 100%
+Phase: 01 (api-gateway) — COMPLETE
+Plan: 6 of 6 — DONE
 ```
 
-**Next action:** Phase 0 closure — verifier sweep, then transition to Phase 1 (API Gateway hardening + JWT validation). All 10 Phase 0 plans complete; user-approved smoke run cleared phase-gate ("approved — smoke passed, all 5 SCs + NFR-04 green").
+**Next action:** Phase 2 planning — Auth Service (signup → verify email → login → refresh → logout + 8 mandatory security tests).
 
 ---
 
@@ -61,7 +60,7 @@ Plan: 6 of 6
 | Phase 01 P03 | 6min | 3 tasks | 7 files |
 | Phase 01 P04 | 15 | 3 tasks | 13 files |
 | Phase 01-api-gateway P05 | 4h | 3 tasks | 9 files |
-| Phase 01-api-gateway P06 | 20min | 2 tasks + checkpoint | 4 files |
+| Phase 01-api-gateway P06 | 20min | 3 tasks (2 + checkpoint) | 4 files |
 
 ### Plan Execution Log
 
@@ -155,6 +154,7 @@ Plan: 6 of 6
 - **01-05:** `GatewayTracingTestConfig` provides explicit `ContextPropagators(W3CTraceContextPropagator)` in test context — fixes `otelContextPropagators(ObjectProvider<TextMapPropagator>)` building with an empty list and producing `NoopTextMapPropagator` due to bean ordering in the test application context.
 - **01-05:** `RateLimitProblemDetailFilter` overrides both `writeWith()` and `setComplete()` in `ServerHttpResponseDecorator` — `RequestRateLimiterGatewayFilterFactory` uses the empty-body `setComplete()` path for rate-limited requests, bypassing a `writeWith()`-only override and leaving `Content-Type: null`.
 - **01-05:** `spring.reactor.context-propagation: auto` required in gateway-it test profile to activate `Hooks.enableAutomaticContextPropagation()` via `ReactorAutoConfiguration` — without it, `Slf4JEventListener` cannot propagate OTel span context (traceId/spanId) across reactive thread switches, so MDC is empty in SCG log events captured by `ListAppender`.
+- **01-06:** Phase 1 runtime gate cleared 2026-05-09 — clean `docker compose down -v && up -d --wait` (10 services healthy), `bash scripts/smoke.sh` exit 0 (Phase 0 SC#1-5 + NFR-04 + Phase 1 bypass/routing/rate-limit), Eureka dashboard shows 4 services, Zipkin SC#6 single trace ID spanning api-gateway + trip-service confirmed. Pitfall H (Redis depends_on) and Pitfall J (downstream service depends_on) closed in compose.
 
 ### Critical Pitfalls to Watch
 
@@ -193,8 +193,6 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-09T00:00:00.000Z
-**Stopped at:** 01-06-PLAN.md Task 6.3 (checkpoint:human-verify — awaiting clean compose up + bash smoke.sh + Zipkin SC#6 manual verification)
-**Resume file:** .planning/phases/01-api-gateway/01-06-PLAN.md Task 6.3
-
-**Last session:** 2026-05-08T18:49:36.867Z
+**Last session:** 2026-05-09T02:13:10.103Z
+**Stopped at:** Phase 1 complete — all 6/6 plans done, runtime gate approved. Ready for Phase 2 planning.
+**Resume file:** None

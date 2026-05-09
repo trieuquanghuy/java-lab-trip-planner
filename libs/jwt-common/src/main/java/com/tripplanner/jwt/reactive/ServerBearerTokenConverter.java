@@ -21,8 +21,8 @@ public class ServerBearerTokenConverter implements ServerAuthenticationConverter
     @Override
     public Mono<Authentication> convert(ServerWebExchange exchange) {
         String h = exchange.getRequest().getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        if (h == null || !h.startsWith("Bearer ")) return Mono.empty();
-        String token = h.substring("Bearer ".length()).trim();
+        if (h == null || h.length() < 7 || !h.regionMatches(true, 0, "Bearer ", 0, 7)) return Mono.empty();
+        String token = h.substring(7).trim();
         if (token.isEmpty()) return Mono.empty();
         return Mono.just(new BearerTokenAuthentication(token));
     }

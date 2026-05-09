@@ -10,11 +10,19 @@ import org.springframework.security.core.AuthenticationException;
 
 public class JwtAuthenticationException extends AuthenticationException {
 
-    public JwtAuthenticationException(String message) {
-        super(message);
+    public enum Reason { EXPIRED, INVALID, MISSING_SUB }
+
+    private final Reason reason;
+
+    public JwtAuthenticationException(Reason reason, String message, Throwable cause) {
+        super(message, cause);
+        this.reason = reason;
     }
 
-    public JwtAuthenticationException(String message, Throwable cause) {
-        super(message, cause);
+    public JwtAuthenticationException(Reason reason, String message) {
+        super(message);
+        this.reason = reason;
     }
+
+    public Reason reason() { return reason; }
 }

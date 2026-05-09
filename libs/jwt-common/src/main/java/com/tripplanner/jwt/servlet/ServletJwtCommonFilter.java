@@ -52,6 +52,9 @@ public class ServletJwtCommonFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilterAsyncDispatch() { return true; }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse resp, FilterChain chain)
             throws ServletException, IOException {
 
@@ -62,29 +65,37 @@ public class ServletJwtCommonFilter extends OncePerRequestFilter {
         }
 
         String header = req.getHeader(HttpHeaders.AUTHORIZATION);
-        if (header == null || !header.startsWith("Bearer ")) {
+        if (header == null || header.length() < 7
+                || !header.regionMatches(true, 0, "Bearer ", 0, 7)) {
             writeProblem(resp, HttpStatus.UNAUTHORIZED, ErrorCode.AUTH_UNAUTHORIZED,
-                    "Authorization Bearer token required");
+                    "Authentication required");
             return;
         }
 
+        boolean weSet = false;
         try {
-            UserContext user = verifier.verify(header.substring("Bearer ".length()).trim());
+            UserContext user = verifier.verify(header.substring(7).trim());
             ServletAuthToken auth = new ServletAuthToken(user, AuthorityUtils.createAuthorityList("ROLE_USER"));
             auth.setAuthenticated(true);
             SecurityContextHolder.getContext().setAuthentication(auth);
 
             MDC.put("userId", user.userId());
+            weSet = true;
 
             chain.doFilter(req, resp);
         } catch (JwtAuthenticationException ex) {
-            ErrorCode code = ex.getMessage() != null && ex.getMessage().contains("expired")
+            ErrorCode code = ex.reason() == JwtAuthenticationException.Reason.EXPIRED
                     ? ErrorCode.AUTH_TOKEN_EXPIRED
                     : ErrorCode.AUTH_INVALID_TOKEN;
-            writeProblem(resp, HttpStatus.UNAUTHORIZED, code, ex.getMessage());
+            String detail = code == ErrorCode.AUTH_TOKEN_EXPIRED
+                    ? "Token has expired"
+                    : "Token is invalid";
+            writeProblem(resp, HttpStatus.UNAUTHORIZED, code, detail);
         } finally {
-            SecurityContextHolder.clearContext();
-            MDC.remove("userId");
+            if (weSet) {
+                SecurityContextHolder.clearContext();
+                MDC.remove("userId");
+            }
         }
     }
 

@@ -13,9 +13,10 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.WeakKeyException;
 
 import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 
 public class JwtVerifier {
@@ -28,11 +29,12 @@ public class JwtVerifier {
                 "AUTH_JWT_SECRET must be set; got null. See .env.example for the dev placeholder.");
         }
         byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
-        if (bytes.length < 32) {
+        try {
+            this.signingKey = Keys.hmacShaKeyFor(bytes);
+        } catch (WeakKeyException ex) {
             throw new IllegalStateException(
-                "AUTH_JWT_SECRET must be at least 32 bytes (256 bits) for HS256; got " + bytes.length);
+                "AUTH_JWT_SECRET must be at least 32 bytes (256 bits) for HS256; got " + bytes.length, ex);
         }
-        this.signingKey = new SecretKeySpec(bytes, "HmacSHA256");
     }
 
     public UserContext verify(String compactJws) throws JwtAuthenticationException {
@@ -45,16 +47,19 @@ public class JwtVerifier {
             Claims c = jws.getPayload();
             String sub = c.getSubject();
             if (sub == null || sub.isBlank()) {
-                throw new JwtAuthenticationException("token missing 'sub' claim");
+                throw new JwtAuthenticationException(
+                    JwtAuthenticationException.Reason.MISSING_SUB, "token missing 'sub' claim");
             }
             String email = c.get("email", String.class);
             Boolean ver = c.get("ver", Boolean.class);
             return new UserContext(sub, email, Boolean.TRUE.equals(ver));
 
         } catch (ExpiredJwtException ex) {
-            throw new JwtAuthenticationException("token expired", ex);
+            throw new JwtAuthenticationException(
+                JwtAuthenticationException.Reason.EXPIRED, "token expired", ex);
         } catch (JwtException ex) {
-            throw new JwtAuthenticationException("token invalid", ex);
+            throw new JwtAuthenticationException(
+                JwtAuthenticationException.Reason.INVALID, "token invalid", ex);
         }
     }
 }

@@ -26,7 +26,11 @@ import reactor.core.publisher.Mono;
 @Component
 public class ProblemDetailAuthEntryPoint implements ServerAuthenticationEntryPoint {
 
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
+
+    public ProblemDetailAuthEntryPoint(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 
     @Override
     public Mono<Void> commence(ServerWebExchange exchange, AuthenticationException ex) {
@@ -36,15 +40,21 @@ public class ProblemDetailAuthEntryPoint implements ServerAuthenticationEntryPoi
 
         // Distinguish token-expired from invalid/forged from plain missing-auth.
         // BadCredentialsException wraps JwtAuthenticationException from ReactiveJwtAuthenticationManager.
-        ErrorCode code = (ex.getCause() instanceof JwtAuthenticationException jae
-                && jae.getMessage() != null
-                && jae.getMessage().contains("expired"))
-                ? ErrorCode.AUTH_TOKEN_EXPIRED
-                : ((ex instanceof BadCredentialsException)
-                ? ErrorCode.AUTH_INVALID_TOKEN
-                : ErrorCode.AUTH_UNAUTHORIZED);
+        ErrorCode code;
+        String detail;
+        if (ex.getCause() instanceof JwtAuthenticationException jae
+                && jae.reason() == JwtAuthenticationException.Reason.EXPIRED) {
+            code = ErrorCode.AUTH_TOKEN_EXPIRED;
+            detail = "Token has expired";
+        } else if (ex instanceof BadCredentialsException) {
+            code = ErrorCode.AUTH_INVALID_TOKEN;
+            detail = "Token is invalid";
+        } else {
+            code = ErrorCode.AUTH_UNAUTHORIZED;
+            detail = "Authentication required";
+        }
 
-        ProblemDetail pd = ProblemDetailFactory.of(HttpStatus.UNAUTHORIZED, code, ex.getMessage());
+        ProblemDetail pd = ProblemDetailFactory.of(HttpStatus.UNAUTHORIZED, code, detail);
         try {
             byte[] bytes = mapper.writeValueAsBytes(pd);
             return resp.writeWith(Mono.just(resp.bufferFactory().wrap(bytes)));

@@ -43,7 +43,9 @@ class JwtVerifierTest {
         String token = JwtFixtures.mintExpired("user-1", "user@example.com");
         assertThatThrownBy(() -> verifier.verify(token))
                 .isInstanceOf(JwtAuthenticationException.class)
-                .hasMessageContaining("expired");
+                .hasMessageContaining("expired")
+                .satisfies(ex -> assertThat(((JwtAuthenticationException) ex).reason())
+                        .isEqualTo(JwtAuthenticationException.Reason.EXPIRED));
     }
 
     @Test
@@ -63,16 +65,6 @@ class JwtVerifierTest {
     @Test
     void tokenMissingSubThrowsWithMissingSubMessage() {
         // Mint a token without subject claim — use JwtFixtures raw builder
-        // Build manually without subject
-        io.jsonwebtoken.Jwts.builder()
-                .claim("email", "user@example.com")
-                .claim("ver", true)
-                .issuedAt(java.util.Date.from(java.time.Instant.now()))
-                .expiration(java.util.Date.from(java.time.Instant.now().plusSeconds(900)))
-                .signWith(io.jsonwebtoken.security.Keys.hmacShaKeyFor(
-                        JwtFixtures.TEST_SECRET.getBytes(java.nio.charset.StandardCharsets.UTF_8)))
-                .compact();
-
         String noSubToken = io.jsonwebtoken.Jwts.builder()
                 .claim("email", "user@example.com")
                 .claim("ver", true)

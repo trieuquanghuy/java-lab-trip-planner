@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: 2
+current_plan: 3
 status: executing
-stopped_at: Completed 02-01-PLAN.md (auth persistence foundation)
-last_updated: "2026-05-09T15:33:07.823Z"
+stopped_at: Completed 02-02-PLAN.md (JwtIssuer + auto-config)
+last_updated: "2026-05-09T15:41:46.377Z"
 progress:
   total_phases: 11
   completed_phases: 2
   total_plans: 23
-  completed_plans: 17
-  percent: 74
+  completed_plans: 18
+  percent: 78
 ---
 
 # Project State: Trip Planner
@@ -35,12 +35,12 @@ progress:
 
 **Phase:** 2
 **Status:** Executing Phase 02
-**Current plan:** 2
+**Current plan:** 3
 
 ```
-Progress: [███████░░░] 74%
+Progress: [████████░░] 78%
 Phase: 02 (auth-service) — EXECUTING
-Plan: 2 of 7
+Plan: 3 of 7
 ```
 
 **Next action:** Phase 2 planning — Auth Service (signup → verify email → login → refresh → logout + 8 mandatory security tests).
@@ -62,6 +62,7 @@ Plan: 2 of 7
 | Phase 01-api-gateway P05 | 4h | 3 tasks | 9 files |
 | Phase 01-api-gateway P06 | 20min | 3 tasks (2 + checkpoint) | 4 files |
 | Phase 02-auth-service P01 | 13min | 3 tasks | 12 files |
+| Phase 02-auth-service P02 | 6min | 2 tasks | 3 files |
 
 ### Plan Execution Log
 
@@ -79,6 +80,7 @@ Plan: 2 of 7
 | 00-monorepo-scaffolding P10 | 12min | 3 | 2 |
 | 01-api-gateway P03 | 6min | 3 | 7 |
 | 02-auth-service P01 | 13min | 3 | 12 |
+| 02-auth-service P02 | 6min | 2 | 3 |
 
 ---
 
@@ -162,6 +164,10 @@ Plan: 2 of 7
 - **02-01:** Hibernate `ddl-auto: validate` boot test against the live PostgreSQL container deferred to Plan 02-04/02-05 (no service-layer beans yet to wire up the application context). `./gradlew :services:auth-service:assemble` (clean) is the strongest static guarantee Plan 02-01 can ship; the runtime entity↔schema validation gate fires when `AuthServiceApplication` first boots with the full bean graph.
 - **02-01:** ErrorCode catalog grew 5 → 13 entries (5 baseline from Phase 0/1 + 8 new auth.*/validation.* codes per docs/04 §6 + D-15) — append-only enum extension idiom established (`BAD_GATEWAY` semicolon → comma; new entries appended; terminal entry carries the `;` enum-list terminator). Downstream phases (3, 4, 5, 6) can grow the catalog the same way.
 - **02-01:** Repository pattern locked for the auth domain — `@Repository` annotation + `JpaRepository<Entity, IdType>` + `@Lock(LockModeType.PESSIMISTIC_WRITE)` with explicit JPQL `@Query` for the row-lock primitive (`RefreshTokenRepository.findByTokenHashForUpdate`); `@Modifying` for UPDATE primitives (`EmailVerificationTokenRepository.markAllUnconsumedAsConsumedFor` — D-23 re-signup). This is the template for the trip-service / destination-service repositories in Phase 5+.
+- **02-02:** JwtIssuer location RESOLVED — sibling-twin to JwtVerifier in `libs/jwt-common` (Open Q3 closed). Constructor body byte-for-byte identical to JwtVerifier lines 26-38. Same `JwtProperties`, same `Keys.hmacShaKeyFor` key construction, same fail-at-startup contract on null or `<32-byte` secrets. The maintenance unit is the pair, not the individual class.
+- **02-02:** Phase 1 IN-01 closed — `@ConditionalOnMissingBean` now on BOTH `jwtVerifier` AND `jwtIssuer` beans in `JwtAutoConfiguration`. A downstream service that supplies its own `@Bean JwtVerifier` (e.g., a `@TestConfiguration`) will no longer crash with `NoUniqueBeanDefinitionException`; the auto-config backs off cooperatively.
+- **02-02:** jjwt 0.13.0 modern issuance API locked — `Jwts.builder().issuer().subject().issuedAt().expiration().id().claim().signWith(SecretKey).compact()`. `signWith(SecretKey)` auto-selects HS256 from the key (no explicit `SignatureAlgorithm.HS256` parameter that could be downgraded — T-2-02-01 algorithm-confusion mitigation at the issuance boundary).
+- **02-02:** Access-token TTL = `Duration.ofMinutes(15)` per docs/05 §1; claim shape: `iss=tripplanner-auth`, `sub=userId`, `iat=now`, `exp=now+15min`, `jti=UUID.randomUUID()`, `email`, `ver`. Round-trip through `JwtVerifier` confirmed in `JwtIssuerTest` (7/7 GREEN); `JwtVerifierTest` still 7/7 GREEN — no regression from the `@ConditionalOnMissingBean` addition.
 
 ### Critical Pitfalls to Watch
 
@@ -200,6 +206,6 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-09T15:33:01.338Z
+**Last session:** 2026-05-09T15:40:43.277Z
 **Stopped at:** Phase 2 UI-SPEC approved
 **Resume file:** None

@@ -116,6 +116,10 @@ services:
         condition: service_healthy
       eureka-server:
         condition: service_healthy
+      mailhog:                                 # Phase 2 D-03 — JavaMailSender targets compose-network mailhog:1025
+        condition: service_started
+      redis:                                   # Phase 2 D-06 — LoginRateLimiter targets compose-network redis:6379
+        condition: service_healthy
     environment:
       SPRING_PROFILES_ACTIVE: docker
       POSTGRES_HOST: postgres
@@ -123,8 +127,12 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       AUTH_DB_USER: ${AUTH_DB_USER}
       AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
       EUREKA_URL: http://eureka-server:8761/eureka
       ZIPKIN_BASE_URL: http://zipkin:9411
+      MAIL_FROM: ${MAIL_FROM:-no-reply@tripplanner.local}
+      FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:5173}
+      AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
     # healthcheck inherits from Dockerfile
 
   trip-service:

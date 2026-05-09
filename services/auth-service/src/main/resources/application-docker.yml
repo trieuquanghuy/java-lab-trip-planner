@@ -13,6 +13,11 @@ spring:
       on-profile: docker
   datasource:
     url: jdbc:postgresql://postgres:5432/${POSTGRES_DB}?currentSchema=auth
+  mail:
+    host: mailhog                              # compose-network DNS (D-03)
+  data:
+    redis:
+      host: redis                              # compose-network DNS (D-06)
 eureka:
   client:
     service-url:

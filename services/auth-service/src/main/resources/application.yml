@@ -36,6 +36,16 @@ spring:
       ddl-auto: validate                       # NEVER `update` (anti-pattern / C15)
     properties:
       hibernate.default_schema: auth
+  mail:                                        # Phase 2 / 02-CONTEXT.md D-03 — JavaMailSender for verification email
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
+  data:                                        # Phase 2 / 02-CONTEXT.md D-06 — servlet StringRedisTemplate for LoginRateLimiter
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 server:
   port: 8081
 management:
@@ -62,3 +72,20 @@ eureka:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
     fetch-registry: true
     register-with-eureka: true
+
+# Phase 1 D-16: AUTH_JWT_SECRET binds via libs/jwt-common JwtProperties("auth.jwt").
+auth:
+  jwt:
+    secret: ${AUTH_JWT_SECRET}
+
+# Phase 2 / AuthProperties (Plan 02-03 Task 3.1) — bound via @ConfigurationProperties("app").
+app:
+  auth:
+    cookie:
+      secure: ${AUTH_COOKIE_SECURE:false}                                          # D-12 profile-toggle
+  frontend:
+    base-url: ${FRONTEND_BASE_URL:http://localhost:5173}                           # D-02 / UI-SPEC redirect target
+  mail:
+    from: ${MAIL_FROM:no-reply@tripplanner.local}                                  # D-03 / UI-SPEC
+  verification:
+    link-base: ${VERIFICATION_LINK_BASE:http://localhost:8080/api/auth/verify?token=}  # UI-SPEC §Email Copy

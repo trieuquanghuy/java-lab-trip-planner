@@ -16,7 +16,12 @@ A signed-in user can search a city, discover attractions, and assemble them into
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet — greenfield project, ship to validate)
+**Gateway & Cross-Cutting Security**
+- [x] All `/api/*` traffic routed through api-gateway with JWT validation; gateway strips inbound X-User-Id and injects from JWT claims (Validated in Phase 1: api-gateway)
+- [x] Downstream services (trip, destination) reject any request that bypasses the gateway (Validated in Phase 1 via `DirectServiceAccessWithoutGatewayReturns401IT`)
+- [x] RFC 7807 problem-detail JSON contract for 401/429 (Validated in Phase 1; gateway↔downstream JSON-shape divergence flagged in 01-REVIEW.md BL-01 for Phase 2 follow-up)
+- [x] IP-based login rate limiting (30 req / 15 min per IP) at gateway (Validated in Phase 1 via `LoginRateLimiterIT`; strict 5/15min IP+email leg deferred to Phase 2 per D-05)
+- [x] Distributed trace continuity across gateway → downstream (Validated in Phase 1; user-attested Zipkin UI 2026-05-09)
 
 ### Active
 
@@ -138,4 +143,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-08 after initialization (synthesized from `docs/` design package)*
+*Last updated: 2026-05-09 after Phase 1 (api-gateway) completion*

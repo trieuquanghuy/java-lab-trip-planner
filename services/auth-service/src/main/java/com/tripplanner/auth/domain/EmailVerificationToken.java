@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -11,12 +13,18 @@ import java.util.UUID;
 /**
  * JPA entity for auth.email_verification_tokens. See V3__create_email_verification_tokens.sql.
  * `token` is the raw 64-char hex (CHAR(64) PK) — verification link reveals it; consumed_at marks single-use.
+ *
+ * @JdbcTypeCode(SqlTypes.CHAR) (Plan 02-06 Rule 1 fix): the column is CHAR(64) in Postgres which
+ * Postgres reports as `bpchar` (Types#CHAR) on JDBC metadata. Without this annotation Hibernate
+ * defaults String -> Types.VARCHAR for schema validation and ddl-auto: validate fails with
+ * "Schema-validation: wrong column type". @JdbcTypeCode pins the validator to Types.CHAR.
  */
 @Entity
 @Table(name = "email_verification_tokens", schema = "auth")
 public class EmailVerificationToken {
 
     @Id
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "token", nullable = false, updatable = false, length = 64, columnDefinition = "char(64)")
     private String token;
 

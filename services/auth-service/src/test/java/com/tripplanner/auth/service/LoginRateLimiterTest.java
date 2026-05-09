@@ -11,10 +11,17 @@ package com.tripplanner.auth.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -25,6 +32,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(classes = LoginRateLimiterTest.TestApp.class)
 @Testcontainers
 @ActiveProfiles("ratelimit-slice")
+@TestPropertySource(properties = {
+        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=none",
+        "eureka.client.enabled=false",
+        "spring.cloud.discovery.enabled=false",
+        "auth.jwt.secret=phase-1-jwt-fixture-secret-32bytes!!"
+})
 class LoginRateLimiterTest {
 
     @Container
@@ -62,10 +76,21 @@ class LoginRateLimiterTest {
     }
 
     /**
-     * Minimal Spring context — Spring Boot autoconfig brings up StringRedisTemplate from the
-     * @ServiceConnection-wired Redis container, and component scan picks up LoginRateLimiter
-     * (it lives in this package — com.tripplanner.auth.service).
+     * Minimal Spring context — auto-config exclusions disable JPA/Flyway/DataSource since this slice
+     * test only needs Redis. Component scan limits to this single class to avoid pulling the full
+     * auth-service into context (which would require Postgres + JavaMailSender + Eureka, etc.).
      */
-    @SpringBootApplication
+    @Configuration
+    @EnableAutoConfiguration(exclude = {
+            DataSourceAutoConfiguration.class,
+            HibernateJpaAutoConfiguration.class,
+            FlywayAutoConfiguration.class
+    })
+    @ComponentScan(
+            basePackageClasses = LoginRateLimiter.class,
+            useDefaultFilters = false,
+            includeFilters = @ComponentScan.Filter(
+                    type = FilterType.ASSIGNABLE_TYPE,
+                    classes = LoginRateLimiter.class))
     static class TestApp {}
 }

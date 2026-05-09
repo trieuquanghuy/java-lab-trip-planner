@@ -36,8 +36,19 @@ import java.util.List;
 
 public class ServletJwtCommonFilter extends OncePerRequestFilter {
 
+    // WHITELIST — paths that bypass JWT verification. The auth-service public endpoints
+    // (signup/verify/login/refresh) MUST be on this list because the FilterRegistrationBean
+    // in JwtAutoConfiguration runs this filter BEFORE Spring Security's permitAll matchers
+    // can intercept the request (Plan 02-06 Rule 1 fix — without this, every signup/login
+    // request returned 401 'Authentication required' before reaching the controller).
+    //
+    // Trip-service / destination-service do NOT serve these paths so allowing them here
+    // is a no-op for those services. /api/auth/logout intentionally OMITTED — it requires
+    // a valid bearer JWT per docs/05 §1 + SecurityConfig.anyRequest().authenticated().
     private static final List<String> WHITELIST = List.of(
-        "/__health", "/actuator/health", "/actuator/info"
+        "/__health", "/actuator/health", "/actuator/info",
+        "/api/auth/signup", "/api/auth/verify",
+        "/api/auth/login",  "/api/auth/refresh"
     );
 
     private final JwtVerifier verifier;

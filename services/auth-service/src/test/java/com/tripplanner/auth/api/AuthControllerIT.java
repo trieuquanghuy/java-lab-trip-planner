@@ -68,7 +68,10 @@ class AuthControllerIT extends AuthIntegrationTestBase {
                 .andExpect(cookie().path("refresh_token", "/api/auth"))
                 .andReturn();
         String refreshA = login.getResponse().getCookie("refresh_token").getValue();
+        String accessToken = com.jayway.jsonpath.JsonPath.read(
+                login.getResponse().getContentAsString(), "$.accessToken");
         assertThat(refreshA).isNotBlank();
+        assertThat(accessToken).isNotBlank();
 
         // 4. Refresh -> 200 + new JWT + new cookie (rotated).
         MvcResult refresh = mvc.perform(post("/api/auth/refresh")
@@ -82,8 +85,9 @@ class AuthControllerIT extends AuthIntegrationTestBase {
                 .as("rotation must mint a new cookie value")
                 .isNotEqualTo(refreshA);
 
-        // 5. Logout with cookie B -> 204 + Max-Age=0 cookie clear (D-12 / D-11).
+        // 5. Logout with cookie B + bearer JWT -> 204 + Max-Age=0 cookie clear (D-12 / D-11).
         mvc.perform(post("/api/auth/logout")
+                        .header("Authorization", "Bearer " + accessToken)
                         .cookie(new Cookie("refresh_token", refreshB)))
                 .andExpect(status().isNoContent())
                 .andExpect(cookie().maxAge("refresh_token", 0));

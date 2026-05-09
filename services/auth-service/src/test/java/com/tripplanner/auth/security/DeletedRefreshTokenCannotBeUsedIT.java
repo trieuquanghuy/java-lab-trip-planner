@@ -53,17 +53,21 @@ class DeletedRefreshTokenCannotBeUsedIT extends AuthIntegrationTestBase {
         mvc.perform(get("/api/auth/verify").param("token", token))
                 .andExpect(status().isFound());
 
-        // 3. Login -> capture refresh cookie A.
+        // 3. Login -> capture refresh cookie A AND access JWT (logout requires bearer auth — D-11).
         MvcResult login = mvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\":\"" + email + "\",\"password\":\"correctpassword\"}"))
                 .andExpect(status().isOk())
                 .andReturn();
         String cookieA = login.getResponse().getCookie("refresh_token").getValue();
+        String accessToken = com.jayway.jsonpath.JsonPath.read(
+                login.getResponse().getContentAsString(), "$.accessToken");
         assertThat(cookieA).isNotBlank();
+        assertThat(accessToken).isNotBlank();
 
-        // 4. Logout (presenting cookie A) -> 204 (D-11 idempotent revoke).
+        // 4. Logout (presenting cookie A + bearer JWT) -> 204 (D-11 idempotent revoke).
         mvc.perform(post("/api/auth/logout")
+                        .header("Authorization", "Bearer " + accessToken)
                         .cookie(new Cookie("refresh_token", cookieA)))
                 .andExpect(status().isNoContent());
 

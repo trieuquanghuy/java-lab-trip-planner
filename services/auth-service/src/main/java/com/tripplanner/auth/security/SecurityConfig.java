@@ -44,6 +44,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    FilterRegistrationBean<ServletJwtCommonFilter> jwtFilterReg,
                                                    RestAuthenticationEntryPoint entryPoint) throws Exception {
+        // Plan 02-06 Rule 1 fix: disable global servlet-level registration of the JWT filter
+        // and let the SecurityFilterChain own it via addFilterBefore. Without this, the filter
+        // ran TWICE (once at servlet container level, once inside Spring Security) and Spring
+        // Security's SecurityContextHolderFilter overwrote the SecurityContext set by the
+        // first invocation — yielding 401 'Authentication required' for valid bearer tokens
+        // on /api/auth/logout. Trip-service / destination-service did not catch this because
+        // their Phase 1 ITs only exercised the no-JWT path, not the valid-JWT-passes path.
+        jwtFilterReg.setEnabled(false);
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

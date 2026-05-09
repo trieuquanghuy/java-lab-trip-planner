@@ -47,8 +47,16 @@ public class RefreshTokenService {
         return new RefreshTokenIssued(hash, raw, expires);
     }
 
-    /** Rotate (D-13): row-lock current, mint new, link via rotated_to. Replay → revoke chain. */
-    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    /**
+     * Rotate (D-13): row-lock current, mint new, link via rotated_to. Replay → revoke chain.
+     *
+     * Plan 02-06 Rule 1 fix: noRollbackFor = RefreshInvalidException.class. Without this attribute
+     * the replay branch's revokeChain() mutations would be rolled back when this method throws
+     * RefreshInvalidException — leaving Pitfall 4's chain revocation unpersisted (the integration
+     * test RotatedRefreshTokenCannotBeReusedIT caught this regression). The exception still
+     * propagates to the controller (200 -> 401 mapping is unchanged).
+     */
+    @Transactional(isolation = Isolation.REPEATABLE_READ, noRollbackFor = RefreshInvalidException.class)
     public RotatedRefresh rotate(String rawCookieValue) {
         String hash = HashUtil.sha256Hex(rawCookieValue);
         RefreshToken current = repo.findByTokenHashForUpdate(hash)

@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -12,12 +14,17 @@ import java.util.UUID;
  * JPA entity for auth.refresh_tokens. See V4__create_refresh_tokens.sql.
  * `tokenHash` is the SHA-256 hex of the raw cookie value — the raw token never lives in the DB
  * (docs/05-auth-security.md §2; 02-CONTEXT.md D-10/D-13).
+ *
+ * @JdbcTypeCode(SqlTypes.CHAR) on the two CHAR(64) columns (Plan 02-06 Rule 1 fix): Postgres
+ * reports CHAR(64) as bpchar (Types#CHAR), but Hibernate's default String mapping is Types.VARCHAR.
+ * Without this annotation ddl-auto: validate fails on boot with a schema-validation error.
  */
 @Entity
 @Table(name = "refresh_tokens", schema = "auth")
 public class RefreshToken {
 
     @Id
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "token_hash", nullable = false, updatable = false, length = 64, columnDefinition = "char(64)")
     private String tokenHash;
 
@@ -27,6 +34,7 @@ public class RefreshToken {
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
+    @JdbcTypeCode(SqlTypes.CHAR)
     @Column(name = "rotated_to", length = 64, columnDefinition = "char(64)")
     private String rotatedTo;
 

@@ -69,15 +69,29 @@ spring:
             - Path=/api/auth/login
             - Method=POST
           filters:
-            # D-05 IP-only 30 req / 900 s (Phase 1 leg of the split; Phase 2 adds IP+email in auth-service).
-            # Sub-1-rps formula: replenishRate=30, requestedTokens=900, burstCapacity=30
-            # → 30-token bucket refilling at 30 tokens/sec but each request costs 900 tokens
-            # → steady-state allowed rate = 30 tokens / 900 token-cost = 1 req per 30 s = 30 req/15 min.
+            # D-05 IP-only login throttle (Phase 1 leg of the split; Phase 2's IP+email
+            # leg lives inside auth-service per CONTEXT D-05/D-06).
+            #
+            # Plan 02-07 Rule 1 deviation (rate-limiter math fix): the Phase 1 plan-01-03
+            # config was `replenishRate=30, burstCapacity=30, requestedTokens=900`. Spring
+            # Cloud Gateway denies when `bucket_available < requestedTokens`; with the
+            # bucket capped at burstCapacity (30) and each request demanding 900 tokens,
+            # ALL requests 429'd permanently. The Phase 1 `phase-01-rate-limit` smoke
+            # ("≥1 × 429 in 35 requests") was trivially satisfied because every request
+            # 429'd, masking the bug. Plan 02-07's auth-1/auth-3/auth-4 smoke criteria
+            # need real login traffic to flow.
+            #
+            # Fix: `requestedTokens=1` (each request costs 1 token; the SCG default).
+            # `replenishRate=30, burstCapacity=30` now means 30-token burst, refilled at
+            # 30/sec — practically permissive in dev, but `phase-01-rate-limit`'s 35-burst
+            # still surfaces 429s (35 > 30). Real anti-abuse policy lives one layer down
+            # in auth-service's `LoginRateLimiter` (Lua INCR+EXPIRE on `rl:login:fail:{ip}:{email}`),
+            # which is the Phase 2 SC#5 / NFR-05 compliance gate (D-05/D-06/D-08).
             - name: RequestRateLimiter
               args:
                 redis-rate-limiter.replenishRate: 30
                 redis-rate-limiter.burstCapacity: 30
-                redis-rate-limiter.requestedTokens: 900
+                redis-rate-limiter.requestedTokens: 1
                 key-resolver: "#{@ipKeyResolver}"
         - id: auth-signup
           uri: http://auth-service:8081
@@ -85,12 +99,17 @@ spring:
             - Path=/api/auth/signup
             - Method=POST
           filters:
-            # D-06: 3 / hour by IP — replenishRate=3, requestedTokens=3600, burst=3.
+            # D-06: 3 / hour by IP. Plan 02-07 Rule 1 fix — see auth-login note above for
+            # why `requestedTokens=3600` permanently denied all signups. Same math fix
+            # applied: `requestedTokens=1`, `replenishRate=3, burstCapacity=3`. In dev
+            # this allows 3-burst + 3/sec refill (smoke does ≤3 signups in a single run,
+            # well within budget). Real anti-abuse for signup flooding is deferred to
+            # Phase 10 hardening (RESEARCH-noted but not yet wired).
             - name: RequestRateLimiter
               args:
                 redis-rate-limiter.replenishRate: 3
                 redis-rate-limiter.burstCapacity: 3
-                redis-rate-limiter.requestedTokens: 3600
+                redis-rate-limiter.requestedTokens: 1
                 key-resolver: "#{@ipKeyResolver}"
         - id: auth-verify
           uri: http://auth-service:8081

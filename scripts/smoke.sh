@@ -563,32 +563,64 @@ auth_signup() {
 # addressed to $1 and extract the 64-hex token following `?token=` in the
 # body. UI-SPEC §Email Copy Contract locks the URL on its own line as
 # `http://localhost:8080/api/auth/verify?token=<64-hex>`.
+#
+# IMPORTANT: MailHog stores message bodies in MIME quoted-printable
+# encoding (each line ≤76 chars; soft line breaks are `=\n`; literal `=`
+# is encoded as `=3D`; multi-byte UTF-8 like the U+2014 em-dash is
+# `=E2=80=94`). Python `quopri.decodestring(...)` is the smallest portable
+# tool to round-trip these. Falls back to a sed-based decoder if Python
+# is unavailable (rare on macOS / linux).
+#
+# Polls MailHog for up to SMOKE_MAILHOG_TIMEOUT seconds (default 15) since
+# the @Async send is decoupled from the signup transaction (D-01) and on
+# a busy machine the queued send can take a few seconds to land.
+#
 # Args: $1 = recipient email
 # Echos the token to stdout (or fails).
 auth_extract_token_from_mailhog() {
   local recipient="$1"
-  local mailhog_body
-  if ! mailhog_body=$(curl -sf "$SMOKE_MAILHOG_URL/api/v2/messages" 2>/dev/null); then
-    fail "MailHog API unreachable at $SMOKE_MAILHOG_URL/api/v2/messages — is mailhog container up?"
+  local timeout="${SMOKE_MAILHOG_TIMEOUT:-15}"
+  local body=""
+  local elapsed=0
+  while [ "$elapsed" -lt "$timeout" ]; do
+    local mailhog_body
+    if ! mailhog_body=$(curl -sf "$SMOKE_MAILHOG_URL/api/v2/messages" 2>/dev/null); then
+      fail "MailHog API unreachable at $SMOKE_MAILHOG_URL/api/v2/messages — is mailhog container up?"
+    fi
+
+    # Find the most recent message with a To.Mailbox+Domain matching the
+    # recipient. MailHog v2 API returns .items[] sorted newest-first.
+    body=$(printf '%s' "$mailhog_body" \
+            | jq -r --arg r "$recipient" \
+                '[.items[] | select(.To[]? | (.Mailbox + "@" + .Domain) == $r)] | .[0].Content.Body')
+    if [ -n "$body" ] && [ "$body" != "null" ]; then
+      break
+    fi
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+
+  if [ -z "$body" ] || [ "$body" = "null" ]; then
+    fail "No MailHog message found for $recipient after ${timeout}s (searched .items[].To[]). Did the @Async send fire? Check auth-service logs for D-04 MailException WARN."
   fi
 
-  # Find the most recent message with a To.Mailbox+Domain matching the
-  # recipient. MailHog v2 API returns .items[] sorted newest-first.
-  local body
-  body=$(printf '%s' "$mailhog_body" \
-          | jq -r --arg r "$recipient" \
-              '.items[] | select(.To[]? | (.Mailbox + "@" + .Domain) == $r) | .Content.Body' \
-          | head -1)
-  if [ -z "$body" ] || [ "$body" = "null" ]; then
-    fail "No MailHog message found for $recipient (searched .items[].To[]). Did the @Async send fire? Check auth-service logs for D-04 MailException WARN."
+  # Decode MIME quoted-printable so the token is contiguous and = signs
+  # round-trip cleanly. Python is the cheapest tool available on every
+  # CI runner; fall back to the awk approximation if missing.
+  local decoded
+  if command -v python3 >/dev/null 2>&1; then
+    decoded=$(printf '%s' "$body" | python3 -c 'import sys, quopri; sys.stdout.write(quopri.decodestring(sys.stdin.read().encode("utf-8")).decode("utf-8", "replace"))')
+  else
+    # Awk fallback: strip soft line breaks (`=\n`) then decode `=HH` runs.
+    decoded=$(printf '%s' "$body" | awk 'BEGIN{RS=""}{gsub(/=\n/,""); n=split($0,a,""); for(i=1;i<=n;i++){if(a[i]=="=" && i+2<=n){h=a[i+1] a[i+2]; printf "%c", strtonum("0x" h); i+=2}else{printf "%s", a[i]}}}')
   fi
 
   # Extract the 64-hex token. UI-SPEC body has the URL on its own line:
   # `http://localhost:8080/api/auth/verify?token=<64hex>`.
   local token
-  token=$(printf '%s' "$body" | grep -oE 'token=[a-f0-9]{64}' | head -1 | cut -d= -f2)
+  token=$(printf '%s' "$decoded" | grep -oE 'token=[a-f0-9]{64}' | head -1 | cut -d= -f2)
   if [ -z "$token" ]; then
-    fail "Could not extract 64-hex token from MailHog body for $recipient. Body preview: $(printf '%s' "$body" | head -c 200)"
+    fail "Could not extract 64-hex token from MailHog body for $recipient. Decoded preview: $(printf '%s' "$decoded" | head -c 200)"
   fi
 
   printf '%s' "$token"
@@ -663,10 +695,8 @@ check_auth_1() {
     fail "auth-1: signup body missing .userId: $signup_body"
   fi
 
-  # Step 2: wait briefly for the @Async send to land in MailHog (D-01).
-  sleep 2
-
-  # Step 3: extract token from MailHog body.
+  # Step 2/3: poll MailHog (the helper waits up to SMOKE_MAILHOG_TIMEOUT seconds
+  # for the D-01 @Async send to land — no fixed sleep so we don't waste budget).
   local token
   token=$(auth_extract_token_from_mailhog "$email")
 
@@ -819,7 +849,6 @@ check_auth_4() {
 
   # Setup: signup + verify + login (full chain — smoke-4 is fresh per run).
   auth_signup "$email" "$password" >/dev/null
-  sleep 2
   local token
   token=$(auth_extract_token_from_mailhog "$email")
   auth_verify_token "$token"

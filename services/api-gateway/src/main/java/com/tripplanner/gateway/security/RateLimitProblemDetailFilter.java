@@ -58,9 +58,18 @@ public class RateLimitProblemDetailFilter implements WebFilter {
 
             @Override
             public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
-                if (HttpStatus.TOO_MANY_REQUESTS.equals(getStatusCode())) {
-                    return writeProblemDetail();
-                }
+                // Plan 02-07 Rule 1 fix: when a downstream service (e.g. auth-service's
+                // LoginRateLimiter at the IP+email leg, D-05/D-08) emits its own 429 with
+                // a verbatim UI-SPEC ProblemDetail body via writeWith, pass it through
+                // unchanged. Without this guard, this filter overwrote the downstream's
+                // "Too many attempts. Please try again later." with the gateway-internal
+                // "Rate limit exceeded for this route" string, breaking the UI-SPEC
+                // §Server-Driven Copy Contract for auth.rate_limited (Phase 2 SC#5).
+                //
+                // Spring Cloud Gateway's own RequestRateLimiter does NOT call writeWith
+                // for rejected requests — it uses setComplete() (empty-body path)
+                // overridden below — so the original Phase 1 D-07 contract (gateway's
+                // empty-body 429s gain a problem+json envelope) is preserved.
                 return super.writeWith(body);
             }
 

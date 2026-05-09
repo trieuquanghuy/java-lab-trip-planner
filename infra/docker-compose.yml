@@ -103,6 +103,7 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       EUREKA_URL: http://eureka-server:8761/eureka
       ZIPKIN_BASE_URL: http://zipkin:9411
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}      # Plan 02-07 Rule 2 — gateway's ReactiveJwtAuthenticationManager (libs/jwt-common) requires the same HS256 secret as auth-service to verify access tokens (Phase 1 D-16 / Pitfall B).
     # healthcheck inherits from Dockerfile
 
   auth-service:
@@ -153,6 +154,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       TRIP_DB_USER: ${TRIP_DB_USER}
       TRIP_DB_PASSWORD: ${TRIP_DB_PASSWORD}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}      # Plan 02-07 Rule 2 — libs/jwt-common JwtVerifier requires the same secret on every consumer (Phase 1 D-16 / Pitfall B); without this, JwtAutoConfiguration fails fast at boot with "AUTH_JWT_SECRET must be set; got null".
       EUREKA_URL: http://eureka-server:8761/eureka
       ZIPKIN_BASE_URL: http://zipkin:9411
     # healthcheck inherits from Dockerfile
@@ -175,6 +177,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       DESTINATION_DB_USER: ${DESTINATION_DB_USER}
       DESTINATION_DB_PASSWORD: ${DESTINATION_DB_PASSWORD}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}      # Plan 02-07 Rule 2 — see trip-service block above (libs/jwt-common parity).
       EUREKA_URL: http://eureka-server:8761/eureka
       ZIPKIN_BASE_URL: http://zipkin:9411
     # healthcheck inherits from Dockerfile

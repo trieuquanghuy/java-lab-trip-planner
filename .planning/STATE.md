@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: Not started
+current_plan: 2
 status: executing
-stopped_at: Phase 2 UI-SPEC approved
-last_updated: "2026-05-09T15:00:08.709Z"
+stopped_at: Completed 02-01-PLAN.md (auth persistence foundation)
+last_updated: "2026-05-09T15:33:07.823Z"
 progress:
   total_phases: 11
   completed_phases: 2
   total_plans: 23
-  completed_plans: 16
-  percent: 70
+  completed_plans: 17
+  percent: 74
 ---
 
 # Project State: Trip Planner
@@ -34,13 +34,13 @@ progress:
 ## Current Position
 
 **Phase:** 2
-**Status:** Ready to execute
-**Current plan:** Not started
+**Status:** Executing Phase 02
+**Current plan:** 2
 
 ```
-Progress: [██████████] 100%
-Phase: 01 (api-gateway) — COMPLETE
-Plan: 6 of 6 — DONE
+Progress: [███████░░░] 74%
+Phase: 02 (auth-service) — EXECUTING
+Plan: 2 of 7
 ```
 
 **Next action:** Phase 2 planning — Auth Service (signup → verify email → login → refresh → logout + 8 mandatory security tests).
@@ -61,6 +61,7 @@ Plan: 6 of 6 — DONE
 | Phase 01 P04 | 15 | 3 tasks | 13 files |
 | Phase 01-api-gateway P05 | 4h | 3 tasks | 9 files |
 | Phase 01-api-gateway P06 | 20min | 3 tasks (2 + checkpoint) | 4 files |
+| Phase 02-auth-service P01 | 13min | 3 tasks | 12 files |
 
 ### Plan Execution Log
 
@@ -77,6 +78,7 @@ Plan: 6 of 6 — DONE
 | 00-monorepo-scaffolding P09 | 28min | 4 | 25 |
 | 00-monorepo-scaffolding P10 | 12min | 3 | 2 |
 | 01-api-gateway P03 | 6min | 3 | 7 |
+| 02-auth-service P01 | 13min | 3 | 12 |
 
 ---
 
@@ -155,6 +157,11 @@ Plan: 6 of 6 — DONE
 - **01-05:** `RateLimitProblemDetailFilter` overrides both `writeWith()` and `setComplete()` in `ServerHttpResponseDecorator` — `RequestRateLimiterGatewayFilterFactory` uses the empty-body `setComplete()` path for rate-limited requests, bypassing a `writeWith()`-only override and leaving `Content-Type: null`.
 - **01-05:** `spring.reactor.context-propagation: auto` required in gateway-it test profile to activate `Hooks.enableAutomaticContextPropagation()` via `ReactorAutoConfiguration` — without it, `Slf4JEventListener` cannot propagate OTel span context (traceId/spanId) across reactive thread switches, so MDC is empty in SCG log events captured by `ListAppender`.
 - **01-06:** Phase 1 runtime gate cleared 2026-05-09 — clean `docker compose down -v && up -d --wait` (10 services healthy), `bash scripts/smoke.sh` exit 0 (Phase 0 SC#1-5 + NFR-04 + Phase 1 bypass/routing/rate-limit), Eureka dashboard shows 4 services, Zipkin SC#6 single trace ID spanning api-gateway + trip-service confirmed. Pitfall H (Redis depends_on) and Pitfall J (downstream service depends_on) closed in compose.
+- **02-01:** Pinned greenmail 2.1.4 explicitly in `gradle/libs.versions.toml` (not Spring-managed) — latest stable 2.x as of 2026-05; consumed test-only via `greenmail-junit5` alias for Plans 02-04/02-06.
+- **02-01:** `@Column(columnDefinition = "char(64)")` on token PKs (`EmailVerificationToken.token`, `RefreshToken.tokenHash`) forces Hibernate to round-trip CHAR(64) — NOT VARCHAR(64) — so `ddl-auto: validate` matches Flyway DDL byte-for-byte. Length 64 alone is insufficient (Hibernate defaults to VARCHAR for `String` fields).
+- **02-01:** Hibernate `ddl-auto: validate` boot test against the live PostgreSQL container deferred to Plan 02-04/02-05 (no service-layer beans yet to wire up the application context). `./gradlew :services:auth-service:assemble` (clean) is the strongest static guarantee Plan 02-01 can ship; the runtime entity↔schema validation gate fires when `AuthServiceApplication` first boots with the full bean graph.
+- **02-01:** ErrorCode catalog grew 5 → 13 entries (5 baseline from Phase 0/1 + 8 new auth.*/validation.* codes per docs/04 §6 + D-15) — append-only enum extension idiom established (`BAD_GATEWAY` semicolon → comma; new entries appended; terminal entry carries the `;` enum-list terminator). Downstream phases (3, 4, 5, 6) can grow the catalog the same way.
+- **02-01:** Repository pattern locked for the auth domain — `@Repository` annotation + `JpaRepository<Entity, IdType>` + `@Lock(LockModeType.PESSIMISTIC_WRITE)` with explicit JPQL `@Query` for the row-lock primitive (`RefreshTokenRepository.findByTokenHashForUpdate`); `@Modifying` for UPDATE primitives (`EmailVerificationTokenRepository.markAllUnconsumedAsConsumedFor` — D-23 re-signup). This is the template for the trip-service / destination-service repositories in Phase 5+.
 
 ### Critical Pitfalls to Watch
 
@@ -193,6 +200,6 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-09T08:22:25.501Z
+**Last session:** 2026-05-09T15:33:01.338Z
 **Stopped at:** Phase 2 UI-SPEC approved
-**Resume file:** .planning/phases/02-auth-service/02-UI-SPEC.md
+**Resume file:** None

@@ -9,10 +9,10 @@ Requirements derive from `docs/01-prd.md` (22 numbered FRs + 9 NFRs) and were va
 
 ### Authentication
 
-- [ ] **AUTH-01**: User can sign up with a unique email and a password (min 8 chars). Generic error messages used to prevent account enumeration. *(maps to FR-12)*
-- [ ] **AUTH-02**: User receives a verification email containing a unique 24-hour link; clicking the link activates the account. Account cannot log in before verification. *(maps to FR-13)*
-- [ ] **AUTH-03**: User can log in with email and password and stay signed in across page refreshes; bad credentials return a generic error. *(maps to FR-14)*
-- [ ] **AUTH-04**: User can log out, ending the session immediately and blocking access to authenticated routes. *(maps to FR-15)*
+- [x] **AUTH-01**: User can sign up with a unique email and a password (min 8 chars). Generic error messages used to prevent account enumeration. *(maps to FR-12)*
+- [x] **AUTH-02**: User receives a verification email containing a unique 24-hour link; clicking the link activates the account. Account cannot log in before verification. *(maps to FR-13)*
+- [x] **AUTH-03**: User can log in with email and password and stay signed in across page refreshes; bad credentials return a generic error. *(maps to FR-14)*
+- [x] **AUTH-04**: User can log out, ending the session immediately and blocking access to authenticated routes. *(maps to FR-15)*
 
 ### Discovery (Search & Recommendations)
 
@@ -124,10 +124,10 @@ Mapping of requirements to roadmap phases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| AUTH-01 | Phase 2 | Pending |
-| AUTH-02 | Phase 2 | Pending |
-| AUTH-03 | Phase 2 | Pending |
-| AUTH-04 | Phase 2 | Pending |
+| AUTH-01 | Phase 2 | Complete |
+| AUTH-02 | Phase 2 | Complete |
+| AUTH-03 | Phase 2 | Complete |
+| AUTH-04 | Phase 2 | Complete |
 | SRCH-01 | Phase 3 | Pending |
 | SRCH-02 | Phase 4 | Pending |
 | DEST-01 | Phase 4 | Pending |

@@ -1192,32 +1192,45 @@ Same diff in `GatewayForgedJwtIT`, `GatewayProblemDetailRenderingIT`, `LoginRate
 | A5 | docs/04 §3 verify endpoint says "→ 200 OK { verified: true }" but CONTEXT D-02 mandates 302-redirect to FE. CONTEXT D-02 is the authoritative source — the docs/04 line is stale. | `## Architecture Patterns → Pattern 2` | If the planner reads docs/04 §3 literally, they'll plan a 200-with-JSON instead of a 302-redirect. The plan check should explicitly reconcile this. [VERIFIED — CONTEXT D-02 is locked, post-dates docs/04] |
 | A6 | Spring Boot 3.5.14's `spring-boot-starter-data-redis` (servlet) is compatible with the existing `spring-boot-starter-data-redis-reactive` already on the api-gateway classpath (no version conflict at the BOM level) | `## Standard Stack → Phase 2 additions` | If they conflict (e.g., different Lettuce major), classpath warnings appear. They DO NOT — both are managed by the same SB BOM, both use Lettuce 6. [VERIFIED via Spring Boot dependency-versions page] |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`/api/auth/me` ship-or-skip (CONTEXT discretion)**
+   - **RESOLVED:** SKIP `/api/auth/me` in Phase 2. The SPA decodes the JWT client-side via `JSON.parse(atob(token.split('.')[1]))` for `email`/`ver`/`sub`. ROADMAP SC#3 wording is updated to "logged-in user can access an authenticated route, then log out; subsequent authenticated requests return 401" (no /me reference).
+   - **Rationale:** /me adds 12 lines + 1 IT + zero user-visible value; SC#3 test uses the JWT principal directly via `@AuthenticationPrincipal UserContext.userId()`. Phase 7 plan can re-introduce /me if SPA actually needs it.
    - What we know: docs/04 lists 5 endpoints (no /me); ROADMAP SC#3 mentions /me; CONTEXT D-15 includes /me happy-path test.
    - What's unclear: Is /me load-bearing for the SC#3 test? Practically: no — the test can use the JWT's `sub` claim directly (already exposed via `@AuthenticationPrincipal UserContext.userId()`).
    - **Recommendation: SKIP /me in Phase 2.** The SPA already has `email` and `ver` in the JWT payload (decoded with `jose-jwt` in browser, or just `JSON.parse(atob(token.split('.')[1]))`). Shipping /me adds 12 lines of code, 1 IT, ~5min of plan time, and zero user-visible value. Phase 7 plan can add /me if SPA actually needs it. Update ROADMAP SC#3 wording to "logged-in user can access an authenticated route, then log out; subsequent authenticated requests return 401" (drop the /me reference).
 
 2. **Static `verify-success.html` page in auth-service (CONTEXT discretion)**
+   - **RESOLVED:** SKIP the static page. Demo flow is `docker compose up` (FE running) → click email link → 302 to FE-rendered `/verify?status=…` page (Phase 7 owns this surface).
+   - **Rationale:** A static page in auth-service drifts from FE styling and adds maintenance overhead; if FE isn't up, the demo is broken regardless. Phase 7's `/verify` page is the canonical UI.
    - What we know: D-02 says backend 302-redirects to `${app.frontend.base-url}/verify?status=…`. If FE isn't running, browser shows ECONNREFUSED.
    - What's unclear: Is the demo-recording happy with that, or do we want a fallback?
    - **Recommendation: SKIP the static page.** The demo flow is `docker compose up` (which starts the FE) → click email link → browser goes to FE-rendered status page. If FE isn't up, the demo is broken anyway. Static page is one more place to drift from FE styling. (Phase 7's `/verify` page is the canonical UI surface.)
 
 3. **`JwtIssuer` location (CONTEXT discretion)**
+   - **RESOLVED:** Place `JwtIssuer` IN `libs/jwt-common` alongside `JwtVerifier`. Same `JwtAutoConfiguration` exposes the bean; same `JwtProperties` consumes the secret.
+   - **Rationale:** File-pair symmetry (`JwtIssuer.java` + `JwtVerifier.java`) is much easier to maintain than splitting them across `libs/` and `services/`. Auth-service consumes via `implementation(project(":libs:jwt-common"))` (already declared).
    - What we know: Phase 1 placed `JwtVerifier` in `libs/jwt-common`. The library has both servlet and reactive sub-packages, so `libs/jwt-common` is now the canonical "JWT signing+verification" home.
    - **Recommendation: PUT `JwtIssuer` IN `libs/jwt-common`.** Same package as `JwtVerifier`. Same `JwtAutoConfiguration` exposes the bean. Same `JwtProperties` consumes the secret. Symmetry is itself a virtue here — the file pair (`JwtIssuer.java` + `JwtVerifier.java`) is much easier to maintain than splitting them across `libs/` and `services/`. Auth-service consumes via the same `implementation(project(":libs:jwt-common"))` it already declares.
 
 4. **Single-vs-two-tx in `TokenCleanupJob` (CONTEXT discretion)**
+   - **RESOLVED:** TWO transactions (one per table). Each transaction logs its own row count; a failure on one DELETE does NOT roll back the other.
+   - **Rationale:** Functional outcome is identical to a single transaction; logs are cleaner; failure isolation is strictly better.
    - **Recommendation: TWO transactions** (one per table). Functional outcome is identical; logs are cleaner (each transaction reports its own row count); a failure on one DELETE doesn't leave the other rolled back.
 
 5. **Account-enumeration policy resolution (Pattern 1 footnote)**
+   - **RESOLVED:** Option A — `/signup` ALWAYS returns opaque `201 Created` for both new and existing-and-verified accounts. The `auth.email_already_registered` error code stays in the catalog (`docs/04 §6`) for future admin endpoints but MUST NOT be emitted from `/signup`. UI-SPEC §Server-Driven Copy Contract row for `auth.email_already_registered` is marked "NOT EMITTED".
+   - **Rationale:** Matches `docs/05 §9.1` enumeration policy verbatim and is now formally captured as **CONTEXT D-24** for traceability.
    - The CONTEXT D-23 reading vs. docs/04 §6 catalog: **planner MUST raise this with user before implementing.** Two options described in Pattern 1. Recommend Option A (always 201) and update docs/04 §6 to remove `auth.email_already_registered` from the *signup* row (keep the code in the catalog for any future admin endpoint).
 
 6. **Should we add `Origin` header check on `/refresh` per docs/05 §9.3?**
+   - **RESOLVED:** SKIP for v1. SameSite=Strict on the refresh cookie is the primary CSRF defense; Origin-check adds 4 lines, fails open in tools without an Origin header, and complicates ITs. Add to v2 backlog.
+   - **Rationale:** Cross-site requests don't carry a SameSite=Strict cookie at all, so the request never reaches the handler with a valid refresh token in the first place. Origin-check is belt-and-suspenders only.
    - docs/05 §9.3 says "refresh endpoint requires `Origin` header to match allowlisted origins" as belt-and-suspenders CSRF defense.
    - CONTEXT.md doesn't mention it. SameSite=Strict on the cookie is the primary defense.
    - **Recommendation: SKIP for v1.** SameSite=Strict is sufficient (cross-site requests don't carry the cookie at all). Origin-check adds 4 lines, fails open in tools like Postman without an Origin header, and complicates ITs. Add to v2 backlog. Plan should NOT include this task.
+
 
 ## Environment Availability
 

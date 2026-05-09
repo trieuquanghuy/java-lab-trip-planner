@@ -4,14 +4,14 @@ milestone: v1.0
 milestone_name: milestone
 current_plan: 3
 status: executing
-stopped_at: Completed 02-02-PLAN.md (JwtIssuer + auto-config)
-last_updated: "2026-05-09T15:41:46.377Z"
+stopped_at: Phase 2 UI-SPEC approved
+last_updated: "2026-05-09T15:53:53.609Z"
 progress:
   total_phases: 11
   completed_phases: 2
   total_plans: 23
-  completed_plans: 18
-  percent: 78
+  completed_plans: 19
+  percent: 83
 ---
 
 # Project State: Trip Planner
@@ -34,13 +34,13 @@ progress:
 ## Current Position
 
 **Phase:** 2
-**Status:** Executing Phase 02
+**Status:** Ready to execute
 **Current plan:** 3
 
 ```
-Progress: [████████░░] 78%
+Progress: [████████░░] 83%
 Phase: 02 (auth-service) — EXECUTING
-Plan: 3 of 7
+Plan: 4 of 7
 ```
 
 **Next action:** Phase 2 planning — Auth Service (signup → verify email → login → refresh → logout + 8 mandatory security tests).
@@ -63,6 +63,7 @@ Plan: 3 of 7
 | Phase 01-api-gateway P06 | 20min | 3 tasks (2 + checkpoint) | 4 files |
 | Phase 02-auth-service P01 | 13min | 3 tasks | 12 files |
 | Phase 02-auth-service P02 | 6min | 2 tasks | 3 files |
+| Phase 02-auth-service P03 | 5min | 3 tasks | 20 files |
 
 ### Plan Execution Log
 
@@ -81,6 +82,7 @@ Plan: 3 of 7
 | 01-api-gateway P03 | 6min | 3 | 7 |
 | 02-auth-service P01 | 13min | 3 | 12 |
 | 02-auth-service P02 | 6min | 2 | 3 |
+| 02-auth-service P03 | 5min | 3 | 20 |
 
 ---
 
@@ -168,6 +170,15 @@ Plan: 3 of 7
 - **02-02:** Phase 1 IN-01 closed — `@ConditionalOnMissingBean` now on BOTH `jwtVerifier` AND `jwtIssuer` beans in `JwtAutoConfiguration`. A downstream service that supplies its own `@Bean JwtVerifier` (e.g., a `@TestConfiguration`) will no longer crash with `NoUniqueBeanDefinitionException`; the auto-config backs off cooperatively.
 - **02-02:** jjwt 0.13.0 modern issuance API locked — `Jwts.builder().issuer().subject().issuedAt().expiration().id().claim().signWith(SecretKey).compact()`. `signWith(SecretKey)` auto-selects HS256 from the key (no explicit `SignatureAlgorithm.HS256` parameter that could be downgraded — T-2-02-01 algorithm-confusion mitigation at the issuance boundary).
 - **02-02:** Access-token TTL = `Duration.ofMinutes(15)` per docs/05 §1; claim shape: `iss=tripplanner-auth`, `sub=userId`, `iat=now`, `exp=now+15min`, `jti=UUID.randomUUID()`, `email`, `ver`. Round-trip through `JwtVerifier` confirmed in `JwtIssuerTest` (7/7 GREEN); `JwtVerifierTest` still 7/7 GREEN — no regression from the `@ConditionalOnMissingBean` addition.
+- **02-03:** AuthProperties prefix is `@ConfigurationProperties("app")` (NOT `app.auth`) with 4 nested classes (Auth.Cookie, Frontend, Mail, Verification) — single-bean four-group binding per revision iteration 1 correction. Phase-2 callers compose paths like `props.getAuth().getCookie().isSecure()`, `props.getFrontend().getBaseUrl()`, `props.getMail().getFrom()`, `props.getVerification().getLinkBase()`.
+- **02-03:** `RefreshTokenService.revokeChain` walks BOTH directions (Pitfall 4 / D-10). Backward via `findByRotatedTo` reverse-lookup to chain root, then forward marking each row revoked. The `rt_rotated_to_idx` partial index from Plan 01 makes the reverse walk cheap. Without backward walk, mid-chain replays leave the chain root unrevoked.
+- **02-03:** `LoginRateLimiter` uses Lua `INCR+EXPIRE` atomic script (`RedisScript.of(LUA, Long.class)` instance field). Eliminates the non-atomic INCR-then-EXPIRE immortal-counter race. `>= 5` threshold (D-06: 1-5 ok, 6th attempt trips); `clear()` on successful login (D-07).
+- **02-03:** `RefreshTokenService.rotate` runs at `@Transactional(isolation = Isolation.REPEATABLE_READ)` and calls `findByTokenHashForUpdate` first (D-13 / Pitfall 2 row-lock). `@Lock(PESSIMISTIC_WRITE)` requires an active write transaction — without REPEATABLE_READ, Spring Data's @Lock would silently no-op.
+- **02-03:** SecurityConfig is the third instance of `services/trip-service/.../security/ServletSecurityConfig.java` (auth-service is the third copy after trip-service + destination-service); `BCryptPasswordEncoder(12)` bean (D-19); permitAll on `/api/auth/{signup,verify,login,refresh}`. RestAuthenticationEntryPoint is verbatim sibling, constructor-injecting auto-configured ObjectMapper (BL-01 / Pitfall 7 — never `new ObjectMapper()` in code; comment-only mention per the analog).
+- **02-03:** AsyncConfig stays inline with `MdcCopyingTaskDecorator` (NOT extracted to libs/observability). Extraction trigger: a Phase 3+ service adds `@Async`. Pitfall 7 servlet-side answer to D-22 — `traceId`/`requestId`/`userId` propagate from submit thread into worker so Zipkin spans correlate across the email-send.
+- **02-03:** Skinny exception classes — 7 custom RuntimeException subclasses with no-arg ctors and no message. Plan 04 ControllerAdvice supplies the canonical UI-SPEC `detail` strings; prevents English-text drift across throw sites.
+- **02-03:** Rule 2 deviation — wired `AUTH_JWT_SECRET` passthrough into `infra/docker-compose.yml` `auth-service.environment` block. Variable was declared in `.env.example` since Phase 1 (D-16) but never wired through to the auth-service container; without the passthrough, application.yml's `${AUTH_JWT_SECRET}` placeholder would fail to resolve at compose-startup.
+- **02-03:** EmailVerificationService.consume returns verbatim UI-SPEC `"success"|"invalid"|"expired"`. Per docs/05 §9.1 (account-enumeration policy), unknown AND consumed both return `"invalid"` — same code, no enumeration leak.
 
 ### Critical Pitfalls to Watch
 
@@ -206,6 +217,6 @@ None.
 
 *State initialized: 2026-05-08 after roadmap creation*
 
-**Last session:** 2026-05-09T15:40:43.277Z
+**Last session:** 2026-05-09T15:53:24.671Z
 **Stopped at:** Phase 2 UI-SPEC approved
 **Resume file:** None

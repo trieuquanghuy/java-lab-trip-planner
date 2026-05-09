@@ -90,7 +90,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — Flyway V2/V3/V4 + JPA entities + repos + ErrorCode expansion + catalog deps (Wave 1)
 - [x] 02-02-PLAN.md — JwtIssuer in libs/jwt-common + auto-config + round-trip unit test (Wave 1, parallel with 01)
-- [ ] 02-03-PLAN.md — Service layer (LoginRateLimiter Lua, EmailVerificationService, RefreshTokenService rotate+revokeChain) + SecurityConfig + AsyncConfig + AuthProperties + 7 exceptions + yaml/.env wiring (Wave 2)
+- [x] 02-03-PLAN.md — Service layer (LoginRateLimiter Lua, EmailVerificationService, RefreshTokenService rotate+revokeChain) + SecurityConfig + AsyncConfig + AuthProperties + 7 exceptions + yaml/.env wiring (Wave 2)
 - [ ] 02-04-PLAN.md — 6 DTOs + VerificationEmailRequestedEvent + EmailVerificationSender (UI-SPEC body verbatim) + TokenCleanupJob @Scheduled (Wave 3)
 - [ ] 02-05-PLAN.md — AuthService (D-23 re-signup + D-05 timing defense) + AuthController (5 endpoints, 302 verify, ResponseCookie) + AuthControllerAdvice (9 verbatim UI-SPEC detail strings) (Wave 4)
 - [ ] 02-06-PLAN.md — Wave-0 test infra + AuthControllerIT happy path + AuthControllerAdviceIT BL-01 + 4 @Tag(security) ITs + 2 unit tests + BL-01 negative-assertion gateway updates (Wave 5)

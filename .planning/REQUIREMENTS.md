@@ -56,7 +56,7 @@ Requirements derive from `docs/01-prd.md` (22 numbered FRs + 9 NFRs) and were va
 - [x] **NFR-02**: Per-user authorization enforced at the service layer for every authenticated endpoint; cross-user reads return `404` (not `403`) so resource existence is not leaked. *(maps to PRD NFR-2)*
 - [ ] **NFR-03**: When OpenTripMap or Foursquare is unavailable, the system serves cached data and surfaces a degraded-mode indicator to the UI; circuit breakers prevent cascade failures. *(maps to PRD NFR-3)*
 - [x] **NFR-04**: All v1 external services operate on free tiers; no credit-card-required signups required to run the app locally. *(maps to PRD NFR-4)*
-- [ ] **NFR-05**: Backend service-layer line coverage ≥ 70%; auth + ownership-check paths achieve 100% branch coverage; 8 mandatory security integration tests gate every PR. *(maps to PRD NFR-5)*
+- [x] **NFR-05**: Backend service-layer line coverage ≥ 70%; auth + ownership-check paths achieve 100% branch coverage; 8 mandatory security integration tests gate every PR. *(maps to PRD NFR-5)*
 - [x] **NFR-06**: OWASP Top 10 (2021) explicitly addressed: parameterized queries (A03), bcrypt + JWT rotation (A07), CSP + sanitization (A03/XSS), service-layer ownership (A01), Dependency-Check + Dependabot (A06). *(maps to PRD NFR-6)*
 - [ ] **NFR-07**: All interactive controls reachable by Tab; focus visible; drag-drop has keyboard alternative (dnd-kit KeyboardSensor); WCAG AA color contrast on text. *(maps to PRD NFR-7)*
 - [ ] **NFR-08**: Trip planner usable on screens ≥ 360 px wide (mobile-responsive, not a native app). *(maps to PRD NFR-8)*
@@ -150,7 +150,7 @@ Mapping of requirements to roadmap phases.
 | NFR-02 | Phase 1 | Complete |
 | NFR-03 | Phase 4 | Pending |
 | NFR-04 | Phase 0 | Complete |
-| NFR-05 | Phase 2 | Pending |
+| NFR-05 | Phase 2 | Complete |
 | NFR-06 | Phase 6 | Complete |
 | NFR-07 | Phase 8 | Pending |
 | NFR-08 | Phase 8 | Pending |

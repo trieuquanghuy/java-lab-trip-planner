@@ -25,6 +25,24 @@
 #   "Validation Architecture / Wave 0 Gaps" lines 1280-1283; 01-CONTEXT.md
 #   D-05/D-06 (rate-limit topology) + D-15 (every SC needs an IT/smoke);
 #   01-PATTERNS.md Bucket E.
+#
+# Phase 2 extension (02-07-PLAN.md):
+#   Adds 5 new criteria — auth-1 / auth-2 / auth-3 / auth-4 / auth-5 — that
+#   exercise the wired auth-service end-to-end against the running compose
+#   stack (gateway -> auth-service -> Postgres -> Redis -> MailHog). They
+#   are the operational counterpart to Plan 02-06's IT suite (Testcontainers
+#   + GreenMail) and map 1:1 to ROADMAP Phase 2 SC#1-#5. Source:
+#   .planning/ROADMAP.md Phase 2 Success Criteria #1-#5; 02-CONTEXT.md
+#   D-01..D-23 (signup/verify/login/refresh/logout); 02-UI-SPEC.md
+#   §Server-Driven Copy Contract (verbatim error detail strings).
+#
+#   Test-only credentials used by these criteria (T-2-07-02):
+#     emails — smoke-1@test.local, smoke-2@test.local, smoke-4@test.local,
+#              smoke-5-<ts>@test.local
+#     password — smokepassword (≥8 chars, satisfies @Size(min=8))
+#   None of these reach production; they exist only to drive the local
+#   compose stack through Phase 2's signup→verify→login→refresh→logout
+#   flow.
 
 set -euo pipefail
 
@@ -75,6 +93,11 @@ Criteria (use with --criterion):
   phase-01-bypass     T-01-04 / Pitfall 1: direct :8082 with X-User-Id+no-JWT → 401
   phase-01-routing    SC#1: 4 gateway routes (/api/{auth,trips,search,destinations}) forward (no 502/503)
   phase-01-rate-limit SC#5 IP-only: 35 POST /api/auth/login → ≥1 × 429
+  auth-1    Phase 2 SC#1: signup → MailHog token → verify (302) → login (200)
+  auth-2    Phase 2 SC#2: unverified login → 403 auth.email_not_verified; unknown → 400 auth.invalid_credentials (opaque)
+  auth-3    Phase 2 SC#3: authenticated logout (204 + Max-Age=0) → reused refresh cookie 401 auth.refresh_invalid
+  auth-4    Phase 2 SC#4: refresh-rotation cookie B != A; logout(B) → /refresh(B) 401 auth.refresh_invalid
+  auth-5    Phase 2 SC#5 / NFR-05 IP+email leg: 6th failed login → 429 auth.rate_limited
 
 Environment overrides (defaults shown):
   COMPOSE_FILE=infra/docker-compose.yml
@@ -98,6 +121,11 @@ Available criteria for `scripts/smoke.sh --criterion <N>`:
   phase-01-bypass     — T-01-04 / Pitfall 1: direct :8082 with X-User-Id+no-JWT → 401
   phase-01-routing    — SC#1: 4 gateway routes forward (no 502/503)
   phase-01-rate-limit — SC#5 IP-only: 35 POST /api/auth/login → ≥1 × 429
+  auth-1              — Phase 2 SC#1: signup → MailHog → verify (302) → login (200)
+  auth-2              — Phase 2 SC#2: unverified login 403 + unknown-account opaque
+  auth-3              — Phase 2 SC#3: authenticated logout (204) + post-logout refresh 401
+  auth-4              — Phase 2 SC#4: refresh rotation + post-logout chain revocation
+  auth-5              — Phase 2 SC#5 / NFR-05: 6th failed login → 429 auth.rate_limited
 EOF
 }
 
@@ -470,6 +498,455 @@ check_phase_01_rate_limit() {
   pass "phase-01-rate-limit POST /api/auth/login burst → 429 observed within 35 requests (D-05 IP-only leg)"
 }
 
+# =============================================================================
+# Phase 2 — auth-N criterion checks (Plan 02-07 / ROADMAP SC#1-#5)
+#
+# These criteria exercise the wired auth-service end-to-end against the
+# running compose stack:
+#
+#   gateway (:8080) -> auth-service (:8081) -> Postgres -> Redis -> MailHog
+#
+# Each criterion drives one of the 5 ROADMAP Phase 2 success criteria via
+# curl + jq (with grep fallback). They are the operational counterpart to
+# Plan 02-06's Testcontainers + GreenMail IT suite — the ITs prove the
+# logic; these smoke checks prove the WIRED system works on a real
+# `docker compose up` stack.
+#
+# Test-only credentials (per T-2-07-02 disposition):
+#   - emails are *@test.local (RFC 6761 reserved TLD; never deliverable)
+#   - password literal "smokepassword" satisfies the @Size(min=8) rule
+#
+# Verbatim contract assertions (UI-SPEC §Server-Driven Copy Contract):
+#   - "Please verify your email before logging in." (auth.email_not_verified)
+#   - "Email or password is incorrect."             (auth.invalid_credentials)
+#   - "Session expired. Please log in again."       (auth.refresh_invalid)
+#   - "Too many attempts. Please try again later."  (auth.rate_limited)
+# =============================================================================
+
+# Common gateway base URL for all auth-N checks (Plan 01-03 routing).
+SMOKE_GATEWAY_URL="${SMOKE_GATEWAY_URL:-http://localhost:8080}"
+# MailHog admin API (set in compose at 8025; same UI port the human inspects
+# during the Plan 02-07 visual checkpoint).
+SMOKE_MAILHOG_URL="${SMOKE_MAILHOG_URL:-http://localhost:8025}"
+
+# --- Helpers shared by auth-N criteria ---------------------------------------
+
+# require_jq_for_auth — auth-N criteria need jq to parse JSON responses
+# (signup body's userId, MailHog message bodies, error envelopes). The
+# Phase 0 grep fallback works for top-level "$.code":"value" patterns but
+# not for nested .items[0].Content.Body extraction. Fail clearly rather
+# than silently degrade.
+require_jq_for_auth() {
+  if [ "$HAVE_JQ" -ne 1 ]; then
+    fail "jq is required for auth-N criteria (MailHog body parsing + JSON envelope assertions); install jq or run inside CI"
+  fi
+}
+
+# auth_signup — POST /api/auth/signup; assert 201; print body to stdout.
+# Args: $1 = email, $2 = password
+auth_signup() {
+  local email="$1"
+  local password="$2"
+  local resp
+  resp=$(curl -s -o /tmp/smoke_signup_body.json -w '%{http_code}' \
+          -X POST \
+          -H 'Content-Type: application/json' \
+          -d "{\"email\":\"$email\",\"password\":\"$password\"}" \
+          "$SMOKE_GATEWAY_URL/api/auth/signup" 2>/dev/null || echo "000")
+  if [ "$resp" != "201" ]; then
+    fail "auth signup($email) returned HTTP $resp (expected 201). Body: $(cat /tmp/smoke_signup_body.json 2>/dev/null || echo '<empty>')"
+  fi
+  cat /tmp/smoke_signup_body.json
+}
+
+# auth_extract_token_from_mailhog — fetch most-recent MailHog message
+# addressed to $1 and extract the 64-hex token following `?token=` in the
+# body. UI-SPEC §Email Copy Contract locks the URL on its own line as
+# `http://localhost:8080/api/auth/verify?token=<64-hex>`.
+# Args: $1 = recipient email
+# Echos the token to stdout (or fails).
+auth_extract_token_from_mailhog() {
+  local recipient="$1"
+  local mailhog_body
+  if ! mailhog_body=$(curl -sf "$SMOKE_MAILHOG_URL/api/v2/messages" 2>/dev/null); then
+    fail "MailHog API unreachable at $SMOKE_MAILHOG_URL/api/v2/messages — is mailhog container up?"
+  fi
+
+  # Find the most recent message with a To.Mailbox+Domain matching the
+  # recipient. MailHog v2 API returns .items[] sorted newest-first.
+  local body
+  body=$(printf '%s' "$mailhog_body" \
+          | jq -r --arg r "$recipient" \
+              '.items[] | select(.To[]? | (.Mailbox + "@" + .Domain) == $r) | .Content.Body' \
+          | head -1)
+  if [ -z "$body" ] || [ "$body" = "null" ]; then
+    fail "No MailHog message found for $recipient (searched .items[].To[]). Did the @Async send fire? Check auth-service logs for D-04 MailException WARN."
+  fi
+
+  # Extract the 64-hex token. UI-SPEC body has the URL on its own line:
+  # `http://localhost:8080/api/auth/verify?token=<64hex>`.
+  local token
+  token=$(printf '%s' "$body" | grep -oE 'token=[a-f0-9]{64}' | head -1 | cut -d= -f2)
+  if [ -z "$token" ]; then
+    fail "Could not extract 64-hex token from MailHog body for $recipient. Body preview: $(printf '%s' "$body" | head -c 200)"
+  fi
+
+  printf '%s' "$token"
+}
+
+# auth_verify_token — GET /api/auth/verify?token=…; assert 302 and that
+# Location ends with /verify?status=success. Spring's controller emits
+# `Location: ${app.frontend.base-url}/verify?status=<value>` per UI-SPEC
+# §Redirect Query-Param Contract.
+# Args: $1 = token
+auth_verify_token() {
+  local token="$1"
+  local headers_file=/tmp/smoke_verify_headers.txt
+  local code
+  # -L NOT used; we want the 302 itself, not the followed redirect.
+  code=$(curl -s -o /dev/null -D "$headers_file" -w '%{http_code}' \
+          "$SMOKE_GATEWAY_URL/api/auth/verify?token=$token" 2>/dev/null || echo "000")
+  if [ "$code" != "302" ]; then
+    fail "auth verify(token) returned HTTP $code (expected 302). Headers: $(cat "$headers_file" 2>/dev/null || echo '<none>')"
+  fi
+  if ! grep -iE '^location:.*[?&]status=success' "$headers_file" >/dev/null 2>&1; then
+    fail "auth verify(token) Location header did not contain ?status=success. Headers: $(cat "$headers_file")"
+  fi
+}
+
+# auth_login — POST /api/auth/login; on success persists access JWT + cookie
+# jar to /tmp/smoke_<tag>.{jwt,cookies}. Asserts HTTP 200 + body has
+# accessToken + Set-Cookie has refresh_token.
+# Args: $1 = email, $2 = password, $3 = tag (used to namespace the temp files)
+auth_login() {
+  local email="$1"
+  local password="$2"
+  local tag="$3"
+  local body_file="/tmp/smoke_login_${tag}.json"
+  local cookies_file="/tmp/smoke_login_${tag}.cookies"
+  local code
+  code=$(curl -s -o "$body_file" -c "$cookies_file" -w '%{http_code}' \
+          -X POST \
+          -H 'Content-Type: application/json' \
+          -d "{\"email\":\"$email\",\"password\":\"$password\"}" \
+          "$SMOKE_GATEWAY_URL/api/auth/login" 2>/dev/null || echo "000")
+  if [ "$code" != "200" ]; then
+    fail "auth login($email) returned HTTP $code (expected 200). Body: $(cat "$body_file" 2>/dev/null || echo '<empty>')"
+  fi
+  if ! jq -e '.accessToken | type == "string" and length > 0' "$body_file" >/dev/null 2>&1; then
+    fail "auth login($email) body missing .accessToken: $(cat "$body_file")"
+  fi
+  if ! grep -q 'refresh_token' "$cookies_file"; then
+    fail "auth login($email) did not set refresh_token cookie. Cookie jar: $(cat "$cookies_file")"
+  fi
+  jq -r '.accessToken' "$body_file"
+}
+
+# -----------------------------------------------------------------------------
+# auth-1 — Signup → verify-via-MailHog → login E2E (ROADMAP SC#1)
+#
+# Full happy-path chain through the wired stack. This is the only criterion
+# that touches MailHog's admin API to extract the verification token (the
+# token never reaches the SPA per D-02 — it's server-side only). Asserts
+# the redirect-status-success contract (UI-SPEC §Redirect Query-Param
+# Contract) and that login mints a refresh cookie + access JWT.
+# -----------------------------------------------------------------------------
+check_auth_1() {
+  require_jq_for_auth
+  local email="smoke-1@test.local"
+  local password="smokepassword"
+
+  # Step 1: signup → 201
+  local signup_body
+  signup_body=$(auth_signup "$email" "$password")
+  if ! printf '%s' "$signup_body" | jq -e '.userId | type == "string" and length > 0' >/dev/null 2>&1; then
+    fail "auth-1: signup body missing .userId: $signup_body"
+  fi
+
+  # Step 2: wait briefly for the @Async send to land in MailHog (D-01).
+  sleep 2
+
+  # Step 3: extract token from MailHog body.
+  local token
+  token=$(auth_extract_token_from_mailhog "$email")
+
+  # Step 4: GET /api/auth/verify?token=<token> → 302 + Location ?status=success
+  auth_verify_token "$token"
+
+  # Step 5: login → 200 + accessToken + refresh_token cookie
+  auth_login "$email" "$password" "auth1" >/dev/null
+
+  pass "auth-1 signup → MailHog token → verify (302) → login (200) E2E (SC#1)"
+}
+
+# -----------------------------------------------------------------------------
+# auth-2 — Unverified account cannot log in; opaque error (ROADMAP SC#2)
+#
+# Asserts (a) the verbatim UI-SPEC detail string for auth.email_not_verified
+# and (b) the account-enumeration policy from docs/05 §9.1 — both
+# `auth.email_not_verified` (existing-but-unverified) and
+# `auth.invalid_credentials` (unknown email) are emitted from /login such
+# that an attacker cannot distinguish "no account" from "exists but
+# unverified" via a single error code (the codes themselves differ but
+# both response shapes are generic and timing is balanced via D-05's
+# bcrypt-of-empty-string dummy hash).
+# -----------------------------------------------------------------------------
+check_auth_2() {
+  require_jq_for_auth
+  local email="smoke-2@test.local"
+  local password="smokepassword"
+
+  # Step 1: signup → 201 (account exists but stays unverified — skip verify)
+  auth_signup "$email" "$password" >/dev/null
+
+  # Step 2: login the unverified account → 403 auth.email_not_verified
+  local body_file=/tmp/smoke_auth2_login.json
+  local code
+  code=$(curl -s -o "$body_file" -w '%{http_code}' \
+          -X POST \
+          -H 'Content-Type: application/json' \
+          -d "{\"email\":\"$email\",\"password\":\"$password\"}" \
+          "$SMOKE_GATEWAY_URL/api/auth/login" 2>/dev/null || echo "000")
+  if [ "$code" != "403" ]; then
+    fail "auth-2: unverified login returned HTTP $code (expected 403). Body: $(cat "$body_file")"
+  fi
+  if ! jq -e '.code == "auth.email_not_verified"' "$body_file" >/dev/null 2>&1; then
+    fail "auth-2: unverified login body .code != \"auth.email_not_verified\". Body: $(cat "$body_file")"
+  fi
+  if ! jq -e '.detail == "Please verify your email before logging in."' "$body_file" >/dev/null 2>&1; then
+    fail "auth-2: unverified login .detail does not match UI-SPEC verbatim 'Please verify your email before logging in.'. Body: $(cat "$body_file")"
+  fi
+
+  # Step 3: login an unknown account → 400 auth.invalid_credentials
+  # (Account-enumeration policy: response shape is generic; an attacker
+  # cannot infer existence solely from the error code/detail/timing.)
+  body_file=/tmp/smoke_auth2_unknown.json
+  code=$(curl -s -o "$body_file" -w '%{http_code}' \
+          -X POST \
+          -H 'Content-Type: application/json' \
+          -d '{"email":"never@registered.local","password":"smokepassword"}' \
+          "$SMOKE_GATEWAY_URL/api/auth/login" 2>/dev/null || echo "000")
+  if [ "$code" != "400" ]; then
+    fail "auth-2: unknown-account login returned HTTP $code (expected 400). Body: $(cat "$body_file")"
+  fi
+  if ! jq -e '.code == "auth.invalid_credentials"' "$body_file" >/dev/null 2>&1; then
+    fail "auth-2: unknown-account login body .code != \"auth.invalid_credentials\". Body: $(cat "$body_file")"
+  fi
+
+  pass "auth-2 unverified-cannot-login (403 auth.email_not_verified) + opaque unknown (400 auth.invalid_credentials) (SC#2)"
+}
+
+# -----------------------------------------------------------------------------
+# auth-3 — Authenticated route + logout invalidation (ROADMAP SC#3)
+#
+# CONTEXT D-23 + RESEARCH Open Q1: auth-service does NOT ship /api/auth/me;
+# the SPA decodes the JWT client-side. The "authenticated route" assertion
+# is therefore proven by /api/auth/logout itself — it is a Bearer-protected
+# endpoint, returns 204, and clears the cookie. After logout, the same
+# refresh cookie at /api/auth/refresh must return 401 auth.refresh_invalid
+# (D-11 — chain head revoked).
+# -----------------------------------------------------------------------------
+check_auth_3() {
+  require_jq_for_auth
+
+  # Re-use smoke-1's verified user; mint a fresh JWT + cookie.
+  local email="smoke-1@test.local"
+  local password="smokepassword"
+  local cookies_file=/tmp/smoke_login_auth3.cookies
+  local body_file=/tmp/smoke_login_auth3.json
+
+  local code
+  code=$(curl -s -o "$body_file" -c "$cookies_file" -w '%{http_code}' \
+          -X POST \
+          -H 'Content-Type: application/json' \
+          -d "{\"email\":\"$email\",\"password\":\"$password\"}" \
+          "$SMOKE_GATEWAY_URL/api/auth/login" 2>/dev/null || echo "000")
+  if [ "$code" != "200" ]; then
+    fail "auth-3: setup login($email) returned HTTP $code (expected 200). If smoke-1 was not verified earlier, run --criterion auth-1 first. Body: $(cat "$body_file")"
+  fi
+  local jwt
+  jwt=$(jq -r '.accessToken' "$body_file")
+
+  # Step 1: POST /api/auth/logout with Bearer + refresh cookie → 204 +
+  # Set-Cookie has Max-Age=0 (D-11 + D-12 cookie-clear).
+  local headers_file=/tmp/smoke_logout_headers.txt
+  code=$(curl -s -o /dev/null -D "$headers_file" -w '%{http_code}' \
+          -X POST \
+          -H "Authorization: Bearer $jwt" \
+          -b "$cookies_file" \
+          "$SMOKE_GATEWAY_URL/api/auth/logout" 2>/dev/null || echo "000")
+  if [ "$code" != "204" ]; then
+    fail "auth-3: logout returned HTTP $code (expected 204). Headers: $(cat "$headers_file" 2>/dev/null || echo '<none>')"
+  fi
+  if ! grep -iE '^set-cookie:.*refresh_token=' "$headers_file" | grep -iE 'max-age=0' >/dev/null 2>&1; then
+    fail "auth-3: logout did not emit Set-Cookie: refresh_token=...; Max-Age=0. Headers: $(cat "$headers_file")"
+  fi
+
+  # Step 2: POST /api/auth/refresh with the SAME (now-revoked) cookie → 401
+  # auth.refresh_invalid (D-11 chain head revoked).
+  body_file=/tmp/smoke_auth3_refresh.json
+  code=$(curl -s -o "$body_file" -w '%{http_code}' \
+          -X POST \
+          -b "$cookies_file" \
+          "$SMOKE_GATEWAY_URL/api/auth/refresh" 2>/dev/null || echo "000")
+  if [ "$code" != "401" ]; then
+    fail "auth-3: post-logout /refresh returned HTTP $code (expected 401). Body: $(cat "$body_file")"
+  fi
+  if ! jq -e '.code == "auth.refresh_invalid"' "$body_file" >/dev/null 2>&1; then
+    fail "auth-3: post-logout /refresh body .code != \"auth.refresh_invalid\". Body: $(cat "$body_file")"
+  fi
+
+  pass "auth-3 authenticated route + logout invalidation (204 + Max-Age=0 + post-logout 401 auth.refresh_invalid) (SC#3)"
+}
+
+# -----------------------------------------------------------------------------
+# auth-4 — Refresh rotation + post-logout chain revocation (ROADMAP SC#4)
+#
+# D-13 (REPEATABLE_READ + SELECT FOR UPDATE) and D-10 (BOTH-directions chain
+# revocation on replay) are the production-code anchors. Smoke-level
+# assertions:
+#   1. /refresh issues a NEW cookie (cookie B != cookie A).
+#   2. logout(B) revokes the chain head; subsequent /refresh(B) → 401.
+#
+# We don't replay cookie A here — that's Plan 02-06's
+# RotatedRefreshTokenCannotBeReusedIT (security IT). Smoke verifies the
+# WIRED rotation + revocation behavior end-to-end against compose.
+# -----------------------------------------------------------------------------
+check_auth_4() {
+  require_jq_for_auth
+  local email="smoke-4@test.local"
+  local password="smokepassword"
+
+  # Setup: signup + verify + login (full chain — smoke-4 is fresh per run).
+  auth_signup "$email" "$password" >/dev/null
+  sleep 2
+  local token
+  token=$(auth_extract_token_from_mailhog "$email")
+  auth_verify_token "$token"
+
+  local cookies_a=/tmp/smoke_auth4_a.cookies
+  local cookies_b=/tmp/smoke_auth4_b.cookies
+  local body_file=/tmp/smoke_auth4.json
+  local code
+
+  # Login → cookie A
+  code=$(curl -s -o "$body_file" -c "$cookies_a" -w '%{http_code}' \
+          -X POST \
+          -H 'Content-Type: application/json' \
+          -d "{\"email\":\"$email\",\"password\":\"$password\"}" \
+          "$SMOKE_GATEWAY_URL/api/auth/login" 2>/dev/null || echo "000")
+  if [ "$code" != "200" ]; then
+    fail "auth-4: login($email) returned HTTP $code (expected 200). Body: $(cat "$body_file")"
+  fi
+  local cookie_a_value
+  cookie_a_value=$(grep -i 'refresh_token' "$cookies_a" | awk '{print $7}' | tail -1)
+  if [ -z "$cookie_a_value" ]; then
+    fail "auth-4: cookie A (refresh_token) not present in jar. Jar: $(cat "$cookies_a")"
+  fi
+
+  # Step 1: /refresh with cookie A → 200 + new accessToken + cookie B != A
+  code=$(curl -s -o "$body_file" -c "$cookies_b" -w '%{http_code}' \
+          -X POST \
+          -b "$cookies_a" \
+          "$SMOKE_GATEWAY_URL/api/auth/refresh" 2>/dev/null || echo "000")
+  if [ "$code" != "200" ]; then
+    fail "auth-4: /refresh(A) returned HTTP $code (expected 200). Body: $(cat "$body_file")"
+  fi
+  if ! jq -e '.accessToken | type == "string" and length > 0' "$body_file" >/dev/null 2>&1; then
+    fail "auth-4: /refresh(A) body missing .accessToken: $(cat "$body_file")"
+  fi
+  local cookie_b_value
+  cookie_b_value=$(grep -i 'refresh_token' "$cookies_b" | awk '{print $7}' | tail -1)
+  if [ -z "$cookie_b_value" ]; then
+    fail "auth-4: cookie B (refresh_token) not present in jar after rotation. Jar: $(cat "$cookies_b")"
+  fi
+  if [ "$cookie_a_value" = "$cookie_b_value" ]; then
+    fail "auth-4: rotation did NOT issue a new refresh_token cookie value (A == B). D-13 RefreshTokenService.rotate is not rotating."
+  fi
+
+  # Step 2: /logout with cookie B → 204
+  local headers_file=/tmp/smoke_auth4_logout_headers.txt
+  code=$(curl -s -o /dev/null -D "$headers_file" -w '%{http_code}' \
+          -X POST \
+          -b "$cookies_b" \
+          "$SMOKE_GATEWAY_URL/api/auth/logout" 2>/dev/null || echo "000")
+  if [ "$code" != "204" ]; then
+    fail "auth-4: logout(B) returned HTTP $code (expected 204). Headers: $(cat "$headers_file" 2>/dev/null || echo '<none>')"
+  fi
+
+  # Step 3: /refresh with cookie B (now revoked) → 401 auth.refresh_invalid
+  code=$(curl -s -o "$body_file" -w '%{http_code}' \
+          -X POST \
+          -b "$cookies_b" \
+          "$SMOKE_GATEWAY_URL/api/auth/refresh" 2>/dev/null || echo "000")
+  if [ "$code" != "401" ]; then
+    fail "auth-4: post-logout /refresh(B) returned HTTP $code (expected 401). Body: $(cat "$body_file")"
+  fi
+  if ! jq -e '.code == "auth.refresh_invalid"' "$body_file" >/dev/null 2>&1; then
+    fail "auth-4: post-logout /refresh(B) body .code != \"auth.refresh_invalid\". Body: $(cat "$body_file")"
+  fi
+
+  pass "auth-4 refresh-rotation (cookie B != A) + post-logout chain revocation (401 auth.refresh_invalid) (SC#4)"
+}
+
+# -----------------------------------------------------------------------------
+# auth-5 — IP+email login rate-limit at 6th attempt (ROADMAP SC#5 / NFR-05)
+#
+# D-05 / D-06 / D-07 / D-08: LoginRateLimiter Lua script keys on
+# `rl:login:fail:{ip}:{email_lower}`, threshold ≥ 5 (attempts 1-5 OK; 6th
+# trips). Failed attempts only — successful login DELETEs the key. We use
+# a freshly-minted email per run to defeat any leftover Redis state.
+#
+# UI-SPEC verbatim assertions:
+#   - $.code == "auth.rate_limited"
+#   - $.detail == "Too many attempts. Please try again later."
+# -----------------------------------------------------------------------------
+check_auth_5() {
+  require_jq_for_auth
+  local email="smoke-5-$(date +%s)@test.local"
+  local password="smokepassword"
+  local body_file=/tmp/smoke_auth5.json
+
+  # Attempts 1-5: each returns 400 auth.invalid_credentials (D-09 — email
+  # case-normalized; account does not exist; D-05 dummy bcrypt hash drives
+  # constant-latency timing). The rate-limit key is INCR'd on every failed
+  # attempt regardless of whether the account exists.
+  local i
+  for i in 1 2 3 4 5; do
+    local code
+    code=$(curl -s -o "$body_file" -w '%{http_code}' \
+            -X POST \
+            -H 'Content-Type: application/json' \
+            -d "{\"email\":\"$email\",\"password\":\"wrongpassword$i\"}" \
+            "$SMOKE_GATEWAY_URL/api/auth/login" 2>/dev/null || echo "000")
+    if [ "$code" != "400" ]; then
+      fail "auth-5: attempt $i returned HTTP $code (expected 400 auth.invalid_credentials). Body: $(cat "$body_file")"
+    fi
+    if ! jq -e '.code == "auth.invalid_credentials"' "$body_file" >/dev/null 2>&1; then
+      fail "auth-5: attempt $i body .code != \"auth.invalid_credentials\". Body: $(cat "$body_file")"
+    fi
+  done
+
+  # Attempt 6: trips the rate limiter → 429 auth.rate_limited.
+  local code
+  code=$(curl -s -o "$body_file" -w '%{http_code}' \
+          -X POST \
+          -H 'Content-Type: application/json' \
+          -d "{\"email\":\"$email\",\"password\":\"wrongpassword6\"}" \
+          "$SMOKE_GATEWAY_URL/api/auth/login" 2>/dev/null || echo "000")
+  if [ "$code" != "429" ]; then
+    fail "auth-5: 6th attempt returned HTTP $code (expected 429 auth.rate_limited). Body: $(cat "$body_file"). Verify (a) Redis healthy, (b) LoginRateLimiter wired into AuthService.login (D-05), (c) Lua INCR+EXPIRE script atomic (Plan 02-03)."
+  fi
+  if ! jq -e '.code == "auth.rate_limited"' "$body_file" >/dev/null 2>&1; then
+    fail "auth-5: 6th attempt body .code != \"auth.rate_limited\". Body: $(cat "$body_file")"
+  fi
+  if ! jq -e '.detail == "Too many attempts. Please try again later."' "$body_file" >/dev/null 2>&1; then
+    fail "auth-5: 6th attempt .detail does not match UI-SPEC verbatim 'Too many attempts. Please try again later.'. Body: $(cat "$body_file")"
+  fi
+
+  pass "auth-5 6th failed login → 429 auth.rate_limited + verbatim UI-SPEC detail (SC#5 / NFR-05 IP+email leg)"
+}
+
 # -----------------------------------------------------------------------------
 # Subcommand dispatch — first arg selects mode.
 # -----------------------------------------------------------------------------
@@ -484,7 +961,13 @@ run_full_gate() {
   check_phase_01_bypass
   check_phase_01_routing
   check_phase_01_rate_limit
-  echo "[smoke] ALL PASS — Phase 0 SC#1-#5 + NFR-04 + Phase 1 (bypass / routing / rate-limit) met"
+  check_auth_1
+  check_auth_2
+  check_auth_3
+  check_auth_4
+  check_auth_5
+  echo "[smoke] ALL PASS — Phase 0 SC#1-#5 + NFR-04 + Phase 1 (bypass / routing / rate-limit) + Phase 2 (auth-1..auth-5) met"
+  echo "[OK] PHASE 2 SMOKE: 5/5 auth criteria passed"
 }
 
 run_criterion() {
@@ -500,6 +983,11 @@ run_criterion() {
     phase-01-bypass)     check_phase_01_bypass ;;
     phase-01-routing)    check_phase_01_routing ;;
     phase-01-rate-limit) check_phase_01_rate_limit ;;
+    auth-1)   check_auth_1 ;;
+    auth-2)   check_auth_2 ;;
+    auth-3)   check_auth_3 ;;
+    auth-4)   check_auth_4 ;;
+    auth-5)   check_auth_5 ;;
     *)        fail "Unknown criterion '$CRITERION'. Use --list to see available criteria." ;;
   esac
 }
@@ -531,7 +1019,7 @@ main() {
       ;;
     --criterion)
       if [ "$#" -lt 2 ]; then
-        fail "--criterion requires a value (1, 2, 3, 3-route, 4, 5, nfr-04, phase-01-bypass, phase-01-routing, phase-01-rate-limit). Use --list to enumerate."
+        fail "--criterion requires a value (1, 2, 3, 3-route, 4, 5, nfr-04, phase-01-bypass, phase-01-routing, phase-01-rate-limit, auth-1, auth-2, auth-3, auth-4, auth-5). Use --list to enumerate."
       fi
       run_criterion "$2"
       ;;

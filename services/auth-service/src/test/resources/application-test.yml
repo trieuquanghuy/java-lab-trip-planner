@@ -1,0 +1,58 @@
+# Test profile — exercised by all auth-service integration tests.
+#
+# Source: 02-06-PLAN.md Task 6.1(a) (verbatim where possible);
+#         02-CONTEXT.md D-12 (cookie.secure=false in dev/test) and D-19 (BCrypt cost 4 in tests via @TestConfiguration).
+#
+# Wiring notes:
+#   - spring.flyway.locations adds classpath:db/test-migration for the V0__create_auth_schema.sql bootstrap
+#     migration that runs against the Testcontainer Postgres image (which lacks infra/postgres/init.sql).
+#   - spring.datasource is intentionally NOT set here — @ServiceConnection on PostgreSQLContainer auto-wires it.
+#   - spring.data.redis is intentionally NOT set here — @ServiceConnection(name = "redis") auto-wires it.
+#   - spring.mail.host/port are overridden via @DynamicPropertySource pointing at the GreenMail extension.
+spring:
+  flyway:
+    enabled: true
+    schemas: auth
+    default-schema: auth
+    table: auth_flyway_schema_history
+    locations: classpath:db/migration,classpath:db/test-migration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.default_schema: auth
+  mail:
+    host: localhost
+    port: 3025
+    properties:
+      mail.smtp.auth: false
+      mail.smtp.starttls.enable: false
+
+# JWT secret for tests (matches JwtFixtures.TEST_SECRET so the same key signs/verifies across the suite).
+auth:
+  jwt:
+    secret: phase-1-jwt-fixture-secret-32bytes!!
+
+# AuthProperties — D-12 cookie.secure=false (http://localhost), UI-SPEC redirect target, mail-from, link-base.
+app:
+  auth:
+    cookie:
+      secure: false
+  frontend:
+    base-url: http://localhost:5173
+  mail:
+    from: test@tripplanner.local
+  verification:
+    link-base: http://localhost:8080/api/auth/verify?token=
+
+# Eureka registration off in tests — keeps boot fast and avoids network hits.
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+logging:
+  level:
+    com.tripplanner: DEBUG
+    org.springframework.transaction.interceptor: DEBUG

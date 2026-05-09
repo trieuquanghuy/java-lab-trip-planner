@@ -49,3 +49,18 @@ dependencyManagement {
         mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.springCloud.get()}")
     }
 }
+
+// Source: 02-06-PLAN.md Task 6.1(f). Wires `-PincludeTags=security` to scope the test suite to
+// @Tag("security") integration tests only (the NFR-05 merge gate). Without -P, the full suite runs.
+tasks.test {
+    useJUnitPlatform {
+        val includeTags = providers.gradleProperty("includeTags").orNull
+        if (includeTags != null) {
+            includeTags(*includeTags.split(",").toTypedArray())
+        }
+    }
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = false
+    }
+}

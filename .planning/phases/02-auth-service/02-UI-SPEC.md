@@ -1,10 +1,11 @@
 ---
 phase: 2
 slug: auth-service
-status: draft
+status: approved
 shadcn_initialized: true
 preset: slate (initialized in Phase 0 / Plan 00-09 — frontend/components.json)
 created: 2026-05-09
+reviewed_at: 2026-05-09
 phase_kind: backend
 ui_surface: minimal — verification email + RFC 7807 detail strings + redirect query-param vocabulary
 ---

@@ -49,10 +49,7 @@ public class KeyResolverConfig {
 
     /**
      * User-ID-based key resolver for authenticated routes (e.g. /api/trips/**).
-     * Falls back to "anonymous" — effectively unreachable on authenticated() routes
-     * because the SecurityWebFilterChain redirects unauthenticated requests to the
-     * ProblemDetailAuthEntryPoint before the RequestRateLimiter runs.
-     * switchIfEmpty satisfies C30-P1 (non-empty Mono guarantee on public/unauthenticated paths).
+     * Errors on missing principal — do NOT attach this resolver to a public route.
      */
     @Bean
     public KeyResolver userIdKeyResolver() {
@@ -61,6 +58,8 @@ public class KeyResolverConfig {
                 .filter(a -> a != null && a.isAuthenticated()
                         && a.getPrincipal() instanceof UserContext)
                 .map(a -> ((UserContext) a.getPrincipal()).userId())
-                .switchIfEmpty(Mono.just("anonymous"));
+                .switchIfEmpty(Mono.error(new IllegalStateException(
+                    "userIdKeyResolver invoked without authenticated principal — " +
+                    "do NOT attach this resolver to a public route")));
     }
 }

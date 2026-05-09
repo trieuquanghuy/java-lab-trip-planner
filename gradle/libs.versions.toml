@@ -42,6 +42,8 @@ resilience4j = "2.4.0"
 junit = "5.12.0"
 testcontainers = "1.21.0"
 wiremockSpringBoot = "3.9.0"
+# Phase 2 02-CONTEXT.md D-15 — GreenMail SMTP test fake (latest stable 2.x as of 2026-05; not Spring-managed)
+greenmail = "2.1.4"
 
 [libraries]
 # --- Spring Boot starters (versions managed by spring-boot-dependencies BOM imported per service) ---
@@ -85,6 +87,16 @@ spring-boot-starter-security = { module = "org.springframework.boot:spring-boot-
 spring-boot-starter-data-redis-reactive = { module = "org.springframework.boot:spring-boot-starter-data-redis-reactive" }
 spring-security-test = { module = "org.springframework.security:spring-security-test" }
 testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter" }
+
+# --- Phase 2 (auth-service: signup/verify/login/refresh/logout) ---
+# Versions managed by spring-boot-dependencies BOM (3.5.14) for the 3 starters.
+# testcontainers-postgresql gets its version from the testcontainers-bom.
+# greenmail-junit5 is NOT Spring-managed — uses version.ref above.
+spring-boot-starter-mail = { module = "org.springframework.boot:spring-boot-starter-mail" }
+spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation" }
+spring-boot-starter-data-redis = { module = "org.springframework.boot:spring-boot-starter-data-redis" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql" }
+greenmail-junit5 = { module = "com.icegreen:greenmail-junit5", version.ref = "greenmail" }
 
 # --- Testing (Phase 1 — H2 in-memory DB for security ITs that don't need a live PostgreSQL) ---
 # [Rule 3 auto-fix] Security ITs exclude Flyway/JPA but spring-boot-starter-data-jpa still registers

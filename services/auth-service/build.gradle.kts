@@ -27,8 +27,21 @@ dependencies {
     runtimeOnly(libs.postgresql.jdbc)
     implementation(libs.bundles.observability)
 
+    // Phase 2 (D-19/D-20/D-22 + RESEARCH §Standard Stack — versions managed by SB 3.5.14 BOM)
+    implementation(project(":libs:jwt-common"))                   // JwtVerifier + JwtIssuer + JwtFixtures
+    implementation(libs.spring.boot.starter.security)             // SecurityFilterChain, BCryptPasswordEncoder
+    implementation(libs.spring.boot.starter.mail)                 // JavaMailSender (D-03 plain-text)
+    implementation(libs.spring.boot.starter.validation)           // @Email/@NotBlank/@Size (D-18)
+    implementation(libs.spring.boot.starter.data.redis)           // StringRedisTemplate servlet variant (D-06)
+
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.spring.boot.testcontainers)   // catalogued; first integration test arrives in Phase 1+
+    testImplementation(libs.spring.security.test)
+    testImplementation(testFixtures(project(":libs:jwt-common")))     // JwtFixtures.TEST_SECRET
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation(libs.greenmail.junit5)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")     // Convention from Phase 1 01-02 SUMMARY
 }
 
 dependencyManagement {

@@ -17,6 +17,9 @@ springBoot = "3.5.14"
 # D-30: Spring Cloud 2025.0 (Northfields) matches Spring Boot 3.5.x.
 # CLAUDE.md cites 2024.0.x — that pin is wrong; 2024.0 (Moorgate) is for SB 3.4.x.
 # 2025.0.2 is the latest 2025.0.x patch as of April 2026.
+# ADR-PENDING: This deviates from the locked stack in CLAUDE.md. A stack-amendment ADR
+# should be raised to formally acknowledge Spring Cloud 2025.0.x as the correct train
+# for Spring Boot 3.5.x. The 2024.0.x pin in CLAUDE.md is factually incorrect.
 springCloud = "2025.0.2"
 springDependencyManagement = "1.1.6"
 

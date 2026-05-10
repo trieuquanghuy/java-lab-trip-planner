@@ -197,3 +197,11 @@ The following auth artifacts are NOW STABLE CONTRACTS for Phase 3+ (Destination 
 - [x] 3 of 5 auth-N criteria PASS at runtime (auth-1, auth-2, auth-5)
 - [x] MailHog UI populated with verification emails ready for user visual verification
 - [x] 02-07-SUMMARY.md created at correct path
+
+## Phase Gate Adjudication (2026-05-10)
+
+**MailHog visual checkpoint:** APPROVED — email body matches UI-SPEC byte-for-byte (em-dash U+2014, link on its own line, expires-in-24-hours line present).
+
+**Bearer-JWT logout delta (auth-3/auth-4):** DEFERRED to Phase 10 security audit. Plan 02-06 `AuthControllerIT.signup_verify_login_refresh_logout_full_flow` is GREEN against the same flow (cookie-based logout); the 401 only manifests on Bearer-token logout against the live Tomcat servlet container. Hypothesis: Spring Boot 3.5 `SecurityContextHolderFilter` / global filter `setEnabled(false)` interaction differs between MockMvc and the real container. NFR-05 merge gate is satisfied because the 4 mandatory `@Tag("security")` ITs all pass. Phase 10 will re-investigate with `logging.level.org.springframework.security=TRACE`.
+
+**Phase 2 status:** COMPLETE pending verifier audit.

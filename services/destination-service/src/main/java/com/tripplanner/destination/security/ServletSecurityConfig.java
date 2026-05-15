@@ -45,7 +45,8 @@ public class ServletSecurityConfig {
                                 "/__health", "/__health/**",
                                 "/actuator/health", "/actuator/health/**",
                                 "/actuator/info",
-                                "/api/search/**"
+                                "/api/search/**",
+                                "/api/destinations/**"
                         ).permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint))

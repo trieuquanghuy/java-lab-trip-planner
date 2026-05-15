@@ -44,7 +44,8 @@ public class ServletSecurityConfig {
                         .requestMatchers(
                                 "/__health", "/__health/**",
                                 "/actuator/health", "/actuator/health/**",
-                                "/actuator/info"
+                                "/actuator/info",
+                                "/api/search/**"
                         ).permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e.authenticationEntryPoint(entryPoint))

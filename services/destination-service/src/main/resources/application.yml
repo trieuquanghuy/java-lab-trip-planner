@@ -32,6 +32,10 @@ spring:
       ddl-auto: validate                              # NEVER `update` (anti-pattern / C15)
     properties:
       hibernate.default_schema: destination
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 server:
   port: 8083
 management:

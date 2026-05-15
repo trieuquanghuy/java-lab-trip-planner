@@ -24,6 +24,7 @@ dependencies {
     implementation(libs.spring.boot.starter.security)                    // NEW Phase 1 (Spring Security Servlet)
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.data.jpa)
+    implementation(libs.spring.boot.starter.data.redis)
     implementation(libs.spring.cloud.starter.netflix.eureka.client)
     implementation(libs.flyway.core)
     runtimeOnly(libs.flyway.database.postgresql)        // Pitfall A — MANDATORY for PG 16 support

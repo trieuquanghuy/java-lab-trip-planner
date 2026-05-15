@@ -25,6 +25,8 @@ dependencies {
     implementation(libs.spring.boot.starter.actuator)
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.spring.boot.starter.data.redis)
+    implementation(libs.resilience4j.spring.boot3)
+    implementation("org.springframework.boot:spring-boot-starter-aop")   // REQUIRED for @CircuitBreaker annotations
     implementation(libs.spring.cloud.starter.netflix.eureka.client)
     implementation(libs.flyway.core)
     runtimeOnly(libs.flyway.database.postgresql)        // Pitfall A — MANDATORY for PG 16 support
@@ -34,6 +36,7 @@ dependencies {
     testImplementation(libs.spring.boot.starter.test)
     testImplementation(libs.spring.security.test)                        // NEW Phase 1
     testImplementation(testFixtures(project(":libs:jwt-common")))        // NEW Phase 1
+    testImplementation(libs.wiremock.spring.boot)                        // NEW Phase 4 — WireMock for provider client tests
     testImplementation(libs.spring.boot.testcontainers)
     testImplementation(libs.testcontainers.postgresql)
     testImplementation(libs.testcontainers.junit.jupiter)

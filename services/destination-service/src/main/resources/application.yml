@@ -62,3 +62,41 @@ eureka:
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
     fetch-registry: true
     register-with-eureka: true
+
+# --- Provider configuration (Phase 4) ---
+otm:
+  base-url: ${OTM_BASE_URL:https://api.opentripmap.com}
+  api-key: ${OTM_API_KEY:placeholder}
+fsq:
+  base-url: ${FSQ_BASE_URL:https://api.foursquare.com/v3}
+  api-key: ${FSQ_API_KEY:placeholder}
+
+# --- Resilience4j circuit breakers (Phase 4) ---
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        slidingWindowSize: 10
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 5
+        registerHealthIndicator: true
+    instances:
+      openTripMap:
+        baseConfig: default
+        recordExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.io.IOException
+          - java.net.ConnectException
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException
+      foursquare:
+        baseConfig: default
+        recordExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.io.IOException
+          - java.net.ConnectException
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException

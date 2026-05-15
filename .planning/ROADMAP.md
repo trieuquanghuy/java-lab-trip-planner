@@ -134,10 +134,10 @@ Plans:
   4. Provider failures do not cascade — when one provider circuit is open, the other provider still returns partial data
   5. Two overlapping radius searches produce zero duplicate `provider_ref` values in `destinations_cache`
 **Plans**: 4 plans
-  - [ ] 04-01-PLAN.md — Migration + Entity + Repository (Wave 1)
-  - [ ] 04-02-PLAN.md — Provider Clients + DTOs + Resilience4j config (Wave 1)
-  - [ ] 04-03-PLAN.md — NearbyService pipeline + DetailService (Wave 2)
-  - [ ] 04-04-PLAN.md — Controllers + Security + Tests (Wave 3)
+  - [x] 04-01-PLAN.md — Migration + Entity + Repository (Wave 1)
+  - [x] 04-02-PLAN.md — Provider Clients + DTOs + Resilience4j config (Wave 1)
+  - [x] 04-03-PLAN.md — NearbyService pipeline + DetailService (Wave 2)
+  - [x] 04-04-PLAN.md — Controllers + Security + Tests (Wave 3)
 **Notes**:
   - Foursquare free tier: photos and hours are Premium fields silently absent — annotate DTOs `@JsonIgnoreProperties(ignoreUnknown = true)`, make `photos`/`hours` nullable; WireMock stubs must NOT include these fields (Pitfall 6)
   - Use `ON CONFLICT (provider_ref) DO UPDATE` for destinations_cache upsert to prevent duplicate rows from overlapping radius searches (Pitfall 12)

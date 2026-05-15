@@ -112,7 +112,12 @@ Plans:
   3. A cold search call (cache miss) returns in under 250 ms (Postgres FTS with GIN index)
   4. A search for an empty string or a query with no matches returns an empty array with HTTP 200, not a 404
   5. Searching with accented characters (e.g. "Münich") returns the correct city
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [x] 03-01-PLAN.md — Flyway migrations (extensions, cities table, GeoNames seed) + City entity + CityRepository with native FTS query
+- [x] 03-02-PLAN.md — Redis dependency + configuration + search DTOs (SearchResponse, CitySearchItem)
+- [x] 03-03-PLAN.md — SearchService (cache + single-flight lock) + SearchController + security config update
+- [x] 03-04-PLAN.md — Integration tests (Testcontainers Postgres + Redis) + unit tests for all 5 success criteria
 **Notes**:
   - Use population-weighted ORDER BY: `ts_rank(search_tsv, query) * LOG(population + 1) DESC` — plain ts_rank returns London Ontario before London UK for "lon" prefix (Pitfall 11)
   - Store `search_tsv` as a pre-computed generated column indexed by GIN — computing `to_tsvector()` at query time disables the GIN index on 23k rows

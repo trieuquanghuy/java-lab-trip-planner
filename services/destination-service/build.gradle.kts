@@ -35,6 +35,8 @@ dependencies {
     testImplementation(libs.spring.security.test)                        // NEW Phase 1
     testImplementation(testFixtures(project(":libs:jwt-common")))        // NEW Phase 1
     testImplementation(libs.spring.boot.testcontainers)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.junit.jupiter)
     testRuntimeOnly(libs.h2)                                             // NEW Phase 1 — in-memory DB for security ITs (Rule 3 auto-fix)
 }
 

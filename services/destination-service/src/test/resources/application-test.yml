@@ -1,0 +1,12 @@
+spring:
+  flyway:
+    enabled: true
+    schemas: destination
+    default-schema: destination
+    table: destination_flyway_schema_history
+    locations: classpath:db/migration,classpath:db/test-migration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.default_schema: destination

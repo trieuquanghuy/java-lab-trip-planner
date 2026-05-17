@@ -1,0 +1,19 @@
+# Test profile for trip-service integration tests.
+# Mirrors auth-service pattern: Testcontainers Postgres auto-wired via @ServiceConnection.
+spring:
+  flyway:
+    enabled: true
+    schemas: trip
+    default-schema: trip
+    table: trip_flyway_schema_history
+    locations: classpath:db/migration,classpath:db/test-migration
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.default_schema: trip
+
+# JWT secret must match JwtFixtures.TEST_SECRET for test JWT validation.
+auth:
+  jwt:
+    secret: phase-1-jwt-fixture-secret-32bytes!!

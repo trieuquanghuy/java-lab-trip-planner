@@ -156,7 +156,13 @@ Plans:
   3. A returning logged-in user sees all previously created trips, days, and items; a user with no trips sees an empty state
   4. User A cannot read User B's trip — requests return 404 (not 403)
   5. Two simultaneous PATCH requests shrinking the same trip produce no orphan `itinerary_items` rows
-**Plans**: TBD
+**Plans**: 5 plans
+Plans:
+- [ ] 05-01-PLAN.md — Flyway V2/V3/V4 migrations + build.gradle.kts deps + ErrorCode extension (Wave 1)
+- [ ] 05-02-PLAN.md — JPA entities + repositories + exception classes + DTOs (Wave 1)
+- [ ] 05-03-PLAN.md — TripService + DayMaterializationService business logic (Wave 2)
+- [ ] 05-04-PLAN.md — TripController + TripControllerAdvice + serialization failure handler (Wave 3)
+- [ ] 05-05-PLAN.md — Test infrastructure + integration tests + unit tests (Wave 4)
 **Notes**:
   - All of day materialization — confirmation count check, insert new days, delete removed days + cascade items — must be inside a single `@Transactional(isolation = REPEATABLE_READ)` service method (Pitfall 4)
   - Never call `@Transactional` methods from within the same bean; use a separate Spring bean for proxy interception

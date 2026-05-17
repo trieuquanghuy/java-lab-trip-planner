@@ -26,6 +26,7 @@ dependencies {
     implementation(libs.spring.boot.starter.data.jpa)
     implementation(libs.spring.cloud.starter.netflix.eureka.client)
     implementation(libs.flyway.core)
+    implementation(libs.spring.boot.starter.validation)                  // Phase 5 — @Valid, @NotBlank, @Size on DTOs
     runtimeOnly(libs.flyway.database.postgresql)        // Pitfall A — MANDATORY for PG 16 support
     runtimeOnly(libs.postgresql.jdbc)
     implementation(libs.bundles.observability)
@@ -34,6 +35,7 @@ dependencies {
     testImplementation(libs.spring.security.test)                        // NEW Phase 1
     testImplementation(testFixtures(project(":libs:jwt-common")))        // NEW Phase 1
     testImplementation(libs.spring.boot.testcontainers)
+    testImplementation(libs.testcontainers.postgresql)                   // Phase 5 — PostgreSQLContainer for ITs
     testRuntimeOnly(libs.h2)                                             // NEW Phase 1 — in-memory DB for security ITs (Rule 3 auto-fix)
 }
 

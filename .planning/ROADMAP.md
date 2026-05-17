@@ -160,7 +160,7 @@ Plans:
 Plans:
 - [x] 05-01-PLAN.md — Flyway V2/V3/V4 migrations + build.gradle.kts deps + ErrorCode extension (Wave 1)
 - [x] 05-02-PLAN.md — JPA entities + repositories + exception classes + DTOs (Wave 1)
-- [ ] 05-03-PLAN.md — TripService + DayMaterializationService business logic (Wave 2)
+- [x] 05-03-PLAN.md — TripService + DayMaterializationService business logic (Wave 2)
 - [ ] 05-04-PLAN.md — TripController + TripControllerAdvice + serialization failure handler (Wave 3)
 - [ ] 05-05-PLAN.md — Test infrastructure + integration tests + unit tests (Wave 4)
 **Notes**:
@@ -270,7 +270,7 @@ Plans:
 | 2. Auth Service | 0/? | Not started | - |
 | 3. Destination Service — Search | 0/? | Not started | - |
 | 4. Destination Service — Providers + Cache | 0/? | Not started | - |
-| 5. Trip Service — Trips + Days | 2/5 | In Progress|  |
+| 5. Trip Service — Trips + Days | 3/5 | In Progress|  |
 | 6. Trip Service — Itinerary Items + Favorites | 0/? | Not started | - |
 | 7. Frontend — Auth + Discovery | 0/? | Not started | - |
 | 8. Frontend — Trip Planner | 0/? | Not started | - |

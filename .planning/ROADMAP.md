@@ -15,7 +15,7 @@
 - [ ] **Phase 2: Auth Service** - Full signup → verify email → login → refresh → logout works end-to-end with all 8 mandatory security tests passing
 - [ ] **Phase 3: Destination Service — Search** - City/country search with seeded GeoNames data hits the 500 ms p95 SLA
 - [ ] **Phase 4: Destination Service — Providers + Cache** - Nearby attractions and detail endpoints work with provider failure isolation via circuit breakers
-- [ ] **Phase 5: Trip Service — Trips + Days** - Trip CRUD and idempotent day materialization work correctly under date range changes
+- [x] **Phase 5: Trip Service — Trips + Days** - Trip CRUD and idempotent day materialization work correctly under date range changes (completed 2026-05-17)
 - [ ] **Phase 6: Trip Service — Itinerary Items + Favorites** - Items can be added, removed, reordered (backend), and favorited; notes and cover images are sanitized
 - [ ] **Phase 7: Frontend — Auth + Discovery** - A logged-out user can search destinations and view detail; auth pages work end-to-end
 - [ ] **Phase 8: Frontend — Trip Planner** - Full itinerary editor with drag-drop reorder, cross-day moves, time slots, and map view
@@ -162,7 +162,7 @@ Plans:
 - [x] 05-02-PLAN.md — JPA entities + repositories + exception classes + DTOs (Wave 1)
 - [x] 05-03-PLAN.md — TripService + DayMaterializationService business logic (Wave 2)
 - [x] 05-04-PLAN.md — TripController + TripControllerAdvice + serialization failure handler (Wave 3)
-- [ ] 05-05-PLAN.md — Test infrastructure + integration tests + unit tests (Wave 4)
+- [x] 05-05-PLAN.md — Test infrastructure + integration tests + unit tests (Wave 4)
 **Notes**:
   - All of day materialization — confirmation count check, insert new days, delete removed days + cascade items — must be inside a single `@Transactional(isolation = REPEATABLE_READ)` service method (Pitfall 4)
   - Never call `@Transactional` methods from within the same bean; use a separate Spring bean for proxy interception
@@ -270,7 +270,7 @@ Plans:
 | 2. Auth Service | 0/? | Not started | - |
 | 3. Destination Service — Search | 0/? | Not started | - |
 | 4. Destination Service — Providers + Cache | 0/? | Not started | - |
-| 5. Trip Service — Trips + Days | 4/5 | In Progress|  |
+| 5. Trip Service — Trips + Days | 5/5 | Complete   | 2026-05-17 |
 | 6. Trip Service — Itinerary Items + Favorites | 0/? | Not started | - |
 | 7. Frontend — Auth + Discovery | 0/? | Not started | - |
 | 8. Frontend — Trip Planner | 0/? | Not started | - |

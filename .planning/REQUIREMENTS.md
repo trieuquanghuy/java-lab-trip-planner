@@ -32,7 +32,7 @@ Requirements derive from `docs/01-prd.md` (22 numbered FRs + 9 NFRs) and were va
 - [ ] **TRIP-03**: User can add a destination to a chosen day of a chosen trip from list view OR from detail view. Destination appears immediately under the chosen day. *(maps to FR-8)*
 - [ ] **TRIP-04**: User can remove a destination from a trip day; item disappears immediately after confirmation. *(maps to FR-9)*
 - [ ] **TRIP-05**: Logged-out users prompted to log in when creating a trip or adding a destination. After successful login, the original action completes and user lands on the same trip/destination page. *(maps to FR-10)*
-- [ ] **TRIP-06**: After login, returning user sees previously created trips, days, and items; empty state shown when no trips exist. *(maps to FR-11)*
+- [x] **TRIP-06**: After login, returning user sees previously created trips, days, and items; empty state shown when no trips exist. *(maps to FR-11)*
 
 ### In-Day Scheduling
 
@@ -138,7 +138,7 @@ Mapping of requirements to roadmap phases.
 | TRIP-03 | Phase 6 | Pending |
 | TRIP-04 | Phase 6 | Pending |
 | TRIP-05 | Phase 7 | Pending |
-| TRIP-06 | Phase 5 | Pending |
+| TRIP-06 | Phase 5 | Complete |
 | SCHD-01 | Phase 8 | Pending |
 | SCHD-02 | Phase 8 | Pending |
 | SCHD-03 | Phase 8 | Pending |

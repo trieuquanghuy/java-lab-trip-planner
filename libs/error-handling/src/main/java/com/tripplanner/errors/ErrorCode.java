@@ -21,7 +21,11 @@ public enum ErrorCode {
     AUTH_REFRESH_INVALID("auth.refresh_invalid"),
     AUTH_WEAK_PASSWORD("auth.weak_password"),
     AUTH_INVALID_EMAIL("auth.invalid_email"),
-    VALIDATION_FAILED("validation.failed");
+    VALIDATION_FAILED("validation.failed"),
+    TRIP_NOT_FOUND("trip.not_found"),
+    TRIP_SHORTEN_CONFLICT("trip.shorten_requires_confirmation"),
+    TRIP_INVALID_DATES("trip.invalid_date_range"),
+    TRIP_CONCURRENT_MODIFICATION("trip.concurrent_modification");
 
     private final String code;
 

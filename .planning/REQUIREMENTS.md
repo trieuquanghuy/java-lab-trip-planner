@@ -27,8 +27,8 @@ Requirements derive from `docs/01-prd.md` (22 numbered FRs + 9 NFRs) and were va
 
 ### Trip Planning
 
-- [ ] **TRIP-01**: User can create a trip with a required name (length 1–120). New trip appears in "My Trips" list and the planner opens immediately. *(maps to FR-6)*
-- [ ] **TRIP-02**: User can set start and end dates (start ≤ end). One itinerary day is materialized per date in range. Reducing the range that would orphan planned items requires explicit confirmation (409 Conflict otherwise). *(maps to FR-7)*
+- [x] **TRIP-01**: User can create a trip with a required name (length 1–120). New trip appears in "My Trips" list and the planner opens immediately. *(maps to FR-6)*
+- [x] **TRIP-02**: User can set start and end dates (start ≤ end). One itinerary day is materialized per date in range. Reducing the range that would orphan planned items requires explicit confirmation (409 Conflict otherwise). *(maps to FR-7)*
 - [ ] **TRIP-03**: User can add a destination to a chosen day of a chosen trip from list view OR from detail view. Destination appears immediately under the chosen day. *(maps to FR-8)*
 - [ ] **TRIP-04**: User can remove a destination from a trip day; item disappears immediately after confirmation. *(maps to FR-9)*
 - [ ] **TRIP-05**: Logged-out users prompted to log in when creating a trip or adding a destination. After successful login, the original action completes and user lands on the same trip/destination page. *(maps to FR-10)*
@@ -133,8 +133,8 @@ Mapping of requirements to roadmap phases.
 | DEST-01 | Phase 4 | Pending |
 | DEST-02 | Phase 4 | Pending |
 | DEST-03 | Phase 4 | Pending |
-| TRIP-01 | Phase 5 | Pending |
-| TRIP-02 | Phase 5 | Pending |
+| TRIP-01 | Phase 5 | Complete |
+| TRIP-02 | Phase 5 | Complete |
 | TRIP-03 | Phase 6 | Pending |
 | TRIP-04 | Phase 6 | Pending |
 | TRIP-05 | Phase 7 | Pending |

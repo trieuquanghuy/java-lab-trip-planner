@@ -158,7 +158,7 @@ Plans:
   5. Two simultaneous PATCH requests shrinking the same trip produce no orphan `itinerary_items` rows
 **Plans**: 5 plans
 Plans:
-- [ ] 05-01-PLAN.md — Flyway V2/V3/V4 migrations + build.gradle.kts deps + ErrorCode extension (Wave 1)
+- [x] 05-01-PLAN.md — Flyway V2/V3/V4 migrations + build.gradle.kts deps + ErrorCode extension (Wave 1)
 - [ ] 05-02-PLAN.md — JPA entities + repositories + exception classes + DTOs (Wave 1)
 - [ ] 05-03-PLAN.md — TripService + DayMaterializationService business logic (Wave 2)
 - [ ] 05-04-PLAN.md — TripController + TripControllerAdvice + serialization failure handler (Wave 3)

@@ -38,4 +38,11 @@ public interface ItineraryItemRepository extends JpaRepository<ItineraryItem, UU
 
     @Query("SELECT i FROM ItineraryItem i WHERE i.itineraryDayId IN :dayIds AND i.photoUrl IS NOT NULL ORDER BY i.position ASC")
     List<ItineraryItem> findItemsWithPhotoByDayIds(@Param("dayIds") List<UUID> dayIds);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query(value = "UPDATE trip.itinerary_items SET position = sub.new_pos, updated_at = NOW() " +
+            "FROM (SELECT id, (ROW_NUMBER() OVER (ORDER BY position)) * 100 AS new_pos " +
+            "FROM trip.itinerary_items WHERE itinerary_day_id = :dayId) sub " +
+            "WHERE trip.itinerary_items.id = sub.id", nativeQuery = true)
+    void reindexDay(@Param("dayId") UUID dayId);
 }

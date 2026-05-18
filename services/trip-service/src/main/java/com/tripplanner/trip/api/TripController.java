@@ -45,7 +45,8 @@ public class TripController {
                                                @AuthenticationPrincipal UserContext ctx) {
         TripWithDays result = tripService.create(ctx.userId(), req.name(),
                 req.startDate(), req.endDate());
-        TripResponse body = TripResponse.from(result.trip(), result.days());
+        TripResponse body = TripResponse.from(result.trip(), result.days(),
+                result.itemsByDay(), result.resolvedCoverImage());
         return ResponseEntity.created(URI.create("/api/trips/" + body.id())).body(body);
     }
 
@@ -68,7 +69,8 @@ public class TripController {
     public ResponseEntity<TripResponse> get(@PathVariable UUID id,
                                             @AuthenticationPrincipal UserContext ctx) {
         TripWithDays result = tripService.findTrip(id, ctx.userId());
-        return ResponseEntity.ok(TripResponse.from(result.trip(), result.days()));
+        return ResponseEntity.ok(TripResponse.from(result.trip(), result.days(),
+                result.itemsByDay(), result.resolvedCoverImage()));
     }
 
     @PatchMapping("/{id}")
@@ -79,7 +81,8 @@ public class TripController {
         TripWithDays result = tripService.updateTrip(id, ctx.userId(),
                 req.name(), req.startDate(), req.endDate(),
                 req.coverImageUrl(), confirmShorten);
-        return ResponseEntity.ok(TripResponse.from(result.trip(), result.days()));
+        return ResponseEntity.ok(TripResponse.from(result.trip(), result.days(),
+                result.itemsByDay(), result.resolvedCoverImage()));
     }
 
     @DeleteMapping("/{id}")

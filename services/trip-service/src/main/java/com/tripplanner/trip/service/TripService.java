@@ -1,8 +1,10 @@
 package com.tripplanner.trip.service;
 
 import com.tripplanner.trip.domain.ItineraryDay;
+import com.tripplanner.trip.domain.ItineraryItem;
 import com.tripplanner.trip.domain.Trip;
 import com.tripplanner.trip.repository.ItineraryDayRepository;
+import com.tripplanner.trip.repository.ItineraryItemRepository;
 import com.tripplanner.trip.repository.TripRepository;
 import com.tripplanner.trip.service.exception.InvalidDateRangeException;
 import com.tripplanner.trip.service.exception.TripNotFoundException;
@@ -12,7 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -20,13 +24,16 @@ public class TripService {
 
     private final TripRepository tripRepo;
     private final ItineraryDayRepository dayRepo;
+    private final ItineraryItemRepository itemRepo;
     private final DayMaterializationService dayMaterializationService;
 
     public TripService(TripRepository tripRepo,
                        ItineraryDayRepository dayRepo,
+                       ItineraryItemRepository itemRepo,
                        DayMaterializationService dayMaterializationService) {
         this.tripRepo = tripRepo;
         this.dayRepo = dayRepo;
+        this.itemRepo = itemRepo;
         this.dayMaterializationService = dayMaterializationService;
     }
 
@@ -45,7 +52,7 @@ public class TripService {
         if (startDate != null && endDate != null) {
             days = dayMaterializationService.materializeDays(trip, startDate, endDate, false);
         }
-        return new TripWithDays(trip, days);
+        return new TripWithDays(trip, days, Map.of(), null);
     }
 
     /**
@@ -57,7 +64,24 @@ public class TripService {
         Trip trip = tripRepo.findByIdAndUserId(tripId, UUID.fromString(userId))
                 .orElseThrow(TripNotFoundException::new);
         List<ItineraryDay> days = dayRepo.findByTripIdOrderByDayIndex(trip.getId());
-        return new TripWithDays(trip, days);
+
+        // Load items per day
+        Map<UUID, List<ItineraryItem>> itemsByDay = new HashMap<>();
+        List<UUID> dayIds = days.stream().map(ItineraryDay::getId).toList();
+        for (ItineraryDay day : days) {
+            itemsByDay.put(day.getId(), itemRepo.findByItineraryDayIdOrderByPositionAsc(day.getId()));
+        }
+
+        // Cover image fallback: first item with photo_url (D-09/D-10)
+        String resolvedCoverImage = null;
+        if (trip.getCoverImageUrl() == null && !dayIds.isEmpty()) {
+            List<ItineraryItem> withPhoto = itemRepo.findItemsWithPhotoByDayIds(dayIds);
+            if (!withPhoto.isEmpty()) {
+                resolvedCoverImage = withPhoto.get(0).getPhotoUrl();
+            }
+        }
+
+        return new TripWithDays(trip, days, itemsByDay, resolvedCoverImage);
     }
 
     /**
@@ -115,7 +139,7 @@ public class TripService {
             days = dayRepo.findByTripIdOrderByDayIndex(trip.getId());
         }
 
-        return new TripWithDays(trip, days);
+        return new TripWithDays(trip, days, Map.of(), null);
     }
 
     /**
@@ -135,6 +159,7 @@ public class TripService {
         }
     }
 
-    /** Result container — trip plus its materialized days. */
-    public record TripWithDays(Trip trip, List<ItineraryDay> days) {}
+    /** Result container — trip plus its materialized days, items per day, and resolved cover image. */
+    public record TripWithDays(Trip trip, List<ItineraryDay> days,
+                               Map<UUID, List<ItineraryItem>> itemsByDay, String resolvedCoverImage) {}
 }

@@ -5,6 +5,7 @@ import { SignupPage } from '@/pages/SignupPage';
 import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 import { HomePage } from '@/pages/HomePage';
 import { DestinationDetailPage } from '@/pages/DestinationDetailPage';
+import { TripsPage } from '@/pages/TripsPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
 
@@ -26,7 +27,8 @@ export default function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/verify" element={<VerifyEmailPage />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/trips" element={<PlaceholderPage name="My Trips" />} />
+          <Route path="/trips" element={<TripsPage />} />
+          <Route path="/trips/:tripId" element={<PlaceholderPage name="Trip Detail" />} />
           <Route path="/favorites" element={<PlaceholderPage name="Favorites" />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />

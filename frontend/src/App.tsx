@@ -1,23 +1,26 @@
+import { Routes, Route } from 'react-router-dom';
+import { Layout } from '@/components/Layout';
+import { NotFoundPage } from '@/pages/NotFoundPage';
+
+function PlaceholderPage({ name }: { name: string }) {
+  return (
+    <div className="py-8">
+      <h1 className="text-xl font-semibold">{name}</h1>
+    </div>
+  );
+}
+
 export default function App() {
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header slot — empty in P0; P7 lands brand + nav + auth controls */}
-      <header className="border-b border-border">
-        {/* intentionally empty in Phase 0 */}
-      </header>
-
-      {/* Main slot — Phase 0 = single landing element; P7+ = <Routes/> */}
-      <main className="flex-1 container mx-auto px-4 py-8 md:py-12">
-        <h1 className="text-2xl font-semibold tracking-tight">Trip Planner</h1>
-        <p className="mt-2 text-base text-muted-foreground">
-          Your itinerary, day by day.
-        </p>
-      </main>
-
-      {/* Footer slot — empty in P0; P9 polish may add */}
-      <footer className="border-t border-border">
-        {/* intentionally empty in Phase 0 */}
-      </footer>
-    </div>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route path="/" element={<PlaceholderPage name="Home" />} />
+        <Route path="/destinations/:providerRef" element={<PlaceholderPage name="Destination Detail" />} />
+        <Route path="/login" element={<PlaceholderPage name="Login" />} />
+        <Route path="/signup" element={<PlaceholderPage name="Sign Up" />} />
+        <Route path="/verify" element={<PlaceholderPage name="Verify Email" />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   );
 }

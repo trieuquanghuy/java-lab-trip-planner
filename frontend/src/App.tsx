@@ -1,6 +1,10 @@
 import { Routes, Route } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
+import { LoginPage } from '@/pages/LoginPage';
+import { SignupPage } from '@/pages/SignupPage';
+import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
+import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
 
 function PlaceholderPage({ name }: { name: string }) {
   return (
@@ -16,9 +20,13 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<PlaceholderPage name="Home" />} />
         <Route path="/destinations/:providerRef" element={<PlaceholderPage name="Destination Detail" />} />
-        <Route path="/login" element={<PlaceholderPage name="Login" />} />
-        <Route path="/signup" element={<PlaceholderPage name="Sign Up" />} />
-        <Route path="/verify" element={<PlaceholderPage name="Verify Email" />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignupPage />} />
+        <Route path="/verify" element={<VerifyEmailPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/trips" element={<PlaceholderPage name="My Trips" />} />
+          <Route path="/favorites" element={<PlaceholderPage name="Favorites" />} />
+        </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

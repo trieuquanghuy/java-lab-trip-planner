@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -9,6 +10,7 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { DayColumn } from './DayColumn';
+import { DayTabs } from './DayTabs';
 import { ItineraryItemCard } from './ItineraryItemCard';
 import { useDragDrop } from './useDragDrop';
 import { useDragStore } from './trip.store';
@@ -24,6 +26,9 @@ export function ItineraryBoard({ trip }: Props) {
     trip.days,
   );
   const activeItemId = useDragStore((s) => s.activeItemId);
+  const [activeMobileDay, setActiveMobileDay] = useState(
+    days[0]?.id ?? '',
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -36,6 +41,8 @@ export function ItineraryBoard({ trip }: Props) {
     ? days.flatMap((d) => d.items).find((i) => i.id === activeItemId)
     : null;
 
+  const mobileDay = days.find((d) => d.id === activeMobileDay) ?? days[0];
+
   return (
     <DndContext
       sensors={sensors}
@@ -44,14 +51,30 @@ export function ItineraryBoard({ trip }: Props) {
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
+      {/* Mobile: tab-based single day view */}
+      <div className="lg:hidden">
+        <DayTabs
+          days={days}
+          activeDayId={activeMobileDay}
+          onDayChange={setActiveMobileDay}
+        />
+        {mobileDay && (
+          <div className="mt-3">
+            <DayColumn day={mobileDay} tripId={trip.id} />
+          </div>
+        )}
+      </div>
+
+      {/* Desktop: horizontal scroll columns */}
       <div
-        className="flex gap-4 overflow-x-auto pb-4 px-2"
+        className="hidden lg:flex gap-4 overflow-x-auto pb-4 px-2"
         aria-live="polite"
       >
         {days.map((day) => (
           <DayColumn key={day.id} day={day} tripId={trip.id} />
         ))}
       </div>
+
       <DragOverlay>
         {activeItem ? (
           <div className="rotate-2 scale-105">

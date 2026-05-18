@@ -1,14 +1,54 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { MapPin, Globe, Clock, Star } from 'lucide-react';
+import { MapPin, Globe, Clock, Star, ArrowLeft } from 'lucide-react';
 import { fetchDestinationDetail } from '@/features/destinations/destinations.api';
 import { useAuth } from '@/features/auth/useAuth';
 import { PhotoCarousel } from '@/features/destinations/PhotoCarousel';
+import { AddToTripDropdown } from '@/features/trips/AddToTripDropdown';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+
+function DetailSkeleton() {
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Photo skeleton with shimmer */}
+      <div className="h-64 w-full rounded-lg animate-shimmer" />
+
+      <div className="space-y-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-3 flex-1">
+            <Skeleton className="h-8 w-3/4" />
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-6 w-20 rounded-full" />
+              <Skeleton className="h-5 w-12" />
+            </div>
+          </div>
+          <Skeleton className="h-10 w-28 hidden md:block" />
+        </div>
+
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-2/3" />
+
+        <div className="space-y-3 pt-2">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4 rounded-full" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4 rounded-full" />
+            <div className="space-y-1.5">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-4 w-32" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function DestinationDetailPage() {
   const { providerRef } = useParams<{ providerRef: string }>();
@@ -22,19 +62,12 @@ export function DestinationDetailPage() {
   });
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-64 w-full rounded-lg" />
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-4 w-48" />
-        <Skeleton className="h-20 w-full" />
-      </div>
-    );
+    return <DetailSkeleton />;
   }
 
   if (isError || !data) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
+      <div className="flex flex-col items-center justify-center py-20 gap-4 animate-fade-in">
         <h1 className="text-2xl font-bold">Destination not found</h1>
         <p className="text-muted-foreground">This destination may no longer be available.</p>
         <Button asChild>
@@ -44,22 +77,27 @@ export function DestinationDetailPage() {
     );
   }
 
-  const handleAddToTrip = () => {
-    if (isAuthenticated) {
-      toast.info('Trip management coming soon');
-    }
-  };
-
   const handleLoginForTrip = () => {
     setAddToTripContext({ destinationRef: providerRef! });
     navigate('/login');
   };
 
   return (
-    <div className="space-y-6 pb-24 md:pb-0">
-      <PhotoCarousel photos={data.photos} />
+    <div className="space-y-6 pb-24 md:pb-0 animate-fade-in">
+      {/* Back navigation */}
+      <button
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </button>
 
-      <div className="space-y-4">
+      <div className="animate-scale-in">
+        <PhotoCarousel photos={data.photos} />
+      </div>
+
+      <div className="space-y-4 animate-slide-up" style={{ animationDelay: '100ms' }}>
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
             <h1 className="text-2xl font-bold">{data.name}</h1>
@@ -77,15 +115,17 @@ export function DestinationDetailPage() {
           {/* Desktop Add to Trip CTA */}
           <div className="hidden md:block">
             {isAuthenticated ? (
-              <Button size="lg" onClick={handleAddToTrip}>
-                Add to Trip
-              </Button>
+              <AddToTripDropdown
+                destinationRef={providerRef!}
+                destinationName={data.name}
+                photoUrl={data.photos[0]}
+              />
             ) : (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button size="lg">Add to Trip</Button>
+                  <Button size="lg" className="transition-transform hover:scale-105">Add to Trip</Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-64">
+                <PopoverContent className="w-64 animate-scale-in">
                   <p className="text-sm mb-3">Log in to add destinations to your trip</p>
                   <Button size="sm" className="w-full" onClick={handleLoginForTrip}>
                     Log in
@@ -130,7 +170,7 @@ export function DestinationDetailPage() {
               href={data.website}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm text-blue-600 hover:underline transition-colors"
             >
               {data.website}
             </a>
@@ -139,11 +179,13 @@ export function DestinationDetailPage() {
       </div>
 
       {/* Mobile sticky Add to Trip CTA */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t md:hidden">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t md:hidden animate-slide-up">
         {isAuthenticated ? (
-          <Button size="lg" className="w-full" onClick={handleAddToTrip}>
-            Add to Trip
-          </Button>
+          <AddToTripDropdown
+            destinationRef={providerRef!}
+            destinationName={data.name}
+            photoUrl={data.photos[0]}
+          />
         ) : (
           <Popover>
             <PopoverTrigger asChild>

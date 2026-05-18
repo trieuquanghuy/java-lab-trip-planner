@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Map as MapIcon, X } from 'lucide-react';
+import { useQueries } from '@tanstack/react-query';
 import { useTrip, useUpdateTrip } from '@/features/trips/trip.hooks';
 import { ItineraryBoard } from '@/features/trips/ItineraryBoard';
+import { TripMap, type MarkerData } from '@/features/trips/TripMap';
+import { fetchDestinationDetail } from '@/features/destinations/destinations.api';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function TripDetailPage() {
@@ -12,6 +15,36 @@ export function TripDetailPage() {
   const updateTrip = useUpdateTrip(tripId ?? '');
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState('');
+  const [showMap, setShowMap] = useState(false);
+
+  // Collect unique destinationRefs from all items
+  const destinationRefs = useMemo(() => {
+    if (!trip) return [];
+    const refs = new Set<string>();
+    trip.days.forEach((day) => day.items.forEach((item) => refs.add(item.destinationRef)));
+    return Array.from(refs);
+  }, [trip]);
+
+  // Fetch destination details in parallel to get lat/lng
+  const destQueries = useQueries({
+    queries: destinationRefs.map((ref) => ({
+      queryKey: ['destination', ref],
+      queryFn: () => fetchDestinationDetail(ref),
+      staleTime: 1000 * 60 * 30, // cache 30 min
+      enabled: showMap,
+    })),
+  });
+
+  const markers: MarkerData[] = useMemo(() => {
+    return destQueries
+      .filter((q) => q.data)
+      .map((q) => ({
+        id: q.data!.providerRef,
+        name: q.data!.name,
+        lat: q.data!.lat,
+        lng: q.data!.lng,
+      }));
+  }, [destQueries]);
 
   if (isLoading) {
     return (
@@ -85,7 +118,7 @@ export function TripDetailPage() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div>
+        <div className="flex-1">
           {editingName ? (
             <input
               type="text"
@@ -108,9 +141,27 @@ export function TripDetailPage() {
             <p className="text-sm text-muted-foreground">{dateRange}</p>
           )}
         </div>
+        <button
+          onClick={() => setShowMap(!showMap)}
+          className={`p-2 rounded-lg transition-colors ${
+            showMap ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+          }`}
+          aria-label={showMap ? 'Hide map' : 'Show map'}
+        >
+          {showMap ? <X className="w-5 h-5" /> : <MapIcon className="w-5 h-5" />}
+        </button>
       </div>
 
-      <ItineraryBoard trip={trip} />
+      <div className="flex gap-4 h-[calc(100vh-180px)]">
+        <div className={`flex-1 overflow-x-auto ${showMap ? 'hidden lg:block' : ''}`}>
+          <ItineraryBoard trip={trip} />
+        </div>
+        {showMap && (
+          <div className="w-full lg:w-[400px] lg:min-w-[400px] h-full rounded-xl overflow-hidden border">
+            <TripMap markers={markers} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

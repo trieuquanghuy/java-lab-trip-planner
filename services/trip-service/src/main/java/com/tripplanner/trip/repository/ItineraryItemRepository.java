@@ -1,13 +1,16 @@
 package com.tripplanner.trip.repository;
 
 import com.tripplanner.trip.domain.ItineraryItem;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -19,4 +22,20 @@ public interface ItineraryItemRepository extends JpaRepository<ItineraryItem, UU
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("DELETE FROM ItineraryItem i WHERE i.itineraryDayId IN :dayIds")
     void deleteByDayIds(@Param("dayIds") List<UUID> dayIds);
+
+    List<ItineraryItem> findByItineraryDayIdOrderByPositionAsc(UUID itineraryDayId);
+
+    @Query("SELECT MAX(i.position) FROM ItineraryItem i WHERE i.itineraryDayId = :dayId")
+    Optional<Integer> findMaxPositionByDayId(@Param("dayId") UUID dayId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT i FROM ItineraryItem i WHERE i.itineraryDayId = :dayId ORDER BY i.position")
+    List<ItineraryItem> findByDayIdForUpdate(@Param("dayId") UUID dayId);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("UPDATE ItineraryItem i SET i.position = :pos, i.updatedAt = CURRENT_TIMESTAMP WHERE i.id = :id")
+    void updatePosition(@Param("id") UUID id, @Param("pos") int pos);
+
+    @Query("SELECT i FROM ItineraryItem i WHERE i.itineraryDayId IN :dayIds AND i.photoUrl IS NOT NULL ORDER BY i.position ASC")
+    List<ItineraryItem> findItemsWithPhotoByDayIds(@Param("dayIds") List<UUID> dayIds);
 }

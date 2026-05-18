@@ -32,6 +32,9 @@ public class ItineraryItem {
     @Column(name = "note", length = 500)
     private String note;
 
+    @Column(name = "photo_url", length = 2048)
+    private String photoUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -40,7 +43,33 @@ public class ItineraryItem {
 
     protected ItineraryItem() {}
 
-    // No public constructor needed in Phase 5 — entity exists only for JPQL COUNT query
+    public ItineraryItem(UUID id, UUID itineraryDayId, String destinationRef, int position,
+                         LocalTime timeSlot, String note, String photoUrl) {
+        this.id = id;
+        this.itineraryDayId = itineraryDayId;
+        this.destinationRef = destinationRef;
+        this.position = position;
+        this.timeSlot = timeSlot;
+        this.note = note;
+        this.photoUrl = photoUrl;
+        this.createdAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
     public UUID getId() { return id; }
     public UUID getItineraryDayId() { return itineraryDayId; }
+    public String getDestinationRef() { return destinationRef; }
+    public int getPosition() { return position; }
+    public LocalTime getTimeSlot() { return timeSlot; }
+    public String getNote() { return note; }
+    public String getPhotoUrl() { return photoUrl; }
+    public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
+
+    public void setItineraryDayId(UUID itineraryDayId) { this.itineraryDayId = itineraryDayId; }
+    public void setPosition(int position) { this.position = position; }
+    public void setTimeSlot(LocalTime timeSlot) { this.timeSlot = timeSlot; }
+    public void setNote(String note) { this.note = note; }
+    public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

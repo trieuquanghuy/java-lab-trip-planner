@@ -178,9 +178,16 @@ Plans:
   3. A note containing `<script>alert(1)</script>` is stored and returned as `alert(1)` (HTML stripped server-side)
   4. A user can favorite and unfavorite a destination; the "My Favorites" page lists all favorites and supports add-to-trip from there
   5. A trip cover image URL is stored and shown on the trip card and trip header; if unset, the first item's photo is used
-**Plans**: TBD
+**Plans**: 6 plans
+Plans:
+- [ ] 06-01-PLAN.md — Flyway V5/V6 migrations + Jsoup dependency + ErrorCode extension (Wave 1)
+- [ ] 06-02-PLAN.md — ItineraryItem entity expansion + Favorite entity + repositories + DTOs + exceptions (Wave 1)
+- [ ] 06-03-PLAN.md — ItineraryItemService with position algorithm + XSS sanitization + concurrency (Wave 2)
+- [ ] 06-04-PLAN.md — FavoriteService + TripResponse/DayResponse items extension + cover image fallback (Wave 2)
+- [ ] 06-05-PLAN.md — ItemController + FavoriteController + TripControllerAdvice extensions (Wave 3)
+- [ ] 06-06-PLAN.md — Integration tests + unit tests (Wave 4)
 **Notes**:
-  - Store `position` as `BIGINT` (not `INT`) to push integer overflow further out (Pitfall 5)
+  - Keep `position` as INT (project scale doesn't need BIGINT) — decided in discuss-phase
   - Use `SELECT ... FOR UPDATE` on the parent `itinerary_days` row before reading/writing positions, to serialize concurrent reorder operations (Pitfall 5)
   - Implement reindex as a single SQL window function UPDATE rather than N individual updates
   - NFR-06 (OWASP Top 10) is mapped here: note sanitization completes the stored-XSS item (A03); combined with bcrypt+JWT rotation from Phase 2, gateway header injection from Phase 1, and parameterized queries throughout, OWASP A01–A07 are fully addressed by end of Phase 6

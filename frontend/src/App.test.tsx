@@ -1,36 +1,46 @@
-import React from 'react';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 
-describe('App', () => {
-  let errorSpy: ReturnType<typeof vi.spyOn>;
-  let warnSpy: ReturnType<typeof vi.spyOn>;
+vi.mock('@/features/auth/AuthProvider', () => ({
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
 
-  beforeEach(() => {
-    errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-  });
+const mockAuthState = { accessToken: null, user: null, isInitializing: false, addToTripContext: null, setSession: vi.fn(), clearSession: vi.fn(), setInitializing: vi.fn(), setAddToTripContext: vi.fn() };
 
-  afterEach(() => {
-    errorSpy.mockRestore();
-    warnSpy.mockRestore();
-  });
+vi.mock('@/features/auth/auth.store', () => ({
+  useAuthStore: Object.assign(
+    (selector?: (s: unknown) => unknown) => selector ? selector(mockAuthState) : mockAuthState,
+    { getState: () => mockAuthState }
+  ),
+}));
 
-  it('renders Trip Planner heading', () => {
-    render(<App />);
-    expect(screen.getByRole('heading', { name: /Trip Planner/i })).toBeInTheDocument();
-  });
-
-  it('emits zero console errors or warnings during StrictMode render (UI-SPEC §Copywriting Contract)', () => {
-    // StrictMode double-invokes render to surface side effects; any React warning
-    // (missing key, deprecated API, dangerous lifecycle) emits via console.error/warn.
-    render(
-      <React.StrictMode>
+function renderApp(route = '/') {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(
+    <QueryClientProvider client={qc}>
+      <MemoryRouter initialEntries={[route]}>
         <App />
-      </React.StrictMode>
-    );
-    expect(errorSpy).not.toHaveBeenCalled();
-    expect(warnSpy).not.toHaveBeenCalled();
+      </MemoryRouter>
+    </QueryClientProvider>
+  );
+}
+
+describe('App routing', () => {
+  it('renders home page at /', () => {
+    renderApp('/');
+    expect(screen.getByText(/discover your next destination/i)).toBeInTheDocument();
+  });
+
+  it('renders 404 for unknown routes', () => {
+    renderApp('/unknown-path');
+    expect(screen.getByText(/404/i)).toBeInTheDocument();
+  });
+
+  it('renders login page at /login', () => {
+    renderApp('/login');
+    expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
   });
 });

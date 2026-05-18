@@ -6,6 +6,7 @@ import { VerifyEmailPage } from '@/pages/VerifyEmailPage';
 import { HomePage } from '@/pages/HomePage';
 import { DestinationDetailPage } from '@/pages/DestinationDetailPage';
 import { TripsPage } from '@/pages/TripsPage';
+import { TripDetailPage } from '@/pages/TripDetailPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
 
@@ -28,7 +29,7 @@ export default function App() {
         <Route path="/verify" element={<VerifyEmailPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/trips" element={<TripsPage />} />
-          <Route path="/trips/:tripId" element={<PlaceholderPage name="Trip Detail" />} />
+          <Route path="/trips/:tripId" element={<TripDetailPage />} />
           <Route path="/favorites" element={<PlaceholderPage name="Favorites" />} />
         </Route>
         <Route path="*" element={<NotFoundPage />} />

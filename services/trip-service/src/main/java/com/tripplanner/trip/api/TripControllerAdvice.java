@@ -2,7 +2,9 @@ package com.tripplanner.trip.api;
 
 import com.tripplanner.errors.ErrorCode;
 import com.tripplanner.errors.ProblemDetailFactory;
+import com.tripplanner.trip.service.exception.DayNotInTripException;
 import com.tripplanner.trip.service.exception.InvalidDateRangeException;
+import com.tripplanner.trip.service.exception.ItemNotFoundException;
 import com.tripplanner.trip.service.exception.ShortenConflictException;
 import com.tripplanner.trip.service.exception.TripNotFoundException;
 import org.springframework.dao.CannotAcquireLockException;
@@ -66,6 +68,18 @@ public class TripControllerAdvice extends ResponseEntityExceptionHandler {
     public ResponseEntity<ProblemDetail> onSerializationFailure(CannotAcquireLockException ex) {
         return body(HttpStatus.CONFLICT, ErrorCode.TRIP_CONCURRENT_MODIFICATION,
                 "Concurrent modification detected. Please retry.");
+    }
+
+    @ExceptionHandler(DayNotInTripException.class)
+    public ResponseEntity<ProblemDetail> onDayNotInTrip(DayNotInTripException ex) {
+        return body(HttpStatus.BAD_REQUEST, ErrorCode.TRIP_DAY_NOT_IN_TRIP,
+                "Target day does not belong to this trip.");
+    }
+
+    @ExceptionHandler(ItemNotFoundException.class)
+    public ResponseEntity<ProblemDetail> onItemNotFound(ItemNotFoundException ex) {
+        return body(HttpStatus.NOT_FOUND, ErrorCode.TRIP_ITEM_NOT_FOUND,
+                "Itinerary item not found.");
     }
 
     private ResponseEntity<ProblemDetail> body(HttpStatus status, ErrorCode code, String detail) {

@@ -202,7 +202,14 @@ Plans:
   3. Signing up, clicking the Mailhog email link, and logging in completes the full auth flow; the user lands on a success page
   4. The "Add to Trip" button on a destination detail is disabled (with tooltip) when the user is not logged in; clicking it when logged out prompts login and the original intent is preserved
   5. After a session expires, the browser shows exactly one failed `/api/auth/refresh` request in the network tab — no infinite retry loop
-**Plans**: TBD
+**Plans**: 6 plans
+Plans:
+- [ ] 07-01-PLAN.md — TypeScript types + shadcn/ui components + Layout shell + routing (Wave 1)
+- [ ] 07-02-PLAN.md — Auth store + Axios 401 interceptor (Pitfall 9) + AuthProvider session restoration (Wave 1)
+- [ ] 07-03-PLAN.md — Login/Signup/Verify pages + ProtectedRoute + auth-aware nav (Wave 2)
+- [ ] 07-04-PLAN.md — Hero search + debounced suggestions + destination card grid (Wave 2)
+- [ ] 07-05-PLAN.md — Destination detail page + photo carousel + Add to Trip CTA with deferred intent (Wave 3)
+- [ ] 07-06-PLAN.md — Unit + integration tests covering auth flows + TRIP-05 redirect (Wave 4)
 **Notes**:
   - Implement `isRefreshing` flag + `failedQueue` pattern in Axios interceptor — never retry `/auth/refresh` or `/auth/login` endpoints; full TypeScript implementation in PITFALLS.md Pitfall 9 (Pitfall 9)
   - Disable TanStack Query's default `retry: 3` for auth-related queries (return `false` for 401 errors)

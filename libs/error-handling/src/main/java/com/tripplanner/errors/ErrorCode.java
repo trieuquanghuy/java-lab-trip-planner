@@ -25,7 +25,9 @@ public enum ErrorCode {
     TRIP_NOT_FOUND("trip.not_found"),
     TRIP_SHORTEN_CONFLICT("trip.shorten_requires_confirmation"),
     TRIP_INVALID_DATES("trip.invalid_date_range"),
-    TRIP_CONCURRENT_MODIFICATION("trip.concurrent_modification");
+    TRIP_CONCURRENT_MODIFICATION("trip.concurrent_modification"),
+    TRIP_DAY_NOT_IN_TRIP("trip.day_not_in_trip"),
+    TRIP_ITEM_NOT_FOUND("trip.item_not_found");
 
     private final String code;
 

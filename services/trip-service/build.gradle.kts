@@ -27,6 +27,7 @@ dependencies {
     implementation(libs.spring.cloud.starter.netflix.eureka.client)
     implementation(libs.flyway.core)
     implementation(libs.spring.boot.starter.validation)                  // Phase 5 — @Valid, @NotBlank, @Size on DTOs
+    implementation(libs.jsoup)                                            // Phase 6 — XSS note sanitization (Safelist.none())
     runtimeOnly(libs.flyway.database.postgresql)        // Pitfall A — MANDATORY for PG 16 support
     runtimeOnly(libs.postgresql.jdbc)
     implementation(libs.bundles.observability)

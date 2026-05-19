@@ -122,7 +122,7 @@ export function TripsPage() {
           {/* End of list indicator */}
           {!hasNextPage && trips.length > 12 && (
             <div className="text-center py-8 text-sm text-muted-foreground">
-              You've seen all {totalElements.toLocaleString()} trips
+              You&apos;ve seen all {totalElements.toLocaleString()} trips
             </div>
           )}
         </>

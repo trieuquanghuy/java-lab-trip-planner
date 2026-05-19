@@ -82,7 +82,7 @@ export function AddToTripDropdown({
           ) : (
             <div className="space-y-3">
               <p className="text-sm font-medium">
-                Add "{destinationName}" to:
+                Add &ldquo;{destinationName}&rdquo; to:
               </p>
               <select
                 value={selectedTripId}

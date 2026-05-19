@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AddToTripDropdown } from '../AddToTripDropdown';
 
 vi.mock('@/features/auth/auth.store', () => ({
-  useAuthStore: (selector: (s: any) => any) => selector({ accessToken: 'mock-token' }),
+  useAuthStore: (selector: (s: unknown) => unknown) => selector({ accessToken: 'mock-token' }),
 }));
 
 vi.mock('@/features/trips/trip.hooks', () => ({
@@ -60,7 +60,7 @@ describe('AddToTripDropdown', () => {
 
   it('returns null when not authenticated', () => {
     vi.doMock('@/features/auth/auth.store', () => ({
-      useAuthStore: (selector: (s: any) => any) => selector({ accessToken: null }),
+      useAuthStore: (selector: (s: unknown) => unknown) => selector({ accessToken: null }),
     }));
     // Re-import would be needed for full test; this verifies render with token
     renderDropdown();

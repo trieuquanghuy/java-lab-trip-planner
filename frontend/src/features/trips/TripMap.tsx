@@ -41,6 +41,13 @@ function FitBounds({ markers }: { markers: MarkerData[] }) {
 }
 
 export function TripMap({ markers }: Props) {
+  const center = useMemo(() => {
+    if (markers.length === 0) return [0, 0] as [number, number];
+    const avgLat = markers.reduce((s, m) => s + m.lat, 0) / markers.length;
+    const avgLng = markers.reduce((s, m) => s + m.lng, 0) / markers.length;
+    return [avgLat, avgLng] as [number, number];
+  }, [markers]);
+
   if (markers.length === 0) {
     return (
       <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
@@ -48,12 +55,6 @@ export function TripMap({ markers }: Props) {
       </div>
     );
   }
-
-  const center = useMemo(() => {
-    const avgLat = markers.reduce((s, m) => s + m.lat, 0) / markers.length;
-    const avgLng = markers.reduce((s, m) => s + m.lng, 0) / markers.length;
-    return [avgLat, avgLng] as [number, number];
-  }, [markers]);
 
   return (
     <MapContainer

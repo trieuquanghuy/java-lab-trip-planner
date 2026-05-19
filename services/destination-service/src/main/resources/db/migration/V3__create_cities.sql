@@ -6,12 +6,12 @@ CREATE TABLE cities (
     geoname_id   BIGINT NOT NULL UNIQUE,
     name         VARCHAR(200) NOT NULL,
     country      VARCHAR(120) NOT NULL,
-    country_code CHAR(2) NOT NULL,
+    country_code VARCHAR(2) NOT NULL,
     lat          NUMERIC(9,6) NOT NULL,
     lng          NUMERIC(9,6) NOT NULL,
     population   BIGINT NOT NULL,
     search_tsv   TSVECTOR GENERATED ALWAYS AS (
-        to_tsvector('simple', unaccent(name) || ' ' || unaccent(country))
+        to_tsvector('simple', immutable_unaccent(name) || ' ' || immutable_unaccent(country))
     ) STORED
 );
 

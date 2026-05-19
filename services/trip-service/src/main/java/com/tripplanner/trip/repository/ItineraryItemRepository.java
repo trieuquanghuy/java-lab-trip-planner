@@ -33,8 +33,8 @@ public interface ItineraryItemRepository extends JpaRepository<ItineraryItem, UU
     List<ItineraryItem> findByDayIdForUpdate(@Param("dayId") UUID dayId);
 
     @Modifying(flushAutomatically = true, clearAutomatically = true)
-    @Query("UPDATE ItineraryItem i SET i.position = :pos, i.updatedAt = CURRENT_TIMESTAMP WHERE i.id = :id")
-    void updatePosition(@Param("id") UUID id, @Param("pos") int pos);
+    @Query("UPDATE ItineraryItem i SET i.position = :pos, i.updatedAt = :now WHERE i.id = :id")
+    void updatePosition(@Param("id") UUID id, @Param("pos") int pos, @Param("now") java.time.Instant now);
 
     @Query("SELECT i FROM ItineraryItem i WHERE i.itineraryDayId IN :dayIds AND i.photoUrl IS NOT NULL ORDER BY i.position ASC")
     List<ItineraryItem> findItemsWithPhotoByDayIds(@Param("dayIds") List<UUID> dayIds);

@@ -1,3 +1,7 @@
+auth:
+  jwt:
+    secret: phase-1-jwt-fixture-secret-32bytes!!
+
 spring:
   flyway:
     enabled: true
@@ -10,3 +14,7 @@ spring:
       ddl-auto: validate
     properties:
       hibernate.default_schema: destination
+      hibernate.jdbc.lob.non_contextual_creation: true
+  datasource:
+    hikari:
+      connection-init-sql: SET search_path TO destination, public

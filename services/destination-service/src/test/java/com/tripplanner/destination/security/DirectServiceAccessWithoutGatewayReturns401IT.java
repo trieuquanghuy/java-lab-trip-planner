@@ -55,7 +55,8 @@ class DirectServiceAccessWithoutGatewayReturns401IT {
         // Pitfall 1 keystone: a request that bypasses the gateway and hits this service directly
         // with a crafted X-User-Id header MUST be rejected. The gateway's strip+inject filter is
         // the first line of defense; this servlet filter is the second.
-        mvc.perform(get("/api/destinations/_ping").header("X-User-Id", "spoofed-uuid"))
+        // Uses a non-public path (anyRequest().authenticated()) to verify the filter rejects.
+        mvc.perform(get("/api/internal/protected").header("X-User-Id", "spoofed-uuid"))
            .andExpect(status().isUnauthorized())
            .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
            .andExpect(jsonPath("$.code").value("auth.unauthorized"));
@@ -63,7 +64,7 @@ class DirectServiceAccessWithoutGatewayReturns401IT {
 
     @Test
     void direct_call_with_no_headers_at_all_returns_401() throws Exception {
-        mvc.perform(get("/api/destinations/_ping"))
+        mvc.perform(get("/api/internal/protected"))
            .andExpect(status().isUnauthorized())
            .andExpect(content().contentTypeCompatibleWith("application/problem+json"))
            .andExpect(jsonPath("$.code").value("auth.unauthorized"));

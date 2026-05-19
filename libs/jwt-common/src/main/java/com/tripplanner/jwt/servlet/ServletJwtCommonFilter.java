@@ -46,9 +46,10 @@ public class ServletJwtCommonFilter extends OncePerRequestFilter {
     // is a no-op for those services. /api/auth/logout intentionally OMITTED — it requires
     // a valid bearer JWT per docs/05 §1 + SecurityConfig.anyRequest().authenticated().
     private static final List<String> WHITELIST = List.of(
-        "/__health", "/actuator/health", "/actuator/info",
+        "/__health", "/actuator/health", "/actuator/info", "/actuator/prometheus",
         "/api/auth/signup", "/api/auth/verify",
-        "/api/auth/login",  "/api/auth/refresh"
+        "/api/auth/login",  "/api/auth/refresh",
+        "/api/search", "/api/destinations"
     );
 
     private final JwtVerifier verifier;

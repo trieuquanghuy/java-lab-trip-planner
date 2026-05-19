@@ -46,5 +46,6 @@ dependencies {
 dependencyManagement {
     imports {
         mavenBom("org.springframework.cloud:spring-cloud-dependencies:${libs.versions.springCloud.get()}")
+        mavenBom("io.github.resilience4j:resilience4j-bom:${libs.versions.resilience4j.get()}")
     }
 }

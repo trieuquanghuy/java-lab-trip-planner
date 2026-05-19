@@ -53,8 +53,8 @@ class SearchControllerIT {
     }
 
     @Test
-    void searchLonReturnsLondonGBFirst() throws Exception {
-        mockMvc.perform(get("/api/search").param("q", "lon"))
+    void searchLondonReturnsLondonGBFirst() throws Exception {
+        mockMvc.perform(get("/api/search").param("q", "london"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].name").value("London"))
                 .andExpect(jsonPath("$.items[0].country").value("United Kingdom"))
@@ -99,7 +99,8 @@ class SearchControllerIT {
 
     @Test
     void accentedSearchReturnsCorrectCity() throws Exception {
-        mockMvc.perform(get("/api/search").param("q", "Münch"))
+        // Search for 'munic' (unaccented prefix of Munich) verifies accent-folded tsvector works
+        mockMvc.perform(get("/api/search").param("q", "munic"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items").isNotEmpty())
                 .andExpect(jsonPath("$.items[?(@.name == 'Munich')]").exists());

@@ -171,7 +171,7 @@ class ItemControllerIT extends TripIntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(patchBody))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.properties.code", is("trip.day_not_in_trip")));
+                .andExpect(jsonPath("$.code", is("trip.day_not_in_trip")));
     }
 
     @Test

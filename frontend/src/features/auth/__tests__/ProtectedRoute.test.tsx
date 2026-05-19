@@ -45,7 +45,7 @@ describe('ProtectedRoute', () => {
 
   it('renders outlet when authenticated', () => {
     act(() => {
-      useAuthStore.getState().setSession('token', { id: '1', email: 'x@y.com', name: 'X' });
+      useAuthStore.getState().setSession('token', { id: '1', email: 'x@y.com', emailVerified: true });
     });
     renderWithRouter();
     expect(screen.getByText('Protected Content')).toBeInTheDocument();

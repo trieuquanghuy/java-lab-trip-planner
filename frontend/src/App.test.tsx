@@ -31,16 +31,16 @@ function renderApp(route = '/') {
 describe('App routing', () => {
   it('renders home page at /', () => {
     renderApp('/');
-    expect(screen.getByText(/discover your next destination/i)).toBeInTheDocument();
+    expect(screen.getByText(/discover your next/i)).toBeInTheDocument();
   });
 
-  it('renders 404 for unknown routes', () => {
+  it('renders 404 for unknown routes', async () => {
     renderApp('/unknown-path');
-    expect(screen.getByText(/404/i)).toBeInTheDocument();
+    expect(await screen.findByText(/404/i)).toBeInTheDocument();
   });
 
-  it('renders login page at /login', () => {
+  it('renders login page at /login', async () => {
     renderApp('/login');
-    expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /log in/i })).toBeInTheDocument();
   });
 });

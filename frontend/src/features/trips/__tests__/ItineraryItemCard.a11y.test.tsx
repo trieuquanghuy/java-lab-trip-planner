@@ -27,10 +27,12 @@ const mockItem: TripItem = {
   id: 'item-1',
   itineraryDayId: 'day-1',
   destinationRef: 'Eiffel Tower',
-  sortOrder: 0,
+  position: 0,
   timeSlot: null,
   note: null,
   photoUrl: null,
+  createdAt: '2026-01-01T00:00:00Z',
+  updatedAt: '2026-01-01T00:00:00Z',
 };
 
 describe('ItineraryItemCard accessibility', () => {

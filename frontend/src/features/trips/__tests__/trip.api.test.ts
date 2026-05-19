@@ -95,8 +95,8 @@ describe('tripApi', () => {
   describe('updateItem', () => {
     it('calls PATCH /api/trips/:tripId/items/:itemId', async () => {
       mockPatch.mockResolvedValue({ data: { id: 'item-1' } });
-      await tripApi.updateItem('trip-1', 'item-1', { sortOrder: 2 });
-      expect(mockPatch).toHaveBeenCalledWith('/api/trips/trip-1/items/item-1', { sortOrder: 2 });
+      await tripApi.updateItem('trip-1', 'item-1', { position: 2 });
+      expect(mockPatch).toHaveBeenCalledWith('/api/trips/trip-1/items/item-1', { position: 2 });
     });
   });
 

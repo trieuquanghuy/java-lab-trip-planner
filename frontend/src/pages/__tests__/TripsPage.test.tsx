@@ -1,11 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type { TripSummary } from '@/types/trip';
 
 // Mock trip hooks
 const mockTrips = {
-  data: { pages: [{ content: [], totalElements: 0, totalPages: 0, page: 0, size: 12 }] },
+  data: { pages: [{ content: [] as TripSummary[], totalElements: 0, totalPages: 0, page: 0, size: 12 }] },
   isLoading: false,
   isFetchingNextPage: false,
   hasNextPage: false,
@@ -39,10 +40,11 @@ const mockLoadingState = {
   fetchNextPage: vi.fn(),
 };
 
-const mockUseInfiniteTrips = vi.fn(() => mockTrips);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const mockUseInfiniteTrips = vi.fn((): any => mockTrips);
 
 vi.mock('@/features/trips/trip.hooks', () => ({
-  useInfiniteTrips: (...args: any[]) => mockUseInfiniteTrips(...args),
+  useInfiniteTrips: () => mockUseInfiniteTrips(),
   useTrips: vi.fn(),
   useTrip: vi.fn(),
   useCreateTrip: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),

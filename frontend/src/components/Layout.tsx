@@ -14,6 +14,45 @@ export function Layout() {
   const user = useAuthStore((s) => s.user);
   const { logout } = useAuth();
 
+  function renderNavContent() {
+    if (isInitializing) {
+      return (
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-8 w-20" />
+          <Skeleton className="h-8 w-16" />
+        </div>
+      );
+    }
+    if (isAuthenticated) {
+      return (
+        <div className="flex items-center gap-2 animate-fade-in">
+          <span className="text-sm text-muted-foreground truncate max-w-[150px]">
+            {user?.email}
+          </span>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/trips">My Trips</Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/favorites">Favorites</Link>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={logout}>
+            Logout
+          </Button>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center gap-2 animate-fade-in">
+        <Button variant="ghost" size="sm" asChild>
+          <Link to="/login">Login</Link>
+        </Button>
+        <Button size="sm" asChild>
+          <Link to="/signup">Sign Up</Link>
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <SkipNavLink />
@@ -23,36 +62,7 @@ export function Layout() {
         </Link>
         <nav className="hidden sm:flex items-center gap-2">
           <ThemeToggle />
-          {isInitializing ? (
-            <div className="flex items-center gap-2">
-              <Skeleton className="h-8 w-20" />
-              <Skeleton className="h-8 w-16" />
-            </div>
-          ) : isAuthenticated ? (
-            <div className="flex items-center gap-2 animate-fade-in">
-              <span className="text-sm text-muted-foreground truncate max-w-[150px]">
-                {user?.email}
-              </span>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/trips">My Trips</Link>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/favorites">Favorites</Link>
-              </Button>
-              <Button variant="ghost" size="sm" onClick={logout}>
-                Logout
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 animate-fade-in">
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/login">Login</Link>
-              </Button>
-              <Button size="sm" asChild>
-                <Link to="/signup">Sign Up</Link>
-              </Button>
-            </div>
-          )}
+          {renderNavContent()}
         </nav>
         <MobileNav />
       </header>

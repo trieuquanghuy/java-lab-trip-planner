@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PhotoCarouselProps {
-  photos: string[];
+  readonly photos: string[];
 }
 
 export function PhotoCarousel({ photos }: PhotoCarouselProps) {
@@ -47,9 +47,9 @@ export function PhotoCarousel({ photos }: PhotoCarouselProps) {
       >
         {photos.map((url, idx) => (
           <img
-            key={idx}
+            key={url}
             src={url}
-            alt={`Destination photo ${idx + 1}`}
+            alt={`Destination ${idx + 1}`}
             loading="lazy"
             className="w-full h-64 object-cover flex-shrink-0 snap-center transition-opacity duration-300"
           />
@@ -81,9 +81,9 @@ export function PhotoCarousel({ photos }: PhotoCarouselProps) {
       {/* Dot indicators */}
       {photos.length > 1 && (
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-          {photos.map((_, idx) => (
+          {photos.map((url, idx) => (
             <button
-              key={idx}
+              key={url}
               onClick={() => scrollTo(idx)}
               aria-label={`Go to photo ${idx + 1}`}
               className={`w-2 h-2 rounded-full transition-all duration-300 ${

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import type { NearbyItem } from '@/types/api';
 
 interface DestinationCardProps {
-  destination: NearbyItem;
+  readonly destination: NearbyItem;
 }
 
 export function DestinationCard({ destination }: DestinationCardProps) {

@@ -41,20 +41,20 @@ apiClient.interceptors.response.use(undefined, async (error) => {
   // Redirect to error page for 500+ server errors (excluding auth endpoints)
   if (error.response?.status >= 500) {
     const reqUrl = originalRequest?.url || '';
-    if (!reqUrl.includes('/auth/') && window.location.pathname !== '/error') {
-      window.location.href = '/error';
-      return Promise.reject(error);
+    if (!reqUrl.includes('/auth/') && globalThis.location.pathname !== '/error') {
+      globalThis.location.href = '/error';
+      throw error;
     }
   }
 
   if (error.response?.status !== 401 || originalRequest._retry) {
-    return Promise.reject(error);
+    throw error;
   }
 
   // NEVER retry auth endpoints — prevents infinite loop
   const url = originalRequest.url || '';
   if (url.includes('/auth/refresh') || url.includes('/auth/login')) {
-    return Promise.reject(error);
+    throw error;
   }
 
   if (isRefreshing) {
@@ -89,7 +89,7 @@ apiClient.interceptors.response.use(undefined, async (error) => {
     processQueue(refreshError, null);
     useAuthStore.getState().clearSession();
     queryClient.clear();
-    return Promise.reject(refreshError);
+    throw refreshError;
   } finally {
     isRefreshing = false;
   }

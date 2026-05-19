@@ -20,7 +20,7 @@
 - [x] **Phase 7: Frontend — Auth + Discovery** - A logged-out user can search destinations and view detail; auth pages work end-to-end (completed 2026-05-18)
 - [x] **Phase 8: Frontend — Trip Planner** - Full itinerary editor with drag-drop reorder, cross-day moves, time slots, and map view (completed 2026-05-18)
 - [x] **Phase 9: Polish** - Production-quality UX: loading states, error boundaries, a11y pass, and mobile-responsive layout (completed 2026-05-19)
-- [ ] **Phase 9.1: M3 Design System Refactor** - Adopt M3 tonal color, typography, shape, and motion tokens over existing Tailwind + shadcn
+- [x] **Phase 9.1: M3 Design System Refactor** - Adopt M3 tonal color, typography, shape, and motion tokens over existing Tailwind + shadcn (completed 2026-05-19)
 - [ ] **Phase 10: Observability + Performance Hardening** - Distributed traces confirmed end-to-end, k6 load test meets SLA, final security and coverage audit passes
 
 ---
@@ -282,9 +282,9 @@ Plans:
   6. Dark mode toggle works and both palettes pass WCAG AA contrast (4.5:1 body, 3:1 large)
 **Plans**: 3 plans
 Plans:
-- [ ] 09.1-01-PLAN.md — M3 tonal palette CSS variables + motion tokens
-- [ ] 09.1-02-PLAN.md — Typography scale + shape tokens + elevation utilities
-- [ ] 09.1-03-PLAN.md — Dark mode toggle component + flash prevention
+- [x] 09.1-01-PLAN.md — M3 tonal palette CSS variables + motion tokens
+- [x] 09.1-02-PLAN.md — Typography scale + shape tokens + elevation utilities
+- [x] 09.1-03-PLAN.md — Dark mode toggle component + flash prevention
 **Notes**:
   - This is a design-token refactor, NOT a library swap — keep Tailwind + shadcn/ui + Radix primitives
   - Seed color: `#1A73E8` (travel blue) → generate full tonal palette (primary, secondary, tertiary, neutral, error)

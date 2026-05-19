@@ -21,7 +21,7 @@
 - [x] **Phase 8: Frontend — Trip Planner** - Full itinerary editor with drag-drop reorder, cross-day moves, time slots, and map view (completed 2026-05-18)
 - [x] **Phase 9: Polish** - Production-quality UX: loading states, error boundaries, a11y pass, and mobile-responsive layout (completed 2026-05-19)
 - [x] **Phase 9.1: M3 Design System Refactor** - Adopt M3 tonal color, typography, shape, and motion tokens over existing Tailwind + shadcn (completed 2026-05-19)
-- [ ] **Phase 10: Observability + Performance Hardening** - Distributed traces confirmed end-to-end, k6 load test meets SLA, final security and coverage audit passes
+- [x] **Phase 10: Observability + Performance Hardening** - Distributed traces confirmed end-to-end, k6 load test meets SLA, final security and coverage audit passes (completed 2026-05-19)
 
 ---
 
@@ -304,12 +304,12 @@ Plans:
   3. Final coverage check passes: ≥ 70% backend service-layer line coverage; 100% branch coverage on auth + ownership-check paths
   4. OWASP Dependency-Check reports zero critical or high CVEs on the production classpath
   5. CI is green for 7 consecutive days on `main`; README is updated with architecture diagram and demo GIFs
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 Plans:
-- [ ] 10-01-PLAN.md — Verify and harden distributed tracing + structured JSON logs
-- [ ] 10-02-PLAN.md — Enable virtual threads + k6 load test on search endpoint
-- [ ] 10-03-PLAN.md — JaCoCo coverage thresholds + OWASP dependency-check + CI pipeline
-- [ ] 10-04-PLAN.md — Portfolio-ready README with architecture diagram and docs
+- [x] 10-01-PLAN.md — Verify and harden distributed tracing + structured JSON logs
+- [x] 10-02-PLAN.md — Enable virtual threads + k6 load test on search endpoint
+- [x] 10-03-PLAN.md — JaCoCo coverage thresholds + OWASP dependency-check + CI pipeline
+- [x] 10-04-PLAN.md — Portfolio-ready README with architecture diagram and docs
 **Notes**:
   - Zipkin trace continuity was first validated in Phase 1; this phase confirms it at full load with realistic traffic patterns
   - NFR-09 (W3C trace context propagated across services; structured JSON logs include traceId, spanId, userId, requestId) is confirmed complete here with the k6-load-tested trace
@@ -332,7 +332,7 @@ Plans:
 | 8. Frontend — Trip Planner | 5/5 | Complete | 2026-05-18 |
 | 9. Polish | 4/4 | Complete | 2026-05-19 |
 | 9.1. M3 Design System Refactor | 3/3 | Complete | 2026-05-19 |
-| 10. Observability + Performance Hardening | 0/4 | Not started | - |
+| 10. Observability + Performance Hardening | 4/4 | Complete   | 2026-05-19 |
 
 ---
 

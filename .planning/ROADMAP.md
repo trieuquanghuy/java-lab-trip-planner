@@ -1,7 +1,7 @@
 # Roadmap: Trip Planner
 
 **Milestone:** v1
-**Granularity:** Fine (11 phases)
+**Granularity:** Fine (12 phases)
 **Coverage:** 31 / 31 requirements mapped
 **Numbering:** Phases 0–10 (mirrors docs/09-roadmap.md exactly)
 **Last updated:** 2026-05-08
@@ -20,6 +20,7 @@
 - [x] **Phase 7: Frontend — Auth + Discovery** - A logged-out user can search destinations and view detail; auth pages work end-to-end (completed 2026-05-18)
 - [ ] **Phase 8: Frontend — Trip Planner** - Full itinerary editor with drag-drop reorder, cross-day moves, time slots, and map view
 - [ ] **Phase 9: Polish** - Production-quality UX: loading states, error boundaries, a11y pass, and mobile-responsive layout
+- [ ] **Phase 9.1: M3 Design System Refactor** - Adopt M3 tonal color, typography, shape, and motion tokens over existing Tailwind + shadcn
 - [ ] **Phase 10: Observability + Performance Hardening** - Distributed traces confirmed end-to-end, k6 load test meets SLA, final security and coverage audit passes
 
 ---
@@ -263,9 +264,30 @@ Plans:
   - The a11y and mobile-responsive confirmation (axe DevTools, Lighthouse) is the completion gate for NFR-07 and NFR-08
 **UI hint**: yes
 
+### Phase 9.1: M3 Design System Refactor
+**Goal**: The frontend adopts Material Design 3 tonal color system, typography scale, shape tokens, and motion system — applied via Tailwind CSS variables over the existing shadcn/ui components.
+**Depends on**: Phase 9
+**Requirements**: (design-system upgrade — no additional REQ-IDs; enhances NFR-07 accessibility via improved contrast ratios and focus indicators)
+**Success Criteria** (what must be TRUE):
+  1. All CSS variables in `index.css` use M3 tonal palette generated from seed `#1A73E8` (light and dark modes)
+  2. Typography scale matches M3 type scale (display/headline/title/body/label) mapped to Tailwind classes
+  3. Border radius tokens follow M3 shape scale (none/xs/sm/md/lg/xl/full)
+  4. Elevation uses M3 surface-tint approach (no legacy `box-shadow` for structural elevation)
+  5. All existing pages render correctly with no visual regressions — components use the same shadcn API surface
+  6. Dark mode toggle works and both palettes pass WCAG AA contrast (4.5:1 body, 3:1 large)
+**Plans**: TBD
+**Notes**:
+  - This is a design-token refactor, NOT a library swap — keep Tailwind + shadcn/ui + Radix primitives
+  - Seed color: `#1A73E8` (travel blue) → generate full tonal palette (primary, secondary, tertiary, neutral, error)
+  - Use M3 color roles: on-primary, primary-container, on-primary-container, surface, on-surface, etc.
+  - Map M3 roles to shadcn CSS variable names where possible (e.g., `--primary` → M3 primary, `--muted` → M3 surface-variant)
+  - Motion: adopt M3 easing (emphasized, standard) and duration tokens (short/medium/long)
+  - Reference: https://m3.material.io/styles/color/system, https://m3.material.io/styles/typography/type-scale-tokens
+**UI hint**: yes
+
 ### Phase 10: Observability + Performance Hardening
 **Goal**: The system is production-debuggable, the search SLA is verified under load, and the final security and coverage audit is clean.
-**Depends on**: Phase 9
+**Depends on**: Phase 9.1
 **Requirements**: NFR-09
 **Success Criteria** (what must be TRUE):
   1. A single "create trip → add item → reorder" action generates one Zipkin trace spanning api-gateway, trip-service, and the DB call; traceId is identical in all service JSON logs for that request
@@ -295,6 +317,7 @@ Plans:
 | 7. Frontend — Auth + Discovery | 0/? | Not started | - |
 | 8. Frontend — Trip Planner | 0/? | Not started | - |
 | 9. Polish | 0/? | Not started | - |
+| 9.1. M3 Design System Refactor | 0/? | Not started | - |
 | 10. Observability + Performance Hardening | 0/? | Not started | - |
 
 ---

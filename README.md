@@ -63,6 +63,38 @@ should propagate by then.
 
 ## Architecture summary
 
+```
+┌─────────────┐       ┌──────────────────┐       ┌─────────────────┐
+│   Frontend  │──────▶│   API Gateway    │──────▶│  Auth Service   │
+│  React 18   │       │  Spring Cloud GW │       │  JWT + bcrypt   │
+│  Vite + TS  │       │     :8080        │       │     :8081       │
+└─────────────┘       └────────┬─────────┘       └─────────────────┘
+                               │
+                    ┌──────────┼──────────┐
+                    ▼                     ▼
+          ┌─────────────────┐   ┌─────────────────────┐
+          │  Trip Service   │   │ Destination Service  │
+          │  CRUD + reorder │   │  Search + providers  │
+          │     :8082       │   │       :8083          │
+          └────────┬────────┘   └──────────┬───────────┘
+                   │                       │
+                   └───────────┬───────────┘
+                               ▼
+                    ┌─────────────────────┐
+                    │   PostgreSQL 16     │
+                    │ schema-per-service  │
+                    │  auth│trip│dest     │
+                    └─────────────────────┘
+
+  ┌───────────────────── Observability ─────────────────────┐
+  │                                                         │
+  │  Eureka :8761    Zipkin :9411    Prometheus    Grafana   │
+  │  (discovery)     (tracing)      :9090         :3000     │
+  │                                                         │
+  │  Redis :6379 (caching)    Mailhog :8025 (dev SMTP)     │
+  └─────────────────────────────────────────────────────────┘
+```
+
 5 backend services (api-gateway, auth-service, trip-service, destination-service,
 eureka-server) + 3 shared libs (observability, error-handling, api-contracts) + a React
 frontend. Single PostgreSQL 16 instance with schema-per-service (`auth`, `trip`,
@@ -72,6 +104,20 @@ Per D-22, downstream services (auth :8081, trip :8082, destination :8083) and Po
 Redis, and Eureka all bind to **127.0.0.1 only** in Docker Compose — the gateway is the
 only public surface in dev. Frontend and observability UIs (Mailhog 8025, Zipkin 9411)
 bind to 0.0.0.0 so they're reachable from the host browser.
+
+### Tech stack
+
+| Layer | Technology | Version |
+|-------|------------|---------|
+| Runtime | Java (Temurin) | 21 LTS |
+| Framework | Spring Boot | 3.5.x |
+| Cloud | Spring Cloud (Northfields) | 2025.0.x |
+| Database | PostgreSQL | 16 |
+| Cache | Redis | 7 |
+| Frontend | React + TypeScript + Vite | 18.3 / 5.8 / 6.x |
+| Styling | Tailwind CSS + shadcn/ui | 3.4.x |
+| Tracing | Micrometer + Zipkin | 1.4.x |
+| CI | GitHub Actions | ubuntu-24.04 |
 
 ### Port assignments
 
@@ -97,7 +143,10 @@ Source of truth: `docs/08-deployment.md §1.3`.
 ### Backend
 
 ```bash
-./gradlew check        # compile + test + jacoco for every subproject
+./gradlew check                          # compile + test + jacoco for every subproject
+./gradlew jacocoTestReport               # generate HTML/XML coverage reports
+./gradlew jacocoTestCoverageVerification # enforce 70% minimum coverage
+./gradlew dependencyCheckAnalyze         # OWASP CVE scan (fails on CVSS >= 7)
 ```
 
 Each service runs Flyway migrations against its own `<schema>_flyway_schema_history`
@@ -113,6 +162,29 @@ pnpm --filter frontend build
 
 Frontend uses Vitest 3.x (D-31) + React Testing Library 16.x; Playwright is added in
 Phase 10 hardening, not Phase 0.
+
+### Load test
+
+```bash
+brew install k6                          # one-time install
+k6 run scripts/k6-search-load.js        # 100 RPS for 60s on /api/destinations/search
+```
+
+Results and SLA threshold documented in [`docs/perf/k6-search-100rps-report.md`](docs/perf/k6-search-100rps-report.md).
+
+---
+
+## Observability
+
+| Tool | URL | Purpose |
+|------|-----|---------|
+| Zipkin | http://localhost:9411 | Distributed tracing (W3C traceparent) |
+| Prometheus | http://localhost:9090 | Metrics scraping (actuator/prometheus) |
+| Grafana | http://localhost:3000 | Dashboards (admin/admin) |
+| Mailhog | http://localhost:8025 | Email verification in dev |
+
+All services emit structured JSON logs with: `traceId`, `spanId`, `userId`, `requestId`.
+End-to-end trace verification: `bash scripts/trace-verify.sh`.
 
 ---
 
@@ -136,10 +208,11 @@ Phase 10 hardening, not Phase 0.
 │   ├── postgres/init.sql      # creates schemas + per-service DB users
 │   └── seeds/                 # Phase 3 lands cities-15000.tsv here
 ├── .github/workflows/
-│   ├── backend.yml            # matrix-per-service ./gradlew check
-│   └── frontend.yml           # pnpm install + lint + test + build
+│   └── ci.yml                 # test + coverage + OWASP + frontend lint
 ├── scripts/
-│   └── smoke.sh               # enforces all 5 ROADMAP success criteria
+│   ├── smoke.sh               # enforces all 5 ROADMAP success criteria
+│   ├── trace-verify.sh        # end-to-end Zipkin trace verification
+│   └── k6-search-load.js     # load test: 100 RPS search endpoint
 ├── docker-compose.yml         # thin alias of infra/docker-compose.yml (D-19)
 ├── settings.gradle.kts
 ├── build.gradle.kts

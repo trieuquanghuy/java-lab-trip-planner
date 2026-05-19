@@ -6,6 +6,7 @@ import { HomePage } from '@/pages/HomePage';
 import { ErrorBoundaryFallback } from '@/components/ErrorBoundaryFallback';
 import { PageLoader } from '@/pages/PageLoader';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
+import { RouteAnnouncer } from '@/components/RouteAnnouncer';
 
 const LoginPage = lazy(() => import('@/pages/LoginPage').then(m => ({ default: m.LoginPage })));
 const SignupPage = lazy(() => import('@/pages/SignupPage').then(m => ({ default: m.SignupPage })));
@@ -20,6 +21,7 @@ export default function App() {
   return (
     <ErrorBoundary FallbackComponent={ErrorBoundaryFallback}>
       <Suspense fallback={<PageLoader />}>
+        <RouteAnnouncer />
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<HomePage />} />

@@ -35,7 +35,7 @@ export function HomePage() {
       {/* Hero Section */}
       <div className="flex flex-col items-center text-center py-16 max-w-2xl mx-auto space-y-6 animate-fade-in">
         <div className="flex items-center gap-2 text-primary">
-          <Compass className="h-6 w-6 animate-spin" style={{ animationDuration: '8s' }} />
+          <Compass className="h-6 w-6 animate-spin" style={{ animationDuration: '8s' }} aria-hidden="true" />
           <span className="text-sm font-medium uppercase tracking-wider">Trip Planner</span>
         </div>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight animate-slide-up">

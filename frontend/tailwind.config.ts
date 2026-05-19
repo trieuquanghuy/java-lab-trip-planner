@@ -30,6 +30,15 @@ export default {
   				'sans-serif'
   			]
   		},
+  		fontSize: {
+  			'headline-lg': ['2rem', { lineHeight: '2.5rem', fontWeight: '400' }],
+  			'title-lg': ['1.375rem', { lineHeight: '1.75rem', fontWeight: '400' }],
+  			'title-md': ['1rem', { lineHeight: '1.5rem', fontWeight: '500' }],
+  			'body-lg': ['1rem', { lineHeight: '1.5rem', fontWeight: '400' }],
+  			'body-md': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '400' }],
+  			'label-lg': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '500' }],
+  			'label-sm': ['0.6875rem', { lineHeight: '1rem', fontWeight: '500' }],
+  		},
   		colors: {
   			border: 'hsl(var(--border))',
   			background: 'hsl(var(--background))',
@@ -70,12 +79,35 @@ export default {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
-  			}
+  			},
+  			elevation: {
+  				'1': 'hsl(var(--elevation-1))',
+  				'2': 'hsl(var(--elevation-2))',
+  				'3': 'hsl(var(--elevation-3))',
+  			},
+  			'primary-container': {
+  				DEFAULT: 'hsl(var(--primary-container))',
+  				foreground: 'hsl(var(--on-primary-container))',
+  			},
+  			'secondary-container': {
+  				DEFAULT: 'hsl(var(--secondary-container))',
+  				foreground: 'hsl(var(--on-secondary-container))',
+  			},
+  			'surface-tint': 'hsl(var(--surface-tint))',
+  			outline: {
+  				DEFAULT: 'hsl(var(--outline))',
+  				variant: 'hsl(var(--outline-variant))',
+  			},
   		},
   		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			none: '0px',
+  			xs: '4px',
+  			sm: '8px',
+  			md: '12px',
+  			lg: '16px',
+  			xl: '28px',
+  			full: '9999px',
+  			DEFAULT: 'var(--radius)',
   		}
   	}
   },

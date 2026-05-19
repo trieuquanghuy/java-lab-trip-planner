@@ -34,6 +34,9 @@ export function Layout() {
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/trips">My Trips</Link>
               </Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/favorites">Favorites</Link>
+              </Button>
               <Button variant="ghost" size="sm" onClick={logout}>
                 Logout
               </Button>

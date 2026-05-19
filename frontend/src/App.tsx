@@ -16,6 +16,7 @@ const TripsPage = lazy(() => import('@/pages/TripsPage').then(m => ({ default: m
 const TripDetailPage = lazy(() => import('@/pages/TripDetailPage').then(m => ({ default: m.TripDetailPage })));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const ServerErrorPage = lazy(() => import('@/pages/ServerErrorPage').then(m => ({ default: m.ServerErrorPage })));
+const FavoritesPage = lazy(() => import('@/pages/FavoritesPage').then(m => ({ default: m.FavoritesPage })));
 
 export default function App() {
   return (
@@ -33,7 +34,7 @@ export default function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/trips" element={<TripsPage />} />
               <Route path="/trips/:tripId" element={<TripDetailPage />} />
-              <Route path="/favorites" element={<NotFoundPage />} />
+              <Route path="/favorites" element={<FavoritesPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
           </Route>

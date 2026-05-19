@@ -41,6 +41,13 @@ export function MobileNav() {
               >
                 My Trips
               </Link>
+              <Link
+                to="/favorites"
+                onClick={() => setIsOpen(false)}
+                className="block py-3 px-2 text-sm font-medium hover:bg-muted rounded-md"
+              >
+                Favorites
+              </Link>
               <button
                 onClick={() => { logout(); setIsOpen(false); }}
                 className="block w-full text-left py-3 px-2 text-sm font-medium hover:bg-muted rounded-md"

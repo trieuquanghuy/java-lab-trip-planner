@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Toaster } from '@/components/ui/sonner';
 import { SkipNavLink } from '@/components/SkipNavLink';
+import { MobileNav } from '@/components/MobileNav';
 
 export function Layout() {
   const isAuthenticated = useAuthStore((s) => !!s.accessToken);
@@ -15,11 +16,11 @@ export function Layout() {
   return (
     <div className="min-h-screen flex flex-col">
       <SkipNavLink />
-      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md px-4 h-14 flex items-center justify-between transition-all">
+      <header className="sticky top-0 z-40 relative border-b border-border bg-background/80 backdrop-blur-md px-4 h-14 flex items-center justify-between transition-all">
         <Link to="/" className="text-lg font-semibold tracking-tight hover:text-primary transition-colors">
           TripPlanner
         </Link>
-        <nav className="flex items-center gap-2">
+        <nav className="hidden sm:flex items-center gap-2">
           {isInitializing ? (
             <div className="flex items-center gap-2">
               <Skeleton className="h-8 w-20" />
@@ -48,6 +49,7 @@ export function Layout() {
             </div>
           )}
         </nav>
+        <MobileNav />
       </header>
 
       <main id="main-content" className="flex-1 container mx-auto px-4 py-8 md:py-12">

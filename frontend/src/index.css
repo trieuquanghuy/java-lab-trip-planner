@@ -5,6 +5,12 @@
 @tailwind utilities;
 
 @layer utilities {
+  /* Minimum touch target (44x44px per WCAG 2.5.5) */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
   /* Fade-in animation */
   .animate-fade-in {
     animation: fade-in 0.4s ease-out both;

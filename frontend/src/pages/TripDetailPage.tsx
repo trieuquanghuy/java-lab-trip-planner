@@ -113,12 +113,12 @@ export function TripDetailPage() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => navigate('/trips')}
-          className="p-2 rounded-lg hover:bg-muted transition-colors"
+          className="p-2 h-11 w-11 sm:h-9 sm:w-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors"
           aria-label="Back to trips"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           {editingName ? (
             <input
               type="text"
@@ -126,12 +126,12 @@ export function TripDetailPage() {
               onChange={(e) => setNameValue(e.target.value.slice(0, 120))}
               onBlur={handleNameBlur}
               onKeyDown={handleNameKeyDown}
-              className="text-2xl font-bold bg-transparent border-b-2 border-primary focus:outline-none"
+              className="text-2xl font-bold bg-transparent border-b-2 border-primary focus:outline-none w-full"
               autoFocus
             />
           ) : (
             <h1
-              className="text-2xl font-bold cursor-pointer hover:text-primary transition-colors"
+              className="text-2xl font-bold cursor-pointer hover:text-primary transition-colors truncate"
               onClick={handleNameClick}
             >
               {trip.name}
@@ -143,7 +143,7 @@ export function TripDetailPage() {
         </div>
         <button
           onClick={() => setShowMap(!showMap)}
-          className={`p-2 rounded-lg transition-colors ${
+          className={`p-2 h-11 w-11 sm:h-9 sm:w-9 flex items-center justify-center rounded-lg transition-colors ${
             showMap ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
           }`}
           aria-label={showMap ? 'Hide map' : 'Show map'}
@@ -152,12 +152,12 @@ export function TripDetailPage() {
         </button>
       </div>
 
-      <div className="flex gap-4 h-[calc(100vh-180px)]">
+      <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-180px)]">
         <div className={`flex-1 overflow-x-auto ${showMap ? 'hidden lg:block' : ''}`}>
           <ItineraryBoard trip={trip} />
         </div>
         {showMap && (
-          <div className="w-full lg:w-[400px] lg:min-w-[400px] h-full rounded-xl overflow-hidden border">
+          <div className="w-full lg:w-[400px] lg:min-w-[400px] h-64 lg:h-full rounded-xl overflow-hidden border">
             <TripMap markers={markers} />
           </div>
         )}

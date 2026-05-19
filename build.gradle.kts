@@ -3,6 +3,7 @@
 // without requiring each one to repeat the boilerplate.
 plugins {
     java
+    id("org.owasp.dependencycheck") version "10.0.4"
 }
 
 allprojects {
@@ -26,5 +27,44 @@ subprojects {
 
     tasks.withType<Test> {
         useJUnitPlatform()
+        finalizedBy(tasks.named("jacocoTestReport"))
     }
+
+    tasks.withType<JacocoReport> {
+        dependsOn(tasks.withType<Test>())
+        reports {
+            xml.required.set(true)
+            html.required.set(true)
+        }
+    }
+
+    tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+        dependsOn(tasks.named("jacocoTestReport"))
+        violationRules {
+            rule {
+                limit {
+                    minimum = "0.70".toBigDecimal()
+                }
+            }
+        }
+        // Exclude config/entity classes from coverage minimum
+        classDirectories.setFrom(
+            fileTree(layout.buildDirectory.dir("classes/java/main")) {
+                exclude(
+                    "**/config/**",
+                    "**/entity/**",
+                    "**/dto/**",
+                    "**/exception/**",
+                    "**/*AutoConfiguration*"
+                )
+            }
+        )
+    }
+}
+
+// OWASP Dependency-Check: fail on HIGH/CRITICAL CVEs (CVSS >= 7)
+dependencyCheck {
+    failBuildOnCVSS = 7.0f
+    formats = listOf("HTML", "JSON")
+    analyzers.assemblyEnabled = false
 }

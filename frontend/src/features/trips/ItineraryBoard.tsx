@@ -12,6 +12,7 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { DayColumn } from './DayColumn';
 import { DayTabs } from './DayTabs';
 import { ItineraryItemCard } from './ItineraryItemCard';
+import { TripEmptyState } from './TripEmptyState';
 import { useDragDrop } from './useDragDrop';
 import { useDragStore } from './trip.store';
 import type { Trip } from '@/types/trip';
@@ -42,6 +43,9 @@ export function ItineraryBoard({ trip }: Props) {
     : null;
 
   const mobileDay = days.find((d) => d.id === activeMobileDay) ?? days[0];
+
+  const hasItems = days.some((d) => d.items.length > 0);
+  if (!hasItems) return <TripEmptyState />;
 
   return (
     <DndContext

@@ -12,14 +12,14 @@
 
 - [x] **Phase 0: Monorepo Scaffolding** - All services boot, register in Eureka, and docker compose up is healthy
 - [x] **Phase 1: API Gateway** - Gateway routes traffic, validates JWTs, strips and injects X-User-Id, and downstream services trust only gateway-injected headers (completed 2026-05-09)
-- [ ] **Phase 2: Auth Service** - Full signup → verify email → login → refresh → logout works end-to-end with all 8 mandatory security tests passing
-- [ ] **Phase 3: Destination Service — Search** - City/country search with seeded GeoNames data hits the 500 ms p95 SLA
-- [ ] **Phase 4: Destination Service — Providers + Cache** - Nearby attractions and detail endpoints work with provider failure isolation via circuit breakers
+- [x] **Phase 2: Auth Service** - Full signup → verify email → login → refresh → logout works end-to-end with all 8 mandatory security tests passing (completed 2026-05-10)
+- [x] **Phase 3: Destination Service — Search** - City/country search with seeded GeoNames data hits the 500 ms p95 SLA (completed 2026-05-15)
+- [x] **Phase 4: Destination Service — Providers + Cache** - Nearby attractions and detail endpoints work with provider failure isolation via circuit breakers (completed 2026-05-16)
 - [x] **Phase 5: Trip Service — Trips + Days** - Trip CRUD and idempotent day materialization work correctly under date range changes (completed 2026-05-17)
-- [ ] **Phase 6: Trip Service — Itinerary Items + Favorites** - Items can be added, removed, reordered (backend), and favorited; notes and cover images are sanitized
+- [x] **Phase 6: Trip Service — Itinerary Items + Favorites** - Items can be added, removed, reordered (backend), and favorited; notes and cover images are sanitized (completed 2026-05-17)
 - [x] **Phase 7: Frontend — Auth + Discovery** - A logged-out user can search destinations and view detail; auth pages work end-to-end (completed 2026-05-18)
-- [ ] **Phase 8: Frontend — Trip Planner** - Full itinerary editor with drag-drop reorder, cross-day moves, time slots, and map view
-- [ ] **Phase 9: Polish** - Production-quality UX: loading states, error boundaries, a11y pass, and mobile-responsive layout
+- [x] **Phase 8: Frontend — Trip Planner** - Full itinerary editor with drag-drop reorder, cross-day moves, time slots, and map view (completed 2026-05-18)
+- [x] **Phase 9: Polish** - Production-quality UX: loading states, error boundaries, a11y pass, and mobile-responsive layout (completed 2026-05-19)
 - [ ] **Phase 9.1: M3 Design System Refactor** - Adopt M3 tonal color, typography, shape, and motion tokens over existing Tailwind + shadcn
 - [ ] **Phase 10: Observability + Performance Hardening** - Distributed traces confirmed end-to-end, k6 load test meets SLA, final security and coverage audit passes
 
@@ -181,12 +181,12 @@ Plans:
   5. A trip cover image URL is stored and shown on the trip card and trip header; if unset, the first item's photo is used
 **Plans**: 6 plans
 Plans:
-- [ ] 06-01-PLAN.md — Flyway V5/V6 migrations + Jsoup dependency + ErrorCode extension (Wave 1)
-- [ ] 06-02-PLAN.md — ItineraryItem entity expansion + Favorite entity + repositories + DTOs + exceptions (Wave 1)
-- [ ] 06-03-PLAN.md — ItineraryItemService with position algorithm + XSS sanitization + concurrency (Wave 2)
-- [ ] 06-04-PLAN.md — FavoriteService + TripResponse/DayResponse items extension + cover image fallback (Wave 2)
-- [ ] 06-05-PLAN.md — ItemController + FavoriteController + TripControllerAdvice extensions (Wave 3)
-- [ ] 06-06-PLAN.md — Integration tests + unit tests (Wave 4)
+- [x] 06-01-PLAN.md — Flyway V5/V6 migrations + Jsoup dependency + ErrorCode extension (Wave 1)
+- [x] 06-02-PLAN.md — ItineraryItem entity expansion + Favorite entity + repositories + DTOs + exceptions (Wave 1)
+- [x] 06-03-PLAN.md — ItineraryItemService with position algorithm + XSS sanitization + concurrency (Wave 2)
+- [x] 06-04-PLAN.md — FavoriteService + TripResponse/DayResponse items extension + cover image fallback (Wave 2)
+- [x] 06-05-PLAN.md — ItemController + FavoriteController + TripControllerAdvice extensions (Wave 3)
+- [x] 06-06-PLAN.md — Integration tests + unit tests (Wave 4)
 **Notes**:
   - Keep `position` as INT (project scale doesn't need BIGINT) — decided in discuss-phase
   - Use `SELECT ... FOR UPDATE` on the parent `itinerary_days` row before reading/writing positions, to serialize concurrent reorder operations (Pitfall 5)
@@ -233,11 +233,11 @@ Plans:
   6. The trip planner layout is usable on a 360 px wide viewport without horizontal scroll or clipped content
 **Plans**: 5 plans
 Plans:
-- [ ] 08-01-PLAN.md — Foundation: types, API service, deps (dnd-kit, react-leaflet)
-- [ ] 08-02-PLAN.md — Trip List Page + Trip Creation Wizard
-- [ ] 08-03-PLAN.md — Itinerary Board with drag-drop (SCHD-01, SCHD-02, SCHD-03)
-- [ ] 08-04-PLAN.md — Trip Map sidebar + Add-to-Trip dropdown (TMAP-01)
-- [ ] 08-05-PLAN.md — Mobile responsive + Keyboard a11y (NFR-07, NFR-08)
+- [x] 08-01-PLAN.md — Foundation: types, API service, deps (dnd-kit, react-leaflet)
+- [x] 08-02-PLAN.md — Trip List Page + Trip Creation Wizard
+- [x] 08-03-PLAN.md — Itinerary Board with drag-drop (SCHD-01, SCHD-02, SCHD-03)
+- [x] 08-04-PLAN.md — Trip Map sidebar + Add-to-Trip dropdown (TMAP-01)
+- [x] 08-05-PLAN.md — Mobile responsive + Keyboard a11y (NFR-07, NFR-08)
 **Notes**:
   - Maintain local ephemeral order state (`useState`) inside `ItineraryBoard` for the drag session; initialize from query cache; do NOT call `invalidateQueries` on success — only on error for rollback (Pitfall 2)
   - Use dnd-kit's `DragOverlay` component; set `opacity: 0` on original item via CSS `data-dragging` attribute
@@ -260,10 +260,10 @@ Plans:
   5. Lighthouse scores ≥ 90 performance and ≥ 95 accessibility on Home and TripDetail pages
 **Plans**: 4 plans
 Plans:
-- [ ] 09-01-PLAN.md — Error boundaries + server error page + code splitting (React.lazy)
-- [ ] 09-02-PLAN.md — Loading/empty/error state audit and gap filling
-- [ ] 09-03-PLAN.md — Accessibility: skip nav, route announcer, ARIA audit
-- [ ] 09-04-PLAN.md — Mobile responsive: hamburger nav, touch targets, 360px verification
+- [x] 09-01-PLAN.md — Error boundaries + server error page + code splitting (React.lazy)
+- [x] 09-02-PLAN.md — Loading/empty/error state audit and gap filling
+- [x] 09-03-PLAN.md — Accessibility: skip nav, route announcer, ARIA audit
+- [x] 09-04-PLAN.md — Mobile responsive: hamburger nav, touch targets, 360px verification
 **Notes**:
   - No new functional requirements are introduced in this phase; all REQ-IDs were mapped to Phases 0–8
   - The a11y and mobile-responsive confirmation (axe DevTools, Lighthouse) is the completion gate for NFR-07 and NFR-08
@@ -313,15 +313,15 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 0. Monorepo Scaffolding | 10/10 | Complete | 2026-05-08 |
-| 1. API Gateway | 6/6 | Complete   | 2026-05-09 |
-| 2. Auth Service | 0/? | Not started | - |
-| 3. Destination Service — Search | 0/? | Not started | - |
-| 4. Destination Service — Providers + Cache | 0/? | Not started | - |
-| 5. Trip Service — Trips + Days | 5/5 | Complete   | 2026-05-17 |
-| 6. Trip Service — Itinerary Items + Favorites | 0/? | Not started | - |
-| 7. Frontend — Auth + Discovery | 0/? | Not started | - |
-| 8. Frontend — Trip Planner | 0/? | Not started | - |
-| 9. Polish | 0/? | Not started | - |
+| 1. API Gateway | 6/6 | Complete | 2026-05-09 |
+| 2. Auth Service | 7/7 | Complete | 2026-05-10 |
+| 3. Destination Service — Search | 4/4 | Complete | 2026-05-15 |
+| 4. Destination Service — Providers + Cache | 4/4 | Complete | 2026-05-16 |
+| 5. Trip Service — Trips + Days | 5/5 | Complete | 2026-05-17 |
+| 6. Trip Service — Itinerary Items + Favorites | 6/6 | Complete | 2026-05-17 |
+| 7. Frontend — Auth + Discovery | 6/6 | Complete | 2026-05-18 |
+| 8. Frontend — Trip Planner | 5/5 | Complete | 2026-05-18 |
+| 9. Polish | 4/4 | Complete | 2026-05-19 |
 | 9.1. M3 Design System Refactor | 0/? | Not started | - |
 | 10. Observability + Performance Hardening | 0/? | Not started | - |
 

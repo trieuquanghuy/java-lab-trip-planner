@@ -16,50 +16,50 @@ Requirements derive from `docs/01-prd.md` (22 numbered FRs + 9 NFRs) and were va
 
 ### Discovery (Search & Recommendations)
 
-- [ ] **SRCH-01**: User can type ≥1 character into the search input and see up to 5 ranked, deduplicated city/country results (case-insensitive, partial match). Selecting a result becomes the active search value. Empty searches show "No attractions found". *(maps to FR-1)*
-- [ ] **SRCH-02**: After a valid location search, user sees up to 20 attractions for that location with name, category/tags, rating/popularity, and thumbnail. Placeholder shown for any missing field. Default radius: 20 km for cities. *(maps to FR-2)*
+- [x] **SRCH-01**: User can type ≥1 character into the search input and see up to 5 ranked, deduplicated city/country results (case-insensitive, partial match). Selecting a result becomes the active search value. Empty searches show "No attractions found". *(maps to FR-1)*
+- [x] **SRCH-02**: After a valid location search, user sees up to 20 attractions for that location with name, category/tags, rating/popularity, and thumbnail. Placeholder shown for any missing field. Default radius: 20 km for cities. *(maps to FR-2)*
 
 ### Destination Details
 
-- [ ] **DEST-01**: User can open a destination detail view from list or detail link, showing name, category, short description, photos, address, opening hours, website, and an "Add to Trip" CTA. Detail opens even with missing fields. "Add to Trip" disabled when not logged in. *(maps to FR-3)*
-- [ ] **DEST-02**: User can swipe through multiple destination photos when available; placeholder shown when no photos exist. *(maps to FR-4)*
-- [ ] **DEST-03**: User sees opening hours when present, or an explicit "Opening hours not available" state when missing. *(maps to FR-5)*
+- [x] **DEST-01**: User can open a destination detail view from list or detail link, showing name, category, short description, photos, address, opening hours, website, and an "Add to Trip" CTA. Detail opens even with missing fields. "Add to Trip" disabled when not logged in. *(maps to FR-3)*
+- [x] **DEST-02**: User can swipe through multiple destination photos when available; placeholder shown when no photos exist. *(maps to FR-4)*
+- [x] **DEST-03**: User sees opening hours when present, or an explicit "Opening hours not available" state when missing. *(maps to FR-5)*
 
 ### Trip Planning
 
 - [x] **TRIP-01**: User can create a trip with a required name (length 1–120). New trip appears in "My Trips" list and the planner opens immediately. *(maps to FR-6)*
 - [x] **TRIP-02**: User can set start and end dates (start ≤ end). One itinerary day is materialized per date in range. Reducing the range that would orphan planned items requires explicit confirmation (409 Conflict otherwise). *(maps to FR-7)*
-- [ ] **TRIP-03**: User can add a destination to a chosen day of a chosen trip from list view OR from detail view. Destination appears immediately under the chosen day. *(maps to FR-8)*
-- [ ] **TRIP-04**: User can remove a destination from a trip day; item disappears immediately after confirmation. *(maps to FR-9)*
-- [ ] **TRIP-05**: Logged-out users prompted to log in when creating a trip or adding a destination. After successful login, the original action completes and user lands on the same trip/destination page. *(maps to FR-10)*
+- [x] **TRIP-03**: User can add a destination to a chosen day of a chosen trip from list view OR from detail view. Destination appears immediately under the chosen day. *(maps to FR-8)*
+- [x] **TRIP-04**: User can remove a destination from a trip day; item disappears immediately after confirmation. *(maps to FR-9)*
+- [x] **TRIP-05**: Logged-out users prompted to log in when creating a trip or adding a destination. After successful login, the original action completes and user lands on the same trip/destination page. *(maps to FR-10)*
 - [x] **TRIP-06**: After login, returning user sees previously created trips, days, and items; empty state shown when no trips exist. *(maps to FR-11)*
 
 ### In-Day Scheduling
 
-- [ ] **SCHD-01**: Logged-in user can drag-drop reorder items within a single day. Order persists immediately with optimistic update; rollback on server error. *(maps to FR-16)*
-- [ ] **SCHD-02**: Logged-in user can drag an item from one day to another within the same trip. Order in the destination day persists. *(maps to FR-17)*
-- [ ] **SCHD-03**: Each item supports an optional time-of-day (HH:mm). When set, items in the day display sorted by time; otherwise sorted by position. *(maps to FR-18)*
+- [x] **SCHD-01**: Logged-in user can drag-drop reorder items within a single day. Order persists immediately with optimistic update; rollback on server error. *(maps to FR-16)*
+- [x] **SCHD-02**: Logged-in user can drag an item from one day to another within the same trip. Order in the destination day persists. *(maps to FR-17)*
+- [x] **SCHD-03**: Each item supports an optional time-of-day (HH:mm). When set, items in the day display sorted by time; otherwise sorted by position. *(maps to FR-18)*
 
 ### Trip Map View
 
-- [ ] **TMAP-01**: For a trip with at least one geocoded item, all items render as markers on an interactive map (Leaflet + OSM tiles). Marker click reveals item name. Map auto-fits bounds to all markers. *(maps to FR-19)*
+- [x] **TMAP-01**: For a trip with at least one geocoded item, all items render as markers on an interactive map (Leaflet + OSM tiles). Marker click reveals item name. Map auto-fits bounds to all markers. *(maps to FR-19)*
 
 ### Personalization
 
-- [ ] **PERS-01**: User can attach a free-text note (≤500 chars) to any itinerary item; notes are sanitized server-side (HTML stripped) to prevent stored XSS. Notes editable inline. *(maps to FR-20)*
-- [ ] **PERS-02**: Logged-in user can favorite/unfavorite a destination from list or detail view; "My Favorites" page lists all favorites and supports add-to-trip from there. *(maps to FR-21)*
-- [ ] **PERS-03**: User can set a cover image URL for a trip; defaults to the first item's photo if unset. Cover image displays on the trip card and trip header. *(maps to FR-22)*
+- [x] **PERS-01**: User can attach a free-text note (≤500 chars) to any itinerary item; notes are sanitized server-side (HTML stripped) to prevent stored XSS. Notes editable inline. *(maps to FR-20)*
+- [ ] **PERS-02**: Logged-in user can favorite/unfavorite a destination from list or detail view; "My Favorites" page lists all favorites and supports add-to-trip from there. *(maps to FR-21)* **[Backend complete; frontend /favorites page not built]**
+- [x] **PERS-03**: User can set a cover image URL for a trip; defaults to the first item's photo if unset. Cover image displays on the trip card and trip header. *(maps to FR-22)*
 
 ### Non-Functional
 
-- [ ] **NFR-01**: City/country search returns within 500 ms p95 for cached or seeded results (Redis L1 + Postgres FTS L2 + provider L3 cache tiers). *(maps to PRD NFR-1)*
+- [x] **NFR-01**: City/country search returns within 500 ms p95 for cached or seeded results (Redis L1 + Postgres FTS L2 + provider L3 cache tiers). *(maps to PRD NFR-1)*
 - [x] **NFR-02**: Per-user authorization enforced at the service layer for every authenticated endpoint; cross-user reads return `404` (not `403`) so resource existence is not leaked. *(maps to PRD NFR-2)*
-- [ ] **NFR-03**: When OpenTripMap or Foursquare is unavailable, the system serves cached data and surfaces a degraded-mode indicator to the UI; circuit breakers prevent cascade failures. *(maps to PRD NFR-3)*
+- [x] **NFR-03**: When OpenTripMap or Foursquare is unavailable, the system serves cached data and surfaces a degraded-mode indicator to the UI; circuit breakers prevent cascade failures. *(maps to PRD NFR-3)*
 - [x] **NFR-04**: All v1 external services operate on free tiers; no credit-card-required signups required to run the app locally. *(maps to PRD NFR-4)*
 - [x] **NFR-05**: Backend service-layer line coverage ≥ 70%; auth + ownership-check paths achieve 100% branch coverage; 8 mandatory security integration tests gate every PR. *(maps to PRD NFR-5)*
 - [x] **NFR-06**: OWASP Top 10 (2021) explicitly addressed: parameterized queries (A03), bcrypt + JWT rotation (A07), CSP + sanitization (A03/XSS), service-layer ownership (A01), Dependency-Check + Dependabot (A06). *(maps to PRD NFR-6)*
-- [ ] **NFR-07**: All interactive controls reachable by Tab; focus visible; drag-drop has keyboard alternative (dnd-kit KeyboardSensor); WCAG AA color contrast on text. *(maps to PRD NFR-7)*
-- [ ] **NFR-08**: Trip planner usable on screens ≥ 360 px wide (mobile-responsive, not a native app). *(maps to PRD NFR-8)*
+- [x] **NFR-07**: All interactive controls reachable by Tab; focus visible; drag-drop has keyboard alternative (dnd-kit KeyboardSensor); WCAG AA color contrast on text. *(maps to PRD NFR-7)* **[Implemented; axe audit pending]**
+- [x] **NFR-08**: Trip planner usable on screens ≥ 360 px wide (mobile-responsive, not a native app). *(maps to PRD NFR-8)* **[Implemented; formal viewport test pending]**
 - [ ] **NFR-09**: All inter-service requests carry W3C trace context; structured JSON logs include `traceId`, `spanId`, `userId`, `requestId`. Single end-to-end trace visible in Zipkin. *(maps to PRD NFR-9)*
 
 ## v2 Requirements

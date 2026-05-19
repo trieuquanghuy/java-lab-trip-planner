@@ -15,6 +15,9 @@
 spring:
   application:
     name: destination-service          # D-25 (Pitfall 7)
+  threads:
+    virtual:
+      enabled: true                    # Phase 10: virtual threads for I/O-heavy search
   profiles:
     default: dev
   datasource:

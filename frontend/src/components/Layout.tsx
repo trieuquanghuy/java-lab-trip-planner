@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Toaster } from '@/components/ui/sonner';
 import { SkipNavLink } from '@/components/SkipNavLink';
 import { MobileNav } from '@/components/MobileNav';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 export function Layout() {
   const isAuthenticated = useAuthStore((s) => !!s.accessToken);
@@ -21,6 +22,7 @@ export function Layout() {
           TripPlanner
         </Link>
         <nav className="hidden sm:flex items-center gap-2">
+          <ThemeToggle />
           {isInitializing ? (
             <div className="flex items-center gap-2">
               <Skeleton className="h-8 w-20" />

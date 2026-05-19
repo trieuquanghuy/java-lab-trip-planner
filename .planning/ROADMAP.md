@@ -258,7 +258,12 @@ Plans:
   3. The app is fully usable on a 360 px wide Chrome DevTools viewport with no clipped content or horizontal scroll
   4. Loading skeletons appear during every list and detail page load; empty states with CTAs appear when data is absent; friendly 404 and 500 error pages are shown for routing and server errors
   5. Lighthouse scores ≥ 90 performance and ≥ 95 accessibility on Home and TripDetail pages
-**Plans**: TBD
+**Plans**: 4 plans
+Plans:
+- [ ] 09-01-PLAN.md — Error boundaries + server error page + code splitting (React.lazy)
+- [ ] 09-02-PLAN.md — Loading/empty/error state audit and gap filling
+- [ ] 09-03-PLAN.md — Accessibility: skip nav, route announcer, ARIA audit
+- [ ] 09-04-PLAN.md — Mobile responsive: hamburger nav, touch targets, 360px verification
 **Notes**:
   - No new functional requirements are introduced in this phase; all REQ-IDs were mapped to Phases 0–8
   - The a11y and mobile-responsive confirmation (axe DevTools, Lighthouse) is the completion gate for NFR-07 and NFR-08

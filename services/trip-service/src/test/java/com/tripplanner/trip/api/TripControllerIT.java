@@ -178,10 +178,10 @@ class TripControllerIT extends TripIntegrationTestBase {
                 .andExpect(status().isNotFound());
     }
 
-    // --- SC-5: Unauthenticated → 401 ---
+    // --- Unauthenticated access → 401 ---
 
     @Test
-    void sc5_unauthenticatedRequestReturns401() throws Exception {
+    void unauthenticatedRequestReturns401() throws Exception {
         mvc.perform(get("/api/trips"))
                 .andExpect(status().isUnauthorized());
     }

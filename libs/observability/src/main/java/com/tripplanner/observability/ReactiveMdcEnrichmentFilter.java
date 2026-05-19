@@ -6,7 +6,7 @@
 // switch to contextWrite + Hooks.enableAutomaticContextPropagation() for full async-trace
 // propagation. For Phase 0's /__health/<svc> route this is sufficient.
 //
-// userId is left empty in Phase 0 — Phase 1's gateway JWT filter will populate it.
+// userId is read from X-User-Id header (injected by gateway's XUserIdInjectionGlobalFilter).
 // Pitfall 7 (Convention C7): do NOT register Spring's HTTP observation filter manually
 // — it is auto-configured by Spring Boot 3.2+ via WebHttpHandlerBuilder.
 package com.tripplanner.observability;
@@ -34,7 +34,9 @@ public class ReactiveMdcEnrichmentFilter implements WebFilter {
         if (requestId == null || requestId.isBlank()) {
             requestId = UUID.randomUUID().toString();
         }
+        String userId = exchange.getRequest().getHeaders().getFirst("X-User-Id");
         final String reqId = requestId;
+        final String uid = userId;
         return chain.filter(exchange)
                 .doOnEach(signal -> {
                     var span = tracer.currentSpan();
@@ -43,6 +45,9 @@ public class ReactiveMdcEnrichmentFilter implements WebFilter {
                         MDC.put("spanId", span.context().spanId());
                     }
                     MDC.put("requestId", reqId);
+                    if (uid != null && !uid.isBlank()) {
+                        MDC.put("userId", uid);
+                    }
                 })
                 .doFinally(signalType -> MDC.clear());
     }

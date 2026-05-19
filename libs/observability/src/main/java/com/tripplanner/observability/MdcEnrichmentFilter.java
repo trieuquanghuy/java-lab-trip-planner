@@ -1,8 +1,8 @@
 // Source: docs/02-architecture.md §6.3, 00-RESEARCH.md lines 1037-1083, 00-CONTEXT.md D-04.
-// Copies traceId/spanId/requestId into MDC after request begins so JSON logs emitted by
+// Copies traceId/spanId/requestId/userId into MDC after request begins so JSON logs emitted by
 // libs/observability's logback-spring-base.xml carry trace context.
 //
-// userId is left empty in Phase 0 — Phase 1's JwtCommonFilter will populate it.
+// userId is read from X-User-Id header (injected by gateway's XUserIdInjectionGlobalFilter).
 // Pitfall 7 (Convention C7): do NOT register Spring's HTTP observation filter manually
 // — it is auto-configured by Spring Boot 3.2+ via WebHttpHandlerBuilder.
 package com.tripplanner.observability;
@@ -39,7 +39,10 @@ public class MdcEnrichmentFilter extends OncePerRequestFilter {
             requestId = UUID.randomUUID().toString();
         }
         MDC.put("requestId", requestId);
-        // userId populated by Phase 1's JwtCommonFilter; empty in Phase 0.
+        var userId = req.getHeader("X-User-Id");
+        if (userId != null && !userId.isBlank()) {
+            MDC.put("userId", userId);
+        }
         try {
             chain.doFilter(req, resp);
         } finally {

@@ -50,6 +50,12 @@ dependencies {
     testImplementation("org.springframework.security:spring-security-config")
     // JwtFixtures from testFixtures source set consumed by JwtVerifierTest + JwtFixturesSmokeMintTask
     testImplementation(testFixtures(project(":libs:jwt-common")))
+    // Mock servlet/webflux for filter tests
+    testImplementation("org.springframework:spring-test")
+    testImplementation("org.springframework:spring-webflux")
+    testImplementation("jakarta.servlet:jakarta.servlet-api")
+    testImplementation("io.projectreactor:reactor-test")
+    testImplementation("org.mockito:mockito-core")
 
     // testFixtures classpath — JwtFixtures (Wave 0b) only needs jjwt to mint test tokens.
     testFixturesApi(libs.jjwt.api)

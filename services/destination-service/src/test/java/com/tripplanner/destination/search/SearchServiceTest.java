@@ -129,6 +129,68 @@ class SearchServiceTest {
         verify(valueOps, org.mockito.Mockito.atLeastOnce()).get("SEARCH:london:city,country:5");
     }
 
+    @Test
+    void redisReadError_fallsToDatabase() {
+        when(valueOps.get(anyString())).thenThrow(new RuntimeException("Redis connection refused"));
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenReturn(true);
+        when(cityRepository.searchByPrefix("par", 5)).thenReturn(List.of());
+
+        SearchResponse result = searchService.search("par", "city,country", 5);
+
+        assertThat(result.items()).isEmpty();
+        verify(cityRepository).searchByPrefix("par", 5);
+    }
+
+    @Test
+    void cacheDeserializationFails_queriesDatabase() {
+        when(valueOps.get("SEARCH:tok:city:3")).thenReturn("{invalid json");
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenReturn(true);
+        when(cityRepository.searchByPrefix("tok", 3)).thenReturn(List.of());
+
+        SearchResponse result = searchService.search("tok", "city", 3);
+
+        assertThat(result.items()).isEmpty();
+        verify(cityRepository).searchByPrefix("tok", 3);
+    }
+
+    @Test
+    void lockNotAcquired_retriesAndFallsToDatabase() {
+        when(valueOps.get(anyString())).thenReturn(null);
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenReturn(false);
+        when(cityRepository.searchByPrefix("ber", 5)).thenReturn(List.of());
+
+        SearchResponse result = searchService.search("ber", "city,country", 5);
+
+        assertThat(result.items()).isEmpty();
+        verify(cityRepository).searchByPrefix("ber", 5);
+    }
+
+    @Test
+    void limitClampsMinToOne() {
+        when(valueOps.get(anyString())).thenReturn(null);
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenReturn(true);
+        when(cityRepository.searchByPrefix("lon", 1)).thenReturn(List.of());
+
+        searchService.search("lon", "city", 0);
+
+        verify(cityRepository).searchByPrefix("lon", 1);
+    }
+
+    @Test
+    void redisWriteError_doesNotThrow() {
+        when(valueOps.get(anyString())).thenReturn(null);
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class))).thenReturn(true);
+        City city = createCity("Paris", "France", "FR", "48.8566", "2.3522", 11000000L);
+        when(cityRepository.searchByPrefix("par", 5)).thenReturn(List.of(city));
+        org.mockito.Mockito.doThrow(new RuntimeException("Redis write failed"))
+                .when(valueOps).set(anyString(), anyString(), any(Duration.class));
+
+        SearchResponse result = searchService.search("par", "city,country", 5);
+
+        assertThat(result.items()).hasSize(1);
+        assertThat(result.items().get(0).name()).isEqualTo("Paris");
+    }
+
     private City createCity(String name, String country, String countryCode,
                             String lat, String lng, long population) {
         try {

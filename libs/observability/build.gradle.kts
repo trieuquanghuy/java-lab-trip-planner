@@ -28,6 +28,15 @@ dependencies {
     // WebFlux needed by ReactiveMdcEnrichmentFilter; compileOnly so servlet-only consumers
     // (auth-service / trip-service / destination-service) don't pull WebFlux they don't use.
     compileOnly("org.springframework:spring-webflux")
+
+    // Test dependencies
+    testImplementation(libs.spring.boot.starter.test)
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation("org.springframework:spring-test")
+    testImplementation("jakarta.servlet:jakarta.servlet-api")
+    testImplementation("org.springframework:spring-webflux")
+    testImplementation("io.projectreactor:reactor-test")
+    testImplementation("org.mockito:mockito-core")
 }
 
 dependencyManagement {

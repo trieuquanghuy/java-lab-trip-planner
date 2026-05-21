@@ -48,8 +48,7 @@ v1.0 tagged and archived
 
 - **Phases:** 12 (0 through 10, including 9.1)
 - **Plans:** 64
-- **Requirements:** 31/32 delivered (97%)
-- **Known gap:** FR-21 frontend (favorites page) — backend complete, UI deferred to v1.1
+- **Requirements:** 31/31 delivered (100%)
 - **Architecture:** 5 Spring Boot services + React SPA, dockerized
 - **Observability:** Zipkin, Prometheus, Grafana, structured JSON logs
 - **CI:** GitHub Actions with JaCoCo + OWASP dependency-check

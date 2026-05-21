@@ -1,22 +1,22 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: "Trip Planner MVP"
-status: shipped
-last_updated: "2026-05-20"
+milestone: v1.1
+milestone_name: "Trip Enhancement"
+status: active
+last_updated: "2026-05-21"
 progress:
-  total_phases: 12
-  completed_phases: 12
-  total_plans: 64
-  completed_plans: 64
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State: Trip Planner
 
 **Initialized:** 2026-05-08
-**Shipped:** 2026-05-20
-**Tag:** v1.0
+**Milestone started:** 2026-05-21
+**Previous:** v1.0 shipped 2026-05-20
 
 ---
 
@@ -32,26 +32,15 @@ progress:
 
 ## Current Position
 
-**Milestone:** v1.0 MVP — SHIPPED ✅
-**Status:** All phases complete. Milestone archived.
-**Next action:** Start v1.1 planning when ready.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-05-21 — Milestone v1.1 started
 
 ```
-Progress: [██████████] 100%
-All 12 phases COMPLETE
-v1.0 tagged and archived
+Progress: [░░░░░░░░░░] 0%
+Milestone v1.1: Trip Enhancement
 ```
-
----
-
-## v1.0 Summary
-
-- **Phases:** 12 (0 through 10, including 9.1)
-- **Plans:** 64
-- **Requirements:** 31/31 delivered (100%)
-- **Architecture:** 5 Spring Boot services + React SPA, dockerized
-- **Observability:** Zipkin, Prometheus, Grafana, structured JSON logs
-- **CI:** GitHub Actions with JaCoCo + OWASP dependency-check
 
 ---
 
@@ -71,8 +60,12 @@ v1.0 tagged and archived
 
 ---
 
-## Retrospective
+## Accumulated Context
 
-See `.planning/RETROSPECTIVE.md` for full analysis.
+- v1.0 shipped 31/31 requirements across 12 phases in 12 days
+- Architecture: 5 Spring Boot services (gateway, auth, trip, destination, eureka) + React SPA
+- All services dockerized with multi-stage builds; `docker compose up` from fresh checkout works
+- Free-tier constraint remains in force for v1.1
+- FR-21 (favorites) backend complete; frontend page deferred from v1.0
 
 ---

@@ -69,27 +69,27 @@ A signed-in user can search a city, discover attractions, and assemble them into
 
 ### Active
 
-<!-- Requirements for next milestone (v1.1). -->
+<!-- Requirements for current milestone (v1.1). -->
 
 - [ ] User can favorite/unfavorite destinations and view them on a Favorites page (FR-21 / PERS-02)
+- [ ] User can see travel time/distance between consecutive itinerary items
+- [ ] User can view weather forecast for trip dates at the destination
+- [ ] User can share a trip via a public link (read-only)
+- [ ] User can duplicate an existing trip as a starting template
 
 ### Out of Scope
 
-<!-- Explicit boundaries. Includes reasoning to prevent re-adding. See docs/09-roadmap.md v2 backlog for the full list. -->
+<!-- Explicit boundaries. Includes reasoning to prevent re-adding. -->
 
-- **Trip sharing via public link** — adds auth-mode complexity (public-vs-authenticated routes); v2 feature
-- **Trip duplication / templates** — small CRUD addition; deferred to v2 to keep v1 focused
 - **Real-time multi-user collaboration** — requires CRDTs or pessimistic locking; out of portfolio scope
 - **Native mobile apps** — web responsive (NFR-8) covers basic mobile use; native is a separate project
-- **Push / email notifications** — requires VAPID keys, background jobs, deliverability ops; v2
-- **Budget tracking** — adds complexity for low portfolio value
-- **Weather forecast integration** — nice-to-have but not core to the planning loop; v2
-- **Travel time/distance between items** — depends on routing API; v2
-- **Export to PDF/.ics** — out-of-band concern; v2
-- **Internationalization, multi-currency** — English-only v1
-- **OAuth (Google, GitHub) login** — adds Spring Authorization Server overhead; v2
-- **File-uploaded cover image** — URL-only in v1 to avoid S3/upload pipeline; v2
-- **Admin tooling** — DB access via psql/pgAdmin sufficient for portfolio scope
+- **Push / email notifications** — requires VAPID keys, background jobs, deliverability ops; deferred past v1.1
+- **Budget tracking** — adds complexity for low portfolio value; deferred past v1.1
+- **Export to PDF/.ics** — out-of-band concern; deferred past v1.1
+- **Internationalization, multi-currency** — English-only
+- **OAuth (Google, GitHub) login** — adds Spring Authorization Server overhead; deferred past v1.1
+- **File-uploaded cover image** — deferred past v1.1 to avoid S3/upload pipeline complexity
+- **Admin tooling** — DB access via psql/pgAdmin sufficient for portfolio scope; deferred past v1.1
 - **GDPR-grade data export** — out-of-band per request only
 
 ## Context
@@ -109,6 +109,17 @@ A signed-in user can search a city, discover attractions, and assemble them into
 - **Auth — JWT with email verification:** HS256 access (15 min) + refresh-token rotation (7 days httpOnly cookie); bcrypt cost 12; email verify required before login — Hand-rolled, not Spring Authorization Server (overkill for v1).
 - **Local-only deployment in v1:** `docker compose up` is the ship target. Cloud (Fly.io/Neon/Upstash) is documented but not built — Portfolio doesn't require live cloud demo; local recording suffices.
 - **Test discipline:** ≥70% backend service-layer line coverage; 100% on auth + ownership-check paths; 8 mandatory security integration tests gate every PR — Portfolio reviewers care about test discipline as much as feature breadth.
+
+## Current Milestone: v1.1 Trip Enhancement
+
+**Goal:** Enhance trips with routing/weather context, social sharing, and duplication — making itineraries smarter and more shareable.
+
+**Target features:**
+- Favorites page (FR-21 carry-over from v1.0)
+- Travel time/distance between consecutive itinerary items
+- Weather forecast integration for trip dates
+- Trip sharing via public link (read-only)
+- Trip duplication / templates
 
 ## Current State (post v1.0)
 
@@ -155,4 +166,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-09 after Phase 1 (api-gateway) completion*
+*Last updated: 2026-05-21 — Milestone v1.1 started*

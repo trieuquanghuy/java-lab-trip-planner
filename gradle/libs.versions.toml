@@ -110,6 +110,9 @@ greenmail-junit5 = { module = "com.icegreen:greenmail-junit5", version.ref = "gr
 # without requiring a running PostgreSQL container (test isolation, no docker-compose in unit CI).
 h2 = { module = "com.h2database:h2" }
 
+# --- Observability: Prometheus metrics registry ---
+micrometer-registry-prometheus = { module = "io.micrometer:micrometer-registry-prometheus" }
+
 [bundles]
 # Pitfall 7 — Pull the full observability stack with one accessor (libs.bundles.observability).
 # Every service depending on libs/observability ALSO declares this bundle so the runtime
@@ -118,6 +121,7 @@ observability = [
     "micrometer-tracing-bridge-otel",
     "opentelemetry-exporter-zipkin",
     "logstash-logback-encoder",
+    "micrometer-registry-prometheus",
 ]
 
 [plugins]

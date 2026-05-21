@@ -34,7 +34,7 @@ spring:
         # set including "gateway" if SC#3-route ever needs to verify the gateway placeholder
         # through the route table.
         - id: health-gateway
-          uri: http://localhost:8080
+          uri: http://localhost:8180
           predicates:
             - Path=/__health/gateway
           filters:
@@ -158,8 +158,19 @@ spring:
                 redis-rate-limiter.replenishRate: 2
                 redis-rate-limiter.burstCapacity: 120
                 key-resolver: "#{@userIdKeyResolver}"
+        # --- FAVORITES (authenticated; same trip-service, same rate limit as trips) ---
+        - id: favorites
+          uri: http://trip-service:8082
+          predicates:
+            - Path=/api/favorites/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 120
+                key-resolver: "#{@userIdKeyResolver}"
 server:
-  port: 8080
+  port: 8180
 management:
   endpoints:
     web:

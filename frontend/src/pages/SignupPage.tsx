@@ -49,8 +49,8 @@ export function SignupPage() {
   };
 
   return (
-    <div className="flex justify-center mt-12">
-      <Card className="w-full max-w-md">
+    <div className="flex justify-center mt-12 animate-slide-up">
+      <Card className="w-full max-w-md transition-shadow hover:shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl">Sign Up</CardTitle>
         </CardHeader>

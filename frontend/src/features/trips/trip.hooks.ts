@@ -1,5 +1,6 @@
 import {
   useQuery,
+  useInfiniteQuery,
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
@@ -9,6 +10,7 @@ import type {
   UpdateTripRequest,
   CreateItemRequest,
   UpdateItemRequest,
+  TripListResponse,
 } from '@/types/trip';
 
 export const tripKeys = {
@@ -23,6 +25,16 @@ export function useTrips(page = 0) {
   return useQuery({
     queryKey: tripKeys.list(page),
     queryFn: () => tripApi.list(page),
+  });
+}
+
+export function useInfiniteTrips(size = 12) {
+  return useInfiniteQuery<TripListResponse>({
+    queryKey: [...tripKeys.lists(), 'infinite'],
+    queryFn: ({ pageParam }) => tripApi.list(pageParam as number, size),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage) =>
+      lastPage.page < lastPage.totalPages - 1 ? lastPage.page + 1 : undefined,
   });
 }
 

@@ -35,7 +35,7 @@
 - Algorithm: HS256 (symmetric).
 - Secret: 32+ byte random string in env var `AUTH_JWT_SECRET`.
 - Why HS256 not RS256: simpler key distribution for v1 (every service in monorepo shares the secret via env). RS256 with public key distribution is a v2 upgrade.
-- Library: `io.jsonwebtoken:jjwt-impl:0.12.x`.
+- Library: `io.jsonwebtoken:jjwt-impl:0.13.0`.
 
 ### Refresh tokens
 - 32 random bytes, hex-encoded → 64-char string.

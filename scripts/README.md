@@ -62,7 +62,7 @@ Verbatim from `.planning/ROADMAP.md` Phase 0 Success Criteria #1-#5 (with the SC
 |-----------|-----------------|
 | `SC#1` | `docker compose up` brings every container to healthy status in under 60 seconds with no manual intervention |
 | `SC#2` | All 4 services (api-gateway, auth-service, trip-service, destination-service) registered in Eureka |
-| `SC#3` | `curl localhost:8080/actuator/health` returns `{"status":"UP"}` through the gateway |
+| `SC#3` | `curl localhost:8180/actuator/health` returns `{"status":"UP"}` through the gateway |
 | `SC#3-route` | `/__health/{auth,trip,destination}` route through the gateway and return `{status: UP, phase: 0}` (D-02 validation) |
 | `SC#4` | `localhost:5173` reachable (frontend dev server up) — note: console-error check is manual |
 | `SC#5` | Per-service `*_flyway_schema_history` tables exist in their respective schemas |
@@ -147,7 +147,7 @@ Per `.planning/phases/00-monorepo-scaffolding/00-VALIDATION.md` "Manual-Only Ver
 
 - **SC#6 Zipkin trace continuity** — `scripts/smoke.sh` cannot scrape the Zipkin UI. After `bash scripts/smoke.sh --up && bash scripts/smoke.sh`, send one routed request:
   ```bash
-  curl -s http://localhost:8080/api/trips/_ping -H 'Authorization: Bearer <smoke-token>'
+  curl -s http://localhost:8180/api/trips/_ping -H 'Authorization: Bearer <smoke-token>'
   ```
   Then open `http://localhost:9411/` in a browser, search for the most recent trace, and confirm a SINGLE trace ID spans `api-gateway` and `trip-service` in the timeline. (D-19 / 01-CONTEXT.md). To mint a `<smoke-token>`, run `TOKEN=$(bash scripts/mint-test-token.sh)` — the helper invokes `./gradlew :libs:jwt-common:test --tests JwtFixturesSmokeMintTask -q --console=plain` and captures the JWT printed to stdout by `JwtFixturesSmokeMintTask` (Plan 01-02 Task 2.2). The script is created by Task 6.2 Part C.
 - **Eureka dashboard renders 4 services as registered** — already documented above for Phase 0; re-verify after Phase 1 to ensure the gateway's expanded depends_on chain didn't break Eureka registration.

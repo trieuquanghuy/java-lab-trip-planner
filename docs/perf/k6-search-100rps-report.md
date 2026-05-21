@@ -1,7 +1,7 @@
 # Search Endpoint Load Test Report
 
-**Date:** 2026-05-19  
-**Endpoint:** `GET /api/destinations/search`  
+**Date:** 2026-05-19
+**Endpoint:** `GET /api/destinations/search`
 **Tool:** [k6](https://k6.io/)
 
 ## Configuration

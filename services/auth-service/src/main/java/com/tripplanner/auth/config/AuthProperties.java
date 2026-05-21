@@ -45,7 +45,7 @@ public class AuthProperties {
     }
 
     public static class Verification {
-        private String linkBase = "http://localhost:8080/api/auth/verify?token=";
+        private String linkBase = "http://localhost:8180/api/auth/verify?token=";
         public String getLinkBase() { return linkBase; }
         public void setLinkBase(String l) { this.linkBase = l; }
     }

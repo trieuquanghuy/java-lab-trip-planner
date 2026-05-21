@@ -59,7 +59,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/__health", "/__health/**",
                                 "/actuator/health", "/actuator/health/**",
-                                "/actuator/info",
+                                "/actuator/info", "/actuator/prometheus",
                                 // Phase 2 PUBLIC auth endpoints (D-12 — gateway also permits these in Phase 1)
                                 "/api/auth/signup", "/api/auth/verify",
                                 "/api/auth/login", "/api/auth/refresh"

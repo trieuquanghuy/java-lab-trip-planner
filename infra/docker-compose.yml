@@ -68,6 +68,36 @@ services:
     ports:
       - "0.0.0.0:9411:9411"
 
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "0.0.0.0:9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "0.0.0.0:3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    depends_on:
+      prometheus:
+        condition: service_healthy
+
   # -- Service registry ---------------------------------------------------------
 
   eureka-server:
@@ -87,7 +117,7 @@ services:
       context: ..
       dockerfile: services/api-gateway/Dockerfile
     ports:
-      - "0.0.0.0:8080:8080"                    # public surface
+      - "0.0.0.0:8180:8180"                    # public surface
     depends_on:
       eureka-server:
         condition: service_healthy
@@ -189,7 +219,7 @@ services:
       context: ../frontend                     # frontend dir; compose file lives in infra/
       dockerfile: Dockerfile                   # relative to context = frontend/Dockerfile (Plan 09)
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8180}
     ports:
       - "0.0.0.0:5173:5173"
     # No depends_on — frontend is a static bundle and can render before backends are up.
@@ -197,3 +227,4 @@ services:
 
 volumes:
   pgdata:
+  grafana-data:

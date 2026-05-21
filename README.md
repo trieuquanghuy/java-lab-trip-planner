@@ -32,7 +32,7 @@ The root `docker-compose.yml` is a thin alias: it uses Docker Compose's `include
 | Surface | URL |
 |---------|-----|
 | Frontend | http://localhost:5173 |
-| API gateway health | http://localhost:8080/actuator/health |
+| API gateway health | http://localhost:8180/actuator/health |
 | Eureka dashboard | http://localhost:8761 |
 | Mailhog UI | http://localhost:8025 |
 | Zipkin UI | http://localhost:9411 |
@@ -67,7 +67,7 @@ should propagate by then.
 ┌─────────────┐       ┌──────────────────┐       ┌─────────────────┐
 │   Frontend  │──────▶│   API Gateway    │──────▶│  Auth Service   │
 │  React 18   │       │  Spring Cloud GW │       │  JWT + bcrypt   │
-│  Vite + TS  │       │     :8080        │       │     :8081       │
+│  Vite + TS  │       │     :8180        │       │     :8081       │
 └─────────────┘       └────────┬─────────┘       └─────────────────┘
                                │
                     ┌──────────┼──────────┐
@@ -96,7 +96,7 @@ should propagate by then.
 ```
 
 5 backend services (api-gateway, auth-service, trip-service, destination-service,
-eureka-server) + 3 shared libs (observability, error-handling, api-contracts) + a React
+eureka-server) + 4 shared libs (jwt-common, observability, error-handling, api-contracts) + a React
 frontend. Single PostgreSQL 16 instance with schema-per-service (`auth`, `trip`,
 `destination`) and per-service DB users (D-08, neutralizes Pitfall 3 cross-schema joins).
 
@@ -124,7 +124,7 @@ bind to 0.0.0.0 so they're reachable from the host browser.
 | Service | Port |
 |---------|------|
 | frontend (Vite) | 5173 |
-| api-gateway | 8080 |
+| api-gateway | 8180 |
 | auth-service | 8081 |
 | trip-service | 8082 |
 | destination-service | 8083 |
@@ -180,7 +180,7 @@ Results and SLA threshold documented in [`docs/perf/k6-search-100rps-report.md`]
 |------|-----|---------|
 | Zipkin | http://localhost:9411 | Distributed tracing (W3C traceparent) |
 | Prometheus | http://localhost:9090 | Metrics scraping (actuator/prometheus) |
-| Grafana | http://localhost:3000 | Dashboards (admin/admin) |
+| Grafana | http://localhost:3001 | Dashboards (admin/admin) |
 | Mailhog | http://localhost:8025 | Email verification in dev |
 
 All services emit structured JSON logs with: `traceId`, `spanId`, `userId`, `requestId`.
@@ -199,14 +199,15 @@ End-to-end trace verification: `bash scripts/trace-verify.sh`.
 │   ├── trip-service/
 │   └── destination-service/
 ├── libs/
+│   ├── jwt-common/            # JWT verify, user-context filter, shared security
 │   ├── observability/         # Spring Boot auto-config: tracing + JSON logging + MDC
 │   ├── error-handling/        # ProblemDetailFactory + ErrorCode enum
-│   └── api-contracts/         # Phase 1 lands UserContext here
+│   └── api-contracts/         # Shared DTOs, UserContext
 ├── frontend/                  # Vite + React 18 + TypeScript + Tailwind v3
 ├── infra/
 │   ├── docker-compose.yml     # canonical compose definition
 │   ├── postgres/init.sql      # creates schemas + per-service DB users
-│   └── seeds/                 # Phase 3 lands cities-15000.tsv here
+│   └── seeds/                 # seed-trips.sql demo data
 ├── .github/workflows/
 │   └── ci.yml                 # test + coverage + OWASP + frontend lint
 ├── scripts/

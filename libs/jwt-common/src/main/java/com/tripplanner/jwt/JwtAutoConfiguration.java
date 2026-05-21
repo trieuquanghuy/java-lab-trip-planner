@@ -47,7 +47,11 @@ public class JwtAutoConfiguration {
             // registered — flattens ProblemDetail extension properties (e.g. "code") to JSON root.
             FilterRegistrationBean<ServletJwtCommonFilter> bean =
                     new FilterRegistrationBean<>(new ServletJwtCommonFilter(verifier, objectMapper));
-            // After observability MDC filter (Integer.MIN_VALUE + 100), before any controller filter.
+            // Disable standalone servlet registration — this filter MUST only run inside Spring
+            // Security's chain (via addFilterBefore in SecurityConfig). Running it as a standalone
+            // servlet filter causes SecurityContextHolderFilter.setDeferredContext() to overwrite
+            // the authentication we set, resulting in spurious 401s (Spring Security 6.x behavior).
+            bean.setEnabled(false);
             bean.setOrder(Integer.MIN_VALUE + 200);
             return bean;
         }

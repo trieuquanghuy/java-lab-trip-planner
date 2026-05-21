@@ -1,6 +1,6 @@
 import { MapPin } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 import { DestinationCard } from './DestinationCard';
+import { DestinationCardSkeleton } from './DestinationCardSkeleton';
 import type { NearbyItem } from '@/types/api';
 
 interface DestinationListProps {
@@ -13,7 +13,7 @@ export function DestinationList({ items, isLoading }: DestinationListProps) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-64 w-full rounded-lg" />
+          <DestinationCardSkeleton key={i} />
         ))}
       </div>
     );
@@ -21,7 +21,7 @@ export function DestinationList({ items, isLoading }: DestinationListProps) {
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+      <div className="flex flex-col items-center justify-center py-12 text-muted-foreground animate-fade-in">
         <MapPin className="h-10 w-10 mb-2" />
         <p>No attractions found</p>
       </div>
@@ -29,7 +29,7 @@ export function DestinationList({ items, isLoading }: DestinationListProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 stagger-children">
       {items.map((item) => (
         <DestinationCard key={item.providerRef} destination={item} />
       ))}

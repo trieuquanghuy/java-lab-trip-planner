@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { searchCities } from './search.api';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { SearchResponse } from '@/types/api';
@@ -11,5 +11,6 @@ export function useSearch(query: string) {
     queryFn: () => searchCities(debouncedQuery),
     enabled: debouncedQuery.length >= 1,
     staleTime: 60_000,
+    placeholderData: keepPreviousData,
   });
 }

@@ -39,7 +39,7 @@ docker compose -f infra/docker-compose.yml up
 | Service | Port |
 |---------|------|
 | frontend (Vite) | 5173 |
-| api-gateway | 8080 |
+| api-gateway | 8180 |
 | auth-service | 8081 |
 | trip-service | 8082 |
 | destination-service | 8083 |
@@ -82,7 +82,7 @@ FOURSQUARE_API_KEY=
 ZIPKIN_BASE_URL=http://zipkin:9411
 
 # Frontend
-VITE_API_URL=http://localhost:8080
+VITE_API_URL=http://localhost:8180
 ```
 
 `.env` is gitignored. `.env.example` is committed and updated whenever a new
@@ -119,7 +119,7 @@ services:
 
   api-gateway:
     build: { context: ../services/api-gateway }
-    ports: ["8080:8080"]
+    ports: ["8180:8180"]
     depends_on: { eureka-server: { condition: service_healthy } }
     environment:
       EUREKA_URL: http://eureka-server:8761/eureka
@@ -143,7 +143,7 @@ services:
   frontend:
     build: { context: ../frontend }
     ports: ["5173:5173"]
-    environment: { VITE_API_URL: http://localhost:8080 }
+    environment: { VITE_API_URL: http://localhost:8180 }
 
 volumes:
   pgdata:
@@ -250,7 +250,7 @@ jobs:
       - run: docker compose -f infra/docker-compose.yml up -d
       - run: |
           # wait for stack
-          npx wait-on http://localhost:8080/actuator/health http://localhost:5173
+          npx wait-on http://localhost:8180/actuator/health http://localhost:5173
       - run: pnpm --filter frontend exec playwright test
       - uses: actions/upload-artifact@v4
         if: failure()
@@ -308,7 +308,7 @@ backup required for portfolio scope.
 | Symptom | Diagnostic | Fix |
 |---------|------------|-----|
 | `docker compose up` hangs on auth-service | check Eureka not yet healthy | Wait; or start eureka first then services |
-| Frontend shows "Network error" on login | check gateway logs at `:8080` | Most likely auth-service is not registered with Eureka |
+| Frontend shows "Network error" on login | check gateway logs at `:8180` | Most likely auth-service is not registered with Eureka |
 | Search returns 0 results for known city | check `cities` table populated | Run `./gradlew :services:destination-service:flywayMigrate` |
 | Search slow (>1 s) | Redis container down or unreachable | `docker compose up -d redis`; service falls back to DB FTS automatically |
 | Verification email not received | check Mailhog UI at `localhost:8025` | All dev emails land there |

@@ -18,6 +18,7 @@ export function TripCard({ trip }: Props) {
           <img
             src={trip.coverImageUrl}
             alt={trip.name}
+            loading="lazy"
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
         ) : (

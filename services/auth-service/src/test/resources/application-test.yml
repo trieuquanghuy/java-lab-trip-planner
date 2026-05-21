@@ -43,7 +43,7 @@ app:
   mail:
     from: test@tripplanner.local
   verification:
-    link-base: http://localhost:8080/api/auth/verify?token=
+    link-base: http://localhost:8180/api/auth/verify?token=
 
 # Eureka registration off in tests — keeps boot fast and avoids network hits.
 eureka:

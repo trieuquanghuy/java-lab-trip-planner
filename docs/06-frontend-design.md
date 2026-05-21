@@ -8,7 +8,7 @@
 | Concern | Choice |
 |---------|--------|
 | Framework | React 18 |
-| Build | Vite 5 + TypeScript 5 |
+| Build | Vite 6 + TypeScript 5.8 |
 | Routing | React Router 6 |
 | Server state | TanStack Query v5 |
 | Client state | Zustand |
@@ -177,7 +177,7 @@ mutation; backend `validation.failed` errors are mapped to per-field errors.
 ```ts
 // api/client.ts
 const client = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,    // http://localhost:8080
+  baseURL: import.meta.env.VITE_API_URL,    // http://localhost:8180
   withCredentials: true,                     // sends refresh-token cookie
 });
 
@@ -290,7 +290,7 @@ Single Sonner-style toast component for success ("Added to trip"), error
 
 ```
 frontend/.env.example
-VITE_API_URL=http://localhost:8080
+VITE_API_URL=http://localhost:8180
 VITE_TILE_SERVER_URL=https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
 VITE_SENTRY_DSN=                 # optional, off by default
 ```

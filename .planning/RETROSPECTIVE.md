@@ -1,9 +1,9 @@
 # Retrospective: v1.0 MVP — Trip Planner
 
-**Milestone:** v1.0 MVP  
-**Shipped:** 2026-05-20  
-**Duration:** 12 days (2026-05-08 → 2026-05-19)  
-**Commits:** 256  
+**Milestone:** v1.0 MVP
+**Shipped:** 2026-05-20
+**Duration:** 12 days (2026-05-08 → 2026-05-19)
+**Commits:** 256
 **LOC:** ~16,100 (Java + TypeScript)
 
 ---

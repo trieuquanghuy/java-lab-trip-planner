@@ -11,7 +11,7 @@
 #
 # Usage:
 #   TOKEN=$(bash scripts/mint-test-token.sh)
-#   curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/trips/_ping
+#   curl -H "Authorization: Bearer $TOKEN" http://localhost:8180/api/trips/_ping
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

@@ -26,7 +26,7 @@ Deliverables:
 Acceptance:
 - `docker compose up` brings everything healthy in < 60 seconds.
 - All 4 services visible in Eureka dashboard at `localhost:8761`.
-- `curl localhost:8080/actuator/health` returns OK.
+- `curl localhost:8180/actuator/health` returns OK.
 
 ## Phase 1 — API gateway
 

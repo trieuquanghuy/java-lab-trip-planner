@@ -3,7 +3,7 @@
 **Status**: Draft for review
 **Last updated**: 2026-05-08
 
-All endpoints are reachable through `api-gateway` at `http://localhost:8080`.
+All endpoints are reachable through `api-gateway` at `http://localhost:8180`.
 The SPA never calls a backend service directly. Direct service ports
 (8081–8083) are for debugging only.
 

@@ -6,7 +6,7 @@
 ## 1. Architectural style
 
 **Monorepo + microservices.** A single Gradle multi-module repository contains
-four Spring Boot services and one React frontend. Services communicate over
+five Spring Boot services and one React frontend. Services communicate over
 HTTP through an API gateway. Each service owns its own data schema.
 
 ### Why this style for this project
@@ -25,7 +25,7 @@ HTTP through an API gateway. Each service owns its own data schema.
 | Concern | Choice | Rationale |
 |---------|--------|-----------|
 | Language | Java 21 LTS | Modern records, pattern matching, virtual threads available |
-| Framework | Spring Boot 3.3.x | Industry standard; Spring Cloud ecosystem for gateway/discovery |
+| Framework | Spring Boot 3.5.x | Industry standard; Spring Cloud ecosystem for gateway/discovery |
 | Build | Gradle 8.x (Kotlin DSL) | Better multi-module ergonomics than Maven |
 | API Gateway | Spring Cloud Gateway | Reactive, native to Spring ecosystem, minimal config |
 | Service discovery | Spring Cloud Netflix Eureka | Battle-tested, simple setup, common in Spring shops |
@@ -35,7 +35,7 @@ HTTP through an API gateway. Each service owns its own data schema.
 | Migrations | Flyway 10 | Per-service migrations under `services/<x>/src/main/resources/db/migration` |
 | Cache | Redis 7 | Search-result cache, session-less |
 | Resilience | Resilience4j | Circuit breaker, retry, timeout per provider call |
-| Auth | Custom JWT (HS256) via `jjwt` | Light; Spring Authorization Server is overkill for v1 |
+| Auth | Custom JWT (HS256) via `jjwt` 0.13.0 | Light; Spring Authorization Server is overkill for v1 |
 | Validation | Jakarta Bean Validation (Hibernate Validator) | Standard |
 | Observability | Micrometer + Prometheus + Zipkin via OpenTelemetry | Standard Spring telemetry stack |
 | Logging | Logback + `logstash-logback-encoder` (JSON) | Structured logs ready for any log backend |
@@ -45,7 +45,7 @@ HTTP through an API gateway. Each service owns its own data schema.
 | Concern | Choice | Rationale |
 |---------|--------|-----------|
 | Framework | React 18 | Industry baseline; large ecosystem |
-| Build | Vite 5 | Fast dev server, simple config |
+| Build | Vite 6 | Fast dev server, simple config |
 | Language | TypeScript 5 | Type safety, IDE support |
 | Routing | React Router 6 | Standard |
 | Server state | TanStack Query v5 | Cache + invalidation + optimistic updates |
@@ -75,7 +75,7 @@ HTTP through an API gateway. Each service owns its own data schema.
                                        │ all /api/** calls
                                        ▼
                             ┌──────────────────────┐
-                            │  api-gateway :8080   │
+                            │  api-gateway :8180   │
                             │  Spring Cloud Gateway│
                             └─┬───────────┬────────┘
                               │           │
@@ -105,7 +105,7 @@ HTTP through an API gateway. Each service owns its own data schema.
 
 ### 3.1 Service responsibilities
 
-#### api-gateway (`:8080`)
+#### api-gateway (`:8180`)
 - Single entry point for the SPA.
 - Routes `/api/auth/**` → auth-service; `/api/trips/**` and `/api/favorites/**` → trip-service; `/api/search/**` and `/api/destinations/**` → destination-service.
 - JWT signature validation (rejects unsigned/expired tokens before they reach downstream services).
@@ -197,13 +197,13 @@ trip-planner/                                  ← monorepo root
 │   └── tests/...
 │
 ├── infra/
-│   ├── docker-compose.yml                     ← local: db, redis, mailhog, eureka, 4 services, frontend
-│   ├── docker-compose.override.yml            ← dev-only overrides (volume mounts, hot reload)
+│   ├── docker-compose.yml                     ← local: db, redis, mailhog, eureka, 5 services, frontend
 │   ├── postgres/init.sql                      ← creates auth, trip, destination schemas
 │   └── seeds/
-│       └── cities-15000.tsv                   ← GeoNames seed for destination-service
+│       └── seed-trips.sql                     ← demo trip data
 │
 ├── .github/workflows/
+│   ├── ci.yml                                 ← test + coverage + OWASP + frontend lint
 │   ├── backend.yml                            ← per-service test/build matrix, change-detection
 │   └── frontend.yml
 │
@@ -246,7 +246,7 @@ docker compose:
   mailhog         :8025 (web), :1025 (smtp)
   zipkin          :9411
   eureka-server   :8761
-  api-gateway     :8080
+  api-gateway     :8180
   auth-service    :8081
   trip-service    :8082
   destination-service :8083

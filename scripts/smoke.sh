@@ -229,8 +229,8 @@ check_sc2() {
 # -----------------------------------------------------------------------------
 check_sc3() {
   local body
-  if ! body=$(curl -sf http://localhost:8080/actuator/health 2>/dev/null); then
-    fail "SC#3: gateway /actuator/health unreachable at localhost:8080"
+  if ! body=$(curl -sf http://localhost:8180/actuator/health 2>/dev/null); then
+    fail "SC#3: gateway /actuator/health unreachable at localhost:8180"
   fi
 
   if [ "$HAVE_JQ" -eq 1 ]; then
@@ -252,7 +252,7 @@ check_sc3() {
 # -----------------------------------------------------------------------------
 check_sc3_route() {
   for svc in auth trip destination; do
-    local url="http://localhost:8080/__health/$svc"
+    local url="http://localhost:8180/__health/$svc"
     local body
     if ! body=$(curl -sf "$url" 2>/dev/null); then
       fail "SC#3-route: $url unreachable"
@@ -448,14 +448,14 @@ check_phase_01_routing() {
     local code
     code=$(curl -s -o /dev/null -w '%{http_code}' \
             -H "Authorization: Bearer $placeholder_token" \
-            "http://localhost:8080$path" 2>/dev/null || echo "000")
+            "http://localhost:8180$path" 2>/dev/null || echo "000")
     case "$code" in
       502)
         fail "phase-01-routing: $path returned 502 — Pitfall J: downstream service unreachable from gateway. Check api-gateway.depends_on in infra/docker-compose.yml (plan 01-06) and that the downstream service is up (docker compose ps)." ;;
       503)
         fail "phase-01-routing: $path returned 503 — likely Redis unreachable (Pitfall H) or rate-limit empty-bucket. Check redis container health and api-gateway → redis depends_on." ;;
       000)
-        fail "phase-01-routing: $path — curl could not reach gateway at localhost:8080. Is the stack up? (scripts/smoke.sh --up)" ;;
+        fail "phase-01-routing: $path — curl could not reach gateway at localhost:8180. Is the stack up? (scripts/smoke.sh --up)" ;;
       *)
         : # any other code (200/401/403/404/500) proves the gateway forwarded
         ;;
@@ -486,7 +486,7 @@ check_phase_01_rate_limit() {
             -X POST \
             -H 'Content-Type: application/json' \
             -d '{"email":"smoke@example.com","password":"smoke"}' \
-            "http://localhost:8080/api/auth/login" 2>/dev/null || echo "000")
+            "http://localhost:8180/api/auth/login" 2>/dev/null || echo "000")
     if [ "$code" = "429" ]; then
       saw_429=1
       break
@@ -504,7 +504,7 @@ check_phase_01_rate_limit() {
 # These criteria exercise the wired auth-service end-to-end against the
 # running compose stack:
 #
-#   gateway (:8080) -> auth-service (:8081) -> Postgres -> Redis -> MailHog
+#   gateway (:8180) -> auth-service (:8081) -> Postgres -> Redis -> MailHog
 #
 # Each criterion drives one of the 5 ROADMAP Phase 2 success criteria via
 # curl + jq (with grep fallback). They are the operational counterpart to
@@ -524,7 +524,7 @@ check_phase_01_rate_limit() {
 # =============================================================================
 
 # Common gateway base URL for all auth-N checks (Plan 01-03 routing).
-SMOKE_GATEWAY_URL="${SMOKE_GATEWAY_URL:-http://localhost:8080}"
+SMOKE_GATEWAY_URL="${SMOKE_GATEWAY_URL:-http://localhost:8180}"
 # MailHog admin API (set in compose at 8025; same UI port the human inspects
 # during the Plan 02-07 visual checkpoint).
 SMOKE_MAILHOG_URL="${SMOKE_MAILHOG_URL:-http://localhost:8025}"
@@ -562,7 +562,7 @@ auth_signup() {
 # auth_extract_token_from_mailhog — fetch most-recent MailHog message
 # addressed to $1 and extract the 64-hex token following `?token=` in the
 # body. UI-SPEC §Email Copy Contract locks the URL on its own line as
-# `http://localhost:8080/api/auth/verify?token=<64-hex>`.
+# `http://localhost:8180/api/auth/verify?token=<64-hex>`.
 #
 # IMPORTANT: MailHog stores message bodies in MIME quoted-printable
 # encoding (each line ≤76 chars; soft line breaks are `=\n`; literal `=`
@@ -616,7 +616,7 @@ auth_extract_token_from_mailhog() {
   fi
 
   # Extract the 64-hex token. UI-SPEC body has the URL on its own line:
-  # `http://localhost:8080/api/auth/verify?token=<64hex>`.
+  # `http://localhost:8180/api/auth/verify?token=<64hex>`.
   local token
   token=$(printf '%s' "$decoded" | grep -oE 'token=[a-f0-9]{64}' | head -1 | cut -d= -f2)
   if [ -z "$token" ]; then

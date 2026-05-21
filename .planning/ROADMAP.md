@@ -28,7 +28,7 @@
 - [x] Phase 9.1: M3 Design System Refactor (3/3 plans) — completed 2026-05-19
 - [x] Phase 10: Observability + Performance Hardening (4/4 plans) — completed 2026-05-19
 
-**Known gap:** PERS-02 (frontend /favorites page) — backend complete, frontend deferred to v1.1.
+**Known gap:** ~~PERS-02 (frontend /favorites page) — backend complete, frontend deferred to v1.1.~~ **Resolved:** FavoritesPage built and functional (confirmed in v1.0 audit 2026-05-21).
 
 </details>
 

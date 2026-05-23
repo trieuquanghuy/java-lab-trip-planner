@@ -20,8 +20,12 @@
 
 **Goal:** Ship the frontend Favorites page so users can view, manage, and navigate favorited destinations.
 **Requirements:** [PERS-01, PERS-02, PERS-03, PERS-04]
-**Plans:** To be planned
+**Plans:** 2 plans
 **Depends on:** None (frontend only, backend exists)
+
+Plans:
+- [ ] 11-01-PLAN.md — Backend batch destinations endpoint (POST /api/destinations/batch)
+- [ ] 11-02-PLAN.md — Frontend FavoritesPage enhancement with DestinationCard grid and optimistic removal
 
 **Success Criteria:**
 1. `/favorites` route renders a grid/list of user's favorited destinations

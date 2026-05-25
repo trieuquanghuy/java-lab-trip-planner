@@ -24,8 +24,8 @@
 **Depends on:** None (frontend only, backend exists)
 
 Plans:
-- [ ] 11-01-PLAN.md — Backend batch destinations endpoint (POST /api/destinations/batch)
-- [ ] 11-02-PLAN.md — Frontend FavoritesPage enhancement with DestinationCard grid and optimistic removal
+- [x] 11-01-PLAN.md — Backend batch destinations endpoint (POST /api/destinations/batch)
+- [x] 11-02-PLAN.md — Frontend FavoritesPage enhancement with DestinationCard grid and optimistic removal
 
 **Success Criteria:**
 1. `/favorites` route renders a grid/list of user's favorited destinations

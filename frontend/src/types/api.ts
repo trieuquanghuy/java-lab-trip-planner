@@ -54,3 +54,7 @@ export interface ApiError {
   detail: string;
   code: string;
 }
+
+export interface BatchDestinationsResponse {
+  items: NearbyItem[];
+}

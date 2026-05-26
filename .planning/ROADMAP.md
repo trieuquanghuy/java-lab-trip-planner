@@ -20,7 +20,7 @@
 
 **Goal:** Ship the frontend Favorites page so users can view, manage, and navigate favorited destinations.
 **Requirements:** [PERS-01, PERS-02, PERS-03, PERS-04]
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 **Depends on:** None (frontend only, backend exists)
 
 Plans:

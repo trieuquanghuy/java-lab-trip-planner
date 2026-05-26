@@ -10,10 +10,10 @@
 
 ### Favorites (PERS)
 
-- [ ] **PERS-01**: User can view a Favorites page listing all favorited destinations
-- [ ] **PERS-02**: User can unfavorite a destination from the Favorites page
-- [ ] **PERS-03**: User can navigate to destination detail from Favorites page
-- [ ] **PERS-04**: User sees an empty state when no favorites exist
+- [x] **PERS-01**: User can view a Favorites page listing all favorited destinations
+- [x] **PERS-02**: User can unfavorite a destination from the Favorites page
+- [x] **PERS-03**: User can navigate to destination detail from Favorites page
+- [x] **PERS-04**: User sees an empty state when no favorites exist
 
 ### Trip Duplication (DUP)
 

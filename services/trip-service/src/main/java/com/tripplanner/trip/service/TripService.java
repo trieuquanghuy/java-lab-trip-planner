@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -151,6 +152,50 @@ public class TripService {
         Trip trip = tripRepo.findByIdAndUserId(tripId, UUID.fromString(userId))
                 .orElseThrow(TripNotFoundException::new);
         tripRepo.delete(trip);
+    }
+
+    /**
+     * Duplicate an existing trip with all days and items.
+     * Per D-06: full deep copy (days, items, time slots, notes, cover image).
+     * Per D-08: name = "Copy of {original}" truncated to 120 chars.
+     * Per D-09: dates are null on the duplicate.
+     */
+    @Transactional
+    public TripWithDays duplicateTrip(UUID tripId, String userId) {
+        Trip source = tripRepo.findByIdAndUserId(tripId, UUID.fromString(userId))
+                .orElseThrow(TripNotFoundException::new);
+
+        String newName = "Copy of " + source.getName();
+        if (newName.length() > 120) {
+            newName = newName.substring(0, 120);
+        }
+        Trip duplicate = new Trip(UUID.randomUUID(), UUID.fromString(userId), newName, null, null);
+        duplicate.setCoverImageUrl(source.getCoverImageUrl());
+        tripRepo.save(duplicate);
+
+        List<ItineraryDay> sourceDays = dayRepo.findByTripIdOrderByDayIndex(source.getId());
+        List<ItineraryDay> newDays = new ArrayList<>();
+        Map<UUID, List<ItineraryItem>> itemsByDay = new HashMap<>();
+
+        for (ItineraryDay srcDay : sourceDays) {
+            ItineraryDay newDay = new ItineraryDay(UUID.randomUUID(), duplicate.getId(),
+                    srcDay.getDayDate(), srcDay.getDayIndex());
+            newDays.add(newDay);
+
+            List<ItineraryItem> srcItems = itemRepo.findByItineraryDayIdOrderByPositionAsc(srcDay.getId());
+            List<ItineraryItem> newItems = new ArrayList<>();
+            for (ItineraryItem srcItem : srcItems) {
+                ItineraryItem newItem = new ItineraryItem(UUID.randomUUID(), newDay.getId(),
+                        srcItem.getDestinationRef(), srcItem.getPosition(),
+                        srcItem.getTimeSlot(), srcItem.getNote(), srcItem.getPhotoUrl());
+                newItems.add(newItem);
+            }
+            itemRepo.saveAll(newItems);
+            itemsByDay.put(newDay.getId(), newItems);
+        }
+        dayRepo.saveAll(newDays);
+
+        return new TripWithDays(duplicate, newDays, itemsByDay, null);
     }
 
     private void validateDates(LocalDate startDate, LocalDate endDate) {

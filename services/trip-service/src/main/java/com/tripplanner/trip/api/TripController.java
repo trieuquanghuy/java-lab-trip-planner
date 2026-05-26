@@ -91,4 +91,13 @@ public class TripController {
         tripService.deleteTrip(id, ctx.userId());
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/duplicate")
+    public ResponseEntity<TripResponse> duplicate(@PathVariable UUID id,
+                                                  @AuthenticationPrincipal UserContext ctx) {
+        TripWithDays result = tripService.duplicateTrip(id, ctx.userId());
+        TripResponse body = TripResponse.from(result.trip(), result.days(),
+                result.itemsByDay(), result.resolvedCoverImage());
+        return ResponseEntity.created(URI.create("/api/trips/" + body.id())).body(body);
+    }
 }

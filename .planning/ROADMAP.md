@@ -44,8 +44,8 @@ Plans:
 **Depends on:** None
 
 Plans:
-- [ ] 12-01-PLAN.md — Backend trip duplication endpoint + tests
-- [ ] 12-02-PLAN.md — Frontend duplicate button on detail page and TripCard
+- [x] 12-01-PLAN.md — Backend trip duplication endpoint + tests
+- [x] 12-02-PLAN.md — Frontend duplicate button on detail page and TripCard
 
 **Success Criteria:**
 1. "Duplicate" button visible on trip detail/list for owned trips

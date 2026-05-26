@@ -28,6 +28,9 @@ export const tripApi = {
 
   delete: (id: string) => apiClient.delete(`/api/trips/${id}`),
 
+  duplicate: (id: string) =>
+    apiClient.post<Trip>(`/api/trips/${id}/duplicate`).then((r) => r.data),
+
   addItem: (tripId: string, dayId: string, data: CreateItemRequest) =>
     apiClient
       .post<TripItem>(`/api/trips/${tripId}/days/${dayId}/items`, data)

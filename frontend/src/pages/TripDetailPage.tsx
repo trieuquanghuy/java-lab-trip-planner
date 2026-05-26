@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Map as MapIcon, X } from 'lucide-react';
+import { ArrowLeft, Copy, Map as MapIcon, X } from 'lucide-react';
 import { useQueries } from '@tanstack/react-query';
-import { useTrip, useUpdateTrip } from '@/features/trips/trip.hooks';
+import { useTrip, useUpdateTrip, useDuplicateTrip } from '@/features/trips/trip.hooks';
 import { ItineraryBoard } from '@/features/trips/ItineraryBoard';
 import { TripMap, type MarkerData } from '@/features/trips/TripMap';
 import { fetchDestinationDetail } from '@/features/destinations/destinations.api';
@@ -13,6 +13,7 @@ export function TripDetailPage() {
   const navigate = useNavigate();
   const { data: trip, isLoading, error } = useTrip(tripId ?? '');
   const updateTrip = useUpdateTrip(tripId ?? '');
+  const duplicateTrip = useDuplicateTrip();
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState('');
   const [showMap, setShowMap] = useState(false);
@@ -141,6 +142,14 @@ export function TripDetailPage() {
             <p className="text-sm text-muted-foreground">{dateRange}</p>
           )}
         </div>
+        <button
+          onClick={() => duplicateTrip.mutate(tripId!)}
+          disabled={duplicateTrip.isPending}
+          className="p-2 h-11 w-11 sm:h-9 sm:w-9 flex items-center justify-center rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+          aria-label="Duplicate trip"
+        >
+          <Copy className="w-5 h-5" />
+        </button>
         <button
           onClick={() => setShowMap(!showMap)}
           className={`p-2 h-11 w-11 sm:h-9 sm:w-9 flex items-center justify-center rounded-lg transition-colors ${

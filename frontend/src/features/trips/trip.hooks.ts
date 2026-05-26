@@ -4,6 +4,8 @@ import {
   useMutation,
   useQueryClient,
 } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { tripApi } from './trip.api';
 import type {
   CreateTripRequest,
@@ -73,6 +75,19 @@ export function useDeleteTrip() {
     mutationFn: (tripId: string) => tripApi.delete(tripId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: tripKeys.lists() });
+    },
+  });
+}
+
+export function useDuplicateTrip() {
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  return useMutation({
+    mutationFn: (tripId: string) => tripApi.duplicate(tripId),
+    onSuccess: (newTrip) => {
+      queryClient.invalidateQueries({ queryKey: tripKeys.lists() });
+      navigate(`/trips/${newTrip.id}`);
+      toast.success('Trip duplicated successfully');
     },
   });
 }

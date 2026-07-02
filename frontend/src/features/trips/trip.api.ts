@@ -43,4 +43,14 @@ export const tripApi = {
 
   deleteItem: (tripId: string, itemId: string) =>
     apiClient.delete(`/api/trips/${tripId}/items/${itemId}`),
+
+  generateShare: (id: string) =>
+    apiClient
+      .post<{ shareToken: string; shareUrl: string }>(`/api/trips/${id}/share`)
+      .then((r) => r.data),
+
+  revokeShare: (id: string) => apiClient.delete(`/api/trips/${id}/share`),
+
+  getSharedTrip: (token: string) =>
+    apiClient.get<Trip>(`/api/share/${token}`).then((r) => r.data),
 };

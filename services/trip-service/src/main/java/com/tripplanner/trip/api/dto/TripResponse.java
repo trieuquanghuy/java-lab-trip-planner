@@ -13,7 +13,8 @@ import java.util.UUID;
 public record TripResponse(
         UUID id, String name, LocalDate startDate, LocalDate endDate,
         String coverImageUrl, Instant createdAt, Instant updatedAt,
-        List<DayResponse> days
+        List<DayResponse> days,
+        UUID shareToken, boolean shareEnabled
 ) {
     /** List endpoint — days without items. */
     public static TripResponse from(Trip trip, List<ItineraryDay> days) {
@@ -24,7 +25,8 @@ public record TripResponse(
         return new TripResponse(
                 trip.getId(), trip.getName(), trip.getStartDate(), trip.getEndDate(),
                 trip.getCoverImageUrl(), trip.getCreatedAt(), trip.getUpdatedAt(),
-                dayResponses
+                dayResponses,
+                trip.getShareToken(), trip.isShareEnabled()
         );
     }
 
@@ -42,7 +44,8 @@ public record TripResponse(
         return new TripResponse(
                 trip.getId(), trip.getName(), trip.getStartDate(), trip.getEndDate(),
                 coverImage, trip.getCreatedAt(), trip.getUpdatedAt(),
-                dayResponses
+                dayResponses,
+                trip.getShareToken(), trip.isShareEnabled()
         );
     }
 }

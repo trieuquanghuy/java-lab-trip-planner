@@ -22,6 +22,10 @@ export default defineConfig({
         target: 'http://localhost:8082',
         changeOrigin: true,
       },
+      '/api/share': {
+        target: 'http://localhost:8082',
+        changeOrigin: true,
+      },
       '/api/favorites': {
         target: 'http://localhost:8082',
         changeOrigin: true,
@@ -31,6 +35,14 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/api/destinations': {
+        target: 'http://localhost:8083',
+        changeOrigin: true,
+      },
+      '/api/weather': {
+        target: 'http://localhost:8083',
+        changeOrigin: true,
+      },
+      '/api/travel': {
         target: 'http://localhost:8083',
         changeOrigin: true,
       },

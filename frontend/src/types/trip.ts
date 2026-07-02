@@ -26,6 +26,8 @@ export interface Trip {
   createdAt: string;
   updatedAt: string;
   days: TripDay[];
+  shareToken: string | null;
+  shareEnabled: boolean;
 }
 
 export interface TripSummary {

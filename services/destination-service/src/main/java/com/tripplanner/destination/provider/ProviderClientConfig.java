@@ -23,4 +23,10 @@ public class ProviderClientConfig {
                 .defaultHeader("Accept", "application/json")
                 .build();
     }
+
+    @Bean
+    public RestClient osrmRestClient(
+            @Value("${osrm.base-url:http://router.project-osrm.org}") String baseUrl) {
+        return RestClient.builder().baseUrl(baseUrl).build();
+    }
 }

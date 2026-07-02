@@ -17,6 +17,7 @@ const TripDetailPage = lazy(() => import('@/pages/TripDetailPage').then(m => ({ 
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 const ServerErrorPage = lazy(() => import('@/pages/ServerErrorPage').then(m => ({ default: m.ServerErrorPage })));
 const FavoritesPage = lazy(() => import('@/pages/FavoritesPage').then(m => ({ default: m.FavoritesPage })));
+const SharedTripPage = lazy(() => import('@/pages/SharedTripPage').then(m => ({ default: m.SharedTripPage })));
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
               <Route path="/trips/:tripId" element={<TripDetailPage />} />
               <Route path="/favorites" element={<FavoritesPage />} />
             </Route>
+            <Route path="/share/:token" element={<SharedTripPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>

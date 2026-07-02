@@ -16,12 +16,14 @@ import { TripEmptyState } from './TripEmptyState';
 import { useDragDrop } from './useDragDrop';
 import { useDragStore } from './trip.store';
 import type { Trip } from '@/types/trip';
+import type { Waypoint } from '@/types/travel';
 
 interface Props {
   trip: Trip;
+  waypointsByDay?: Record<string, Waypoint[]>;
 }
 
-export function ItineraryBoard({ trip }: Props) {
+export function ItineraryBoard({ trip, waypointsByDay = {} }: Props) {
   const { days, handleDragStart, handleDragOver, handleDragEnd } = useDragDrop(
     trip.id,
     trip.days,
@@ -64,7 +66,11 @@ export function ItineraryBoard({ trip }: Props) {
         />
         {mobileDay && (
           <div className="mt-3">
-            <DayColumn day={mobileDay} tripId={trip.id} />
+            <DayColumn
+              day={mobileDay}
+              tripId={trip.id}
+              waypoints={waypointsByDay[mobileDay.id] ?? []}
+            />
           </div>
         )}
       </div>
@@ -75,7 +81,12 @@ export function ItineraryBoard({ trip }: Props) {
         aria-live="polite"
       >
         {days.map((day) => (
-          <DayColumn key={day.id} day={day} tripId={trip.id} />
+          <DayColumn
+            key={day.id}
+            day={day}
+            tripId={trip.id}
+            waypoints={waypointsByDay[day.id] ?? []}
+          />
         ))}
       </div>
 

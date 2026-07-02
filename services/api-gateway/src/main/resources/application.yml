@@ -148,6 +148,12 @@ spring:
         # --- TRIPS (authenticated; D-06 userId-rate-limited 120/min — RequestRateLimiter
         #     runs AFTER AuthenticationWebFilter, so SecurityContext.principal is populated
         #     when userIdKeyResolver reads it.) ---
+        - id: trip-share-public
+          uri: http://trip-service:8082
+          predicates:
+            - Path=/api/share/**
+          filters:
+            - StripPrefix=0
         - id: trips
           uri: http://trip-service:8082
           predicates:
@@ -169,6 +175,28 @@ spring:
                 redis-rate-limiter.replenishRate: 2
                 redis-rate-limiter.burstCapacity: 120
                 key-resolver: "#{@userIdKeyResolver}"
+        # --- WEATHER (public; IP-rate-limited 60/min; routes to destination-service) ---
+        - id: weather
+          uri: http://destination-service:8083
+          predicates:
+            - Path=/api/weather/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 1
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@ipKeyResolver}"
+        # --- TRAVEL (public; IP-rate-limited; Phase 15) ---
+        - id: travel
+          uri: http://destination-service:8083
+          predicates:
+            - Path=/api/travel/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 1
+                redis-rate-limiter.burstCapacity: 60
+                key-resolver: "#{@ipKeyResolver}"
 server:
   port: 8180
 management:

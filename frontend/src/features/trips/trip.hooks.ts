@@ -128,3 +128,31 @@ export function useDeleteItem(tripId: string) {
     },
   });
 }
+
+export function useGenerateShare(tripId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => tripApi.generateShare(tripId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) });
+    },
+  });
+}
+
+export function useRevokeShare(tripId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: () => tripApi.revokeShare(tripId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: tripKeys.detail(tripId) });
+    },
+  });
+}
+
+export function useSharedTrip(token: string) {
+  return useQuery({
+    queryKey: ['shared-trip', token],
+    queryFn: () => tripApi.getSharedTrip(token),
+    enabled: !!token,
+  });
+}

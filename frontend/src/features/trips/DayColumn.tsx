@@ -4,18 +4,24 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { ItineraryItemCard } from './ItineraryItemCard';
+import { TravelSegment } from './TravelSegment';
+import { useTravel } from './travel.hooks';
 import type { TripDay } from '@/types/trip';
+import type { Waypoint } from '@/types/travel';
 
 interface Props {
   day: TripDay;
   tripId: string;
+  waypoints?: Waypoint[];
 }
 
-export function DayColumn({ day, tripId }: Props) {
+export function DayColumn({ day, tripId, waypoints = [] }: Props) {
   const { setNodeRef, isOver } = useDroppable({
     id: day.id,
     data: { dayId: day.id },
   });
+
+  const { data: travelData } = useTravel(waypoints);
 
   // Sort items: those with timeSlot first (chronologically), then by position
   const sortedItems = [...day.items].sort((a, b) => {
@@ -59,8 +65,16 @@ export function DayColumn({ day, tripId }: Props) {
               Drop items here
             </div>
           )}
-          {sortedItems.map((item) => (
-            <ItineraryItemCard key={item.id} item={item} tripId={tripId} />
+          {sortedItems.map((item, index) => (
+            <div key={item.id}>
+              {index > 0 && travelData?.segments[index - 1] && (
+                <TravelSegment
+                  durationMinutes={travelData.segments[index - 1].durationMinutes}
+                  distanceKm={travelData.segments[index - 1].distanceKm}
+                />
+              )}
+              <ItineraryItemCard item={item} tripId={tripId} />
+            </div>
           ))}
         </div>
       </SortableContext>

@@ -38,6 +38,12 @@ public class Trip {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "share_token")
+    private UUID shareToken;
+
+    @Column(name = "share_enabled", nullable = false)
+    private boolean shareEnabled = false;
+
     protected Trip() {}   // JPA
 
     public Trip(UUID id, UUID userId, String name, LocalDate startDate, LocalDate endDate) {
@@ -59,6 +65,24 @@ public class Trip {
     public String getCoverImageUrl() { return coverImageUrl; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+
+    public UUID getShareToken() { return shareToken; }
+    public boolean isShareEnabled() { return shareEnabled; }
+
+    public void setShareToken(UUID shareToken) { this.shareToken = shareToken; }
+    public void setShareEnabled(boolean shareEnabled) { this.shareEnabled = shareEnabled; }
+
+    public void enableShare() {
+        this.shareToken = UUID.randomUUID();
+        this.shareEnabled = true;
+        this.updatedAt = Instant.now();
+    }
+
+    public void revokeShare() {
+        this.shareToken = null;
+        this.shareEnabled = false;
+        this.updatedAt = Instant.now();
+    }
 
     public void setName(String name) { this.name = name; this.updatedAt = Instant.now(); }
     public void setStartDate(LocalDate d) { this.startDate = d; this.updatedAt = Instant.now(); }

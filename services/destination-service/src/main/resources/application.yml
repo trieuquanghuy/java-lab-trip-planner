@@ -74,6 +74,10 @@ fsq:
   base-url: ${FSQ_BASE_URL:https://api.foursquare.com/v3}
   api-key: ${FSQ_API_KEY:placeholder}
 
+# --- OSRM travel routing (Phase 15 — free public API, no key required) ---
+osrm:
+  base-url: ${OSRM_BASE_URL:http://router.project-osrm.org}
+
 # --- Resilience4j circuit breakers (Phase 4) ---
 resilience4j:
   circuitbreaker:
@@ -103,3 +107,29 @@ resilience4j:
           - java.net.ConnectException
         ignoreExceptions:
           - org.springframework.web.client.HttpClientErrorException
+      osrm:
+        slidingWindowSize: 5
+        failureRateThreshold: 60
+        waitDurationInOpenState: 60s
+        permittedNumberOfCallsInHalfOpenState: 2
+        slidingWindowType: COUNT_BASED
+        minimumNumberOfCalls: 3
+        registerHealthIndicator: true
+        recordExceptions:
+          - org.springframework.web.client.HttpServerErrorException
+          - java.io.IOException
+          - java.net.ConnectException
+        ignoreExceptions:
+          - org.springframework.web.client.HttpClientErrorException
+      openMeteo:
+        slidingWindowSize: 5
+        failureRateThreshold: 60
+        waitDurationInOpenState: 30s
+        permittedNumberOfCallsInHalfOpenState: 2
+        minimumNumberOfCalls: 3
+        slidingWindowType: COUNT_BASED
+        registerHealthIndicator: true
+        recordExceptions:
+          - java.io.IOException
+          - java.net.ConnectException
+          - org.springframework.web.client.HttpServerErrorException

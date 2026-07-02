@@ -7,6 +7,7 @@ import { ItineraryBoard } from '@/features/trips/ItineraryBoard';
 import { TripMap, type MarkerData } from '@/features/trips/TripMap';
 import { fetchDestinationDetail } from '@/features/destinations/destinations.api';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { Waypoint } from '@/types/travel';
 
 export function TripDetailPage() {
   const { tripId } = useParams<{ tripId: string }>();
@@ -26,17 +27,42 @@ export function TripDetailPage() {
     return Array.from(refs);
   }, [trip]);
 
-  // Fetch destination details in parallel to get lat/lng
+  // Fetch destination details for travel segments (always enabled, stale for 30min)
   const destQueries = useQueries({
     queries: destinationRefs.map((ref) => ({
       queryKey: ['destination', ref],
       queryFn: () => fetchDestinationDetail(ref),
       staleTime: 1000 * 60 * 30, // cache 30 min
-      enabled: showMap,
+      enabled: !!trip,
     })),
   });
 
+  // Build waypoints per day for travel time calculation
+  const waypointsByDay = useMemo(() => {
+    if (!trip) return {};
+    const result: Record<string, Waypoint[]> = {};
+    trip.days.forEach((day) => {
+      // Use the same sorted order as DayColumn (timeSlot first, then position)
+      const sorted = [...day.items].sort((a, b) => {
+        if (a.timeSlot && b.timeSlot) return a.timeSlot.localeCompare(b.timeSlot);
+        if (a.timeSlot && !b.timeSlot) return -1;
+        if (!a.timeSlot && b.timeSlot) return 1;
+        return a.position - b.position;
+      });
+      const wps = sorted
+        .map((item) => {
+          const dest = destQueries.find((q) => q.data?.providerRef === item.destinationRef);
+          return dest?.data ? { lat: dest.data.lat, lng: dest.data.lng } : null;
+        })
+        .filter((w): w is Waypoint => w !== null);
+      result[day.id] = wps;
+    });
+    return result;
+  }, [trip, destQueries]);
+
+  // Map markers (only computed when map is shown)
   const markers: MarkerData[] = useMemo(() => {
+    if (!showMap) return [];
     return destQueries
       .filter((q) => q.data)
       .map((q) => ({
@@ -45,7 +71,7 @@ export function TripDetailPage() {
         lat: q.data!.lat,
         lng: q.data!.lng,
       }));
-  }, [destQueries]);
+  }, [destQueries, showMap]);
 
   if (isLoading) {
     return (
@@ -163,7 +189,7 @@ export function TripDetailPage() {
 
       <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-180px)]">
         <div className={`flex-1 overflow-x-auto ${showMap ? 'hidden lg:block' : ''}`}>
-          <ItineraryBoard trip={trip} />
+          <ItineraryBoard trip={trip} waypointsByDay={waypointsByDay} />
         </div>
         {showMap && (
           <div className="w-full lg:w-[400px] lg:min-w-[400px] h-64 lg:h-full rounded-xl overflow-hidden border">

@@ -90,6 +90,8 @@ const mockTrip: Trip = {
   createdAt: '',
   updatedAt: '',
   days: serverDays,
+  shareToken: null,
+  shareEnabled: false,
 };
 
 describe('ItineraryBoard', () => {

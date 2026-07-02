@@ -13,4 +13,5 @@ import java.util.UUID;
 public interface TripRepository extends JpaRepository<Trip, UUID> {
     Optional<Trip> findByIdAndUserId(UUID id, UUID userId);
     Page<Trip> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
+    Optional<Trip> findByShareTokenAndShareEnabledTrue(UUID shareToken);
 }

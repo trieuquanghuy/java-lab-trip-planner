@@ -82,13 +82,14 @@ test.describe('Complete User Flow', () => {
     // ── 1. Homepage search ──────────────────────────────────────────────────
     await page.route('**/api/destinations*', async (route) => {
       const url = route.request().url();
-      if (url.includes('/otm:tokyo-tower')) {
+      // providerRefs are URL-encoded by fetchDestinationDetail: otm:x → otm%3Ax
+      if (url.includes('otm%3Atokyo-tower') || url.includes('/otm:tokyo-tower')) {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify(mockDestinationDetail),
         });
-      } else if (url.includes('/otm:senso-ji')) {
+      } else if (url.includes('otm%3Asenso-ji') || url.includes('/otm:senso-ji')) {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',

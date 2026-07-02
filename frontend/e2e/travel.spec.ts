@@ -89,20 +89,23 @@ const tripWithOneItem = {
 test.describe('Travel Time & Distance (Phase 15)', () => {
   // Shared route setup used across tests
   async function setupCommonRoutes(page: import('@playwright/test').Page) {
-    await page.route('**/api/destinations/otm:eiffel', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(eiffelDetail),
-      });
-    });
-
-    await page.route('**/api/destinations/otm:louvre', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify(louvreDetail),
-      });
+    // Use a single wildcard handler to match URL-encoded providerRefs
+    // (otm:eiffel → otm%3Aeiffel, otm:louvre → otm%3Alouvre)
+    await page.route('**/api/destinations/**', async (route) => {
+      const url = route.request().url();
+      if (url.includes('otm%3Alouvre') || url.includes('otm:louvre')) {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(louvreDetail),
+        });
+      } else {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(eiffelDetail),
+        });
+      }
     });
 
     await page.route('**/api/weather*', async (route) => {

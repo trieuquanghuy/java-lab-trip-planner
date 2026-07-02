@@ -22,12 +22,18 @@ test.describe('Destination Details (F2)', () => {
   };
 
   test.beforeEach(async ({ page }) => {
-    await page.route('**/api/destinations/otm:eiffel123', async (route) => {
+    // Use wildcard to match URL-encoded providerRef (otm:eiffel123 → otm%3Aeiffel123)
+    await page.route('**/api/destinations/**', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify(mockDestination),
       });
+    });
+
+    // Prevent auth refresh attempts from hanging or causing extra navigation
+    await page.route('**/api/auth/refresh', async (route) => {
+      await route.fulfill({ status: 401, contentType: 'application/json', body: '{}' });
     });
   });
 
@@ -56,22 +62,24 @@ test.describe('Destination Details (F2)', () => {
   });
 
   test('destination not found page shows fallback', async ({ page }) => {
-    await page.route('**/api/destinations/otm:doesnotexist', async (route) => {
+    // Override the beforeEach wildcard to return 404 for this specific navigation
+    await page.route('**/api/destinations/**', async (route) => {
       await route.fulfill({ status: 404 });
     });
-    await page.goto('/destinations/otm:doesnotexist');
+    await page.goto('/destinations/otm-doesnotexist');
     await expect(page.getByText(/not found|unavailable/i)).toBeVisible({ timeout: 5000 });
   });
 
   test('shows "opening hours not available" when null', async ({ page }) => {
-    await page.route('**/api/destinations/otm:no-hours', async (route) => {
+    // Override beforeEach wildcard for this specific navigation (no colon avoids URL-encoding issue)
+    await page.route('**/api/destinations/**', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ ...mockDestination, providerRef: 'otm:no-hours', openingHours: null }),
+        body: JSON.stringify({ ...mockDestination, providerRef: 'otm-no-hours', openingHours: null }),
       });
     });
-    await page.goto('/destinations/otm:no-hours');
+    await page.goto('/destinations/otm-no-hours');
     await expect(page.getByText(/opening hours not available/i)).toBeVisible({ timeout: 5000 });
   });
 });

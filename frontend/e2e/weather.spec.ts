@@ -73,7 +73,8 @@ test.describe('Weather Forecast (Phase 14)', () => {
       });
     });
 
-    await page.route('**/api/destinations/otm:weather-dest', async (route) => {
+    // Use wildcard to match URL-encoded providerRef (otm:weather-dest → otm%3Aweather-dest)
+    await page.route('**/api/destinations/**', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

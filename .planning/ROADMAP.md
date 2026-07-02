@@ -131,12 +131,42 @@ Plans:
 
 ---
 
+## Backlog
+
+### Phase 999.1: Unit & Integration Test Coverage for Bonus Features (BACKLOG)
+
+**Goal:** Add missing unit and integration tests for bonus features that shipped beyond the assignment timeline — drag-drop reorder (@dnd-kit), map view (Leaflet), trip duplication, and the full favorites system (backend + frontend).
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD — Backend: unit tests for `TripService.duplicate()`, `FavoriteService`, `ItineraryItemService` reorder logic
+- [ ] TBD — Frontend: Vitest component tests for `ItineraryBoard` (dnd-kit), `TripMap`, `FavoritesPage`, `AddToTripDropdown`
+- [ ] TBD (promote with /gsd-review-backlog when ready)
+
+---
+
+### Phase 999.2: E2E Automation Tests — Playwright Full User Flows (BACKLOG)
+
+**Goal:** Write end-to-end Playwright tests covering the complete primary user flow and bonus feature flows: search → destination detail → create trip → add items → drag-drop reorder → map view → favorites → trip duplication.
+**Requirements:** TBD
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD — Core flow: sign up → verify email → login → search city → view destination → create trip
+- [ ] TBD — Trip planner flow: add items to trip days → drag-drop reorder → view map
+- [ ] TBD — Bonus flows: duplicate trip → manage favorites
+- [ ] TBD (promote with /gsd-review-backlog when ready)
+
+---
+
 ## Progress
 
 | Milestone | Phases | Plans | Status | Shipped |
 |-----------|--------|-------|--------|---------|
 | v1.0 MVP | 12 | 64 | ✅ Complete | 2026-05-20 |
 | v1.1 Trip Enhancement | 5 | TBD | 🚧 In Progress | — |
+| Backlog | 2 | TBD | 📋 Parked | — |
 
 ---
 

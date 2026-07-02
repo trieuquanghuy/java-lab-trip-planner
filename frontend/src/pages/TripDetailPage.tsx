@@ -3,11 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Copy, Map as MapIcon, X } from 'lucide-react';
 import { useQueries } from '@tanstack/react-query';
 import { useTrip, useUpdateTrip, useDuplicateTrip } from '@/features/trips/trip.hooks';
+import { useWeather } from '@/features/trips/weather.hooks';
 import { ItineraryBoard } from '@/features/trips/ItineraryBoard';
 import { TripMap, type MarkerData } from '@/features/trips/TripMap';
 import { fetchDestinationDetail } from '@/features/destinations/destinations.api';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Waypoint } from '@/types/travel';
+import type { DayWeather } from '@/types/weather';
 
 export function TripDetailPage() {
   const { tripId } = useParams<{ tripId: string }>();
@@ -72,6 +74,21 @@ export function TripDetailPage() {
         lng: q.data!.lng,
       }));
   }, [destQueries, showMap]);
+
+  // Use first resolved destination for weather geo-anchor
+  const firstDest = destQueries.find((q) => q.data)?.data ?? null;
+  const { data: weatherData } = useWeather(
+    firstDest?.lat ?? null,
+    firstDest?.lng ?? null,
+    trip?.startDate ?? null,
+    trip?.endDate ?? null,
+  );
+
+  const weatherByDate = useMemo(() => {
+    const map: Record<string, DayWeather> = {};
+    weatherData?.days.forEach((w) => { map[w.date] = w; });
+    return map;
+  }, [weatherData]);
 
   if (isLoading) {
     return (
@@ -189,7 +206,7 @@ export function TripDetailPage() {
 
       <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-180px)]">
         <div className={`flex-1 overflow-x-auto ${showMap ? 'hidden lg:block' : ''}`}>
-          <ItineraryBoard trip={trip} waypointsByDay={waypointsByDay} />
+          <ItineraryBoard trip={trip} waypointsByDay={waypointsByDay} weatherByDate={weatherByDate} />
         </div>
         {showMap && (
           <div className="w-full lg:w-[400px] lg:min-w-[400px] h-64 lg:h-full rounded-xl overflow-hidden border">

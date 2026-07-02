@@ -72,6 +72,7 @@ export function ItineraryBoard({ trip, waypointsByDay = {}, weatherByDate = {} }
               day={mobileDay}
               tripId={trip.id}
               waypoints={waypointsByDay[mobileDay.id] ?? []}
+              weather={weatherByDate[mobileDay.dayDate] ?? null}
             />
           </div>
         )}
@@ -88,6 +89,7 @@ export function ItineraryBoard({ trip, waypointsByDay = {}, weatherByDate = {} }
             day={day}
             tripId={trip.id}
             waypoints={waypointsByDay[day.id] ?? []}
+            weather={weatherByDate[day.dayDate] ?? null}
           />
         ))}
       </div>

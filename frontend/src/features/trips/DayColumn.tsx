@@ -5,17 +5,20 @@ import {
 } from '@dnd-kit/sortable';
 import { ItineraryItemCard } from './ItineraryItemCard';
 import { TravelSegment } from './TravelSegment';
+import { WeatherCard } from './WeatherCard';
 import { useTravel } from './travel.hooks';
 import type { TripDay } from '@/types/trip';
 import type { Waypoint } from '@/types/travel';
+import type { DayWeather } from '@/types/weather';
 
 interface Props {
   day: TripDay;
   tripId: string;
   waypoints?: Waypoint[];
+  weather?: DayWeather | null;
 }
 
-export function DayColumn({ day, tripId, waypoints = [] }: Props) {
+export function DayColumn({ day, tripId, waypoints = [], weather }: Props) {
   const { setNodeRef, isOver } = useDroppable({
     id: day.id,
     data: { dayId: day.id },
@@ -54,6 +57,11 @@ export function DayColumn({ day, tripId, waypoints = [] }: Props) {
           {day.items.length}
         </span>
       </div>
+      {weather && (
+        <div className="mb-3">
+          <WeatherCard weather={weather} />
+        </div>
+      )}
 
       <SortableContext
         items={sortedItems.map((i) => i.id)}

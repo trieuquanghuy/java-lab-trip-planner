@@ -17,13 +17,15 @@ import { useDragDrop } from './useDragDrop';
 import { useDragStore } from './trip.store';
 import type { Trip } from '@/types/trip';
 import type { Waypoint } from '@/types/travel';
+import type { DayWeather } from '@/types/weather';
 
 interface Props {
   trip: Trip;
   waypointsByDay?: Record<string, Waypoint[]>;
+  weatherByDate?: Record<string, DayWeather>;
 }
 
-export function ItineraryBoard({ trip, waypointsByDay = {} }: Props) {
+export function ItineraryBoard({ trip, waypointsByDay = {}, weatherByDate = {} }: Props) {
   const { days, handleDragStart, handleDragOver, handleDragEnd } = useDragDrop(
     trip.id,
     trip.days,

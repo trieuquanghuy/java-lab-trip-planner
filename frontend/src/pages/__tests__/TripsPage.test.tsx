@@ -53,6 +53,7 @@ vi.mock('@/features/trips/trip.hooks', () => ({
   useAddItem: vi.fn(() => ({ mutate: vi.fn() })),
   useUpdateItem: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
   useDeleteItem: vi.fn(() => ({ mutate: vi.fn() })),
+  useDuplicateTrip: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
   tripKeys: { all: ['trips'], lists: () => ['trips', 'list'], list: (p: number) => ['trips', 'list', p], details: () => ['trips', 'detail'], detail: (id: string) => ['trips', 'detail', id] },
 }));
 

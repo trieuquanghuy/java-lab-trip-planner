@@ -1,8 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TripCard } from '../TripCard';
 import type { TripSummary } from '@/types/trip';
+
+vi.mock('@/features/trips/trip.hooks', () => ({
+  useDuplicateTrip: vi.fn(() => ({ mutate: vi.fn(), isPending: false })),
+}));
 
 const mockTrip: TripSummary = {
   id: '1',
@@ -21,11 +26,15 @@ const mockTripWithImage: TripSummary = {
   coverImageUrl: 'https://example.com/paris.jpg',
 };
 
+const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
 function renderCard(trip: TripSummary = mockTrip) {
   return render(
-    <MemoryRouter>
-      <TripCard trip={trip} />
-    </MemoryRouter>,
+    <QueryClientProvider client={qc}>
+      <MemoryRouter>
+        <TripCard trip={trip} />
+      </MemoryRouter>
+    </QueryClientProvider>,
   );
 }
 

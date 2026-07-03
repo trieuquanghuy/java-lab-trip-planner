@@ -16,14 +16,14 @@ test.describe('Destination Search (F1)', () => {
   });
 
   test('destination cards appear after searching', async ({ page }) => {
-    // Mock the search API to avoid needing real backend
+    // Mock the city search API — shape: { items: [CitySearchItem] }
     await page.route('**/api/search*', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-          results: [
-            { id: 'paris-fr', name: 'Paris', country: 'France', type: 'city' },
+          items: [
+            { name: 'Paris', country: 'France', lat: 48.8566, lng: 2.3522, type: 'city' },
           ],
         }),
       });
@@ -45,6 +45,9 @@ test.describe('Destination Search (F1)', () => {
 
     const searchInput = page.getByRole('textbox', { name: /search|city|country/i });
     await searchInput.fill('Paris');
+    // Click the city suggestion from the dropdown to trigger fetchNearby
+    await expect(page.getByText('Paris, France')).toBeVisible({ timeout: 5000 });
+    await page.getByText('Paris, France').click();
     await expect(page.getByText('Eiffel Tower')).toBeVisible({ timeout: 5000 });
     await expect(page.getByText('Louvre Museum')).toBeVisible();
   });
@@ -54,12 +57,15 @@ test.describe('Destination Search (F1)', () => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ results: [{ id: 'paris-fr', name: 'Paris', country: 'France', type: 'city' }] }),
+        body: JSON.stringify({
+          items: [{ name: 'Paris', country: 'France', lat: 48.8566, lng: 2.3522, type: 'city' }],
+        }),
       });
     });
 
     await page.route('**/api/destinations*', async (route) => {
-      if (route.request().url().includes('/otm:eiffel')) {
+      const url = route.request().url();
+      if (url.includes('otm%3Aeiffel') || url.includes('/otm:eiffel')) {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -81,8 +87,12 @@ test.describe('Destination Search (F1)', () => {
       }
     });
 
-    await page.getByRole('textbox', { name: /search|city|country/i }).fill('Paris');
-    await page.getByText('Eiffel Tower').click();
+    const searchInput = page.getByRole('textbox', { name: /search|city|country/i });
+    await searchInput.fill('Paris');
+    await expect(page.getByText('Paris, France')).toBeVisible({ timeout: 5000 });
+    await page.getByText('Paris, France').click();
+    await expect(page.getByText('Eiffel Tower')).toBeVisible({ timeout: 5000 });
+    await page.getByText('Eiffel Tower').first().click();
     await expect(page).toHaveURL(/destinations\/otm:eiffel/, { timeout: 5000 });
   });
 });

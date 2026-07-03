@@ -84,9 +84,9 @@ test.describe('Trip Sharing (Phase 13)', () => {
     });
 
     await page.goto('/share/abc-123-def');
-    // Day columns or date labels for both itinerary days must appear
-    await expect(page.getByText(/day 1|sep.?10/i).first()).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText(/day 2|sep.?11/i).first()).toBeVisible({ timeout: 5000 });
+    // SharedTripPage renders dates as toLocaleDateString e.g. "Thursday, September 10"
+    await expect(page.getByText(/September.*10/i).first()).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/September.*11/i).first()).toBeVisible({ timeout: 5000 });
   });
 
   test('shared trip page renders without auth', async ({ page }) => {

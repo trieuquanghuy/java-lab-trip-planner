@@ -46,12 +46,12 @@ test.describe('Destination Details (F2)', () => {
   test('shows opening hours', async ({ page }) => {
     await page.goto('/destinations/otm:eiffel123');
     await expect(page.getByText('Monday')).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText('9:00 AM – 11:45 PM')).toBeVisible();
+    await expect(page.getByText('9:00 AM – 11:45 PM').first()).toBeVisible();
   });
 
   test('shows address', async ({ page }) => {
     await page.goto('/destinations/otm:eiffel123');
-    await expect(page.getByText(/Champ de Mars/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/Champ de Mars/i).first()).toBeVisible({ timeout: 5000 });
   });
 
   test('shows website link', async ({ page }) => {

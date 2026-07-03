@@ -6,6 +6,10 @@ coverage
 .env.local
 .DS_Store
 
+# Playwright artifacts
+playwright-report
+test-results
+
 # TS project-references build outputs (emitted by `tsc -b` during `pnpm build`)
 *.tsbuildinfo
 vite.config.d.ts
